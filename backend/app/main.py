@@ -1,11 +1,12 @@
 # backend/app/main.py
-
 import logging
-import app.init_script
-
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
+
 from app.api.wallet_routes import router as wallet_router
 from app.api.transaction_routes import router as transaction_router
+from app.db.database import Base, engine
+from app import init_script
 
 # Initialize logging
 logging.basicConfig(
@@ -14,12 +15,28 @@ logging.basicConfig(
 )
 
 # Overwrite classes
-app.init_script.initialize_overwrite()
+init_script.initialize_overwrite()
+
+
+# Define the lifespan function
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logging.info("Application startup")
+    try:
+        # Create the tables
+        logging.info("Creating tables")
+        Base.metadata.create_all(bind=engine)
+        logging.info("Tables created")
+        yield
+    finally:
+        logging.info("Application shutdown")
+        logging.info("Closing database connection")
+        engine.dispose()
 
 # Initialize FastAPI app and logging
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
-# Include router for the wallet-related routes
+# Include router routes
 app.include_router(wallet_router)
 app.include_router(transaction_router)
 
