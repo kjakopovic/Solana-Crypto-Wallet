@@ -7,20 +7,35 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.user_model import User
 from app.services.user_service import UserService
+from app.models.json_models import UserCreateRequest
 
 # Initialize the router
 router = APIRouter()
-user_service = UserService(get_db())
 
 
 @router.post("/create-user/")
-def create_user(username: str, email: str, full_name: str, password: str):
-    logging.info(f"Creating user with username: {username}")
-    if not username or not email or not full_name or not password:
+def create_user(request: UserCreateRequest, db: Session = Depends(get_db)):
+    logging.info(f"Creating user with username: {request.username}")
+    user_service = UserService(db)
+
+    if not request.username or not request.email or not request.full_name or not request.password:
         raise HTTPException(status_code=400, detail="Invalid request")
     try:
-        user = user_service.create_user(username, email, full_name, password)
+        user = user_service.create_user(request.username, request.email, request.full_name, request.password)
         return JSONResponse(status_code=201, content={"user": user, "message": "User created successfully"})
     except Exception as e:
         logging.error(f"Error creating user: {e}")
         raise HTTPException(status_code=400, detail="Error creating user")
+
+
+@router.get("/get-user/")
+def get_user(username: str, password: str):
+    logging.info(f"Getting user with username: {username}")
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="Invalid request")
+    try:
+        user = user_service.get_user(username, password)
+        return JSONResponse(status_code=200, content={"user": user, "message": "User retrieved successfully"})
+    except Exception as e:
+        logging.error(f"Error getting user: {e}")
+        raise HTTPException(status_code=400, detail="Error getting user")
