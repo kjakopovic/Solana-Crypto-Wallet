@@ -2,6 +2,7 @@
 import logging
 import bcrypt
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.models.user_model import User
 from app.models.json_models import UserCreateRequest
@@ -74,4 +75,39 @@ class UserService:
             logging.error("Invalid password")
             raise ValueError("Invalid password")
 
-        return db_user
+        user_json = {
+            "username": db_user.username,
+            "email": db_user.email,
+            "full_name": db_user.full_name,
+        }
+        get_user_info = UserCreateRequest.model_construct(**user_json)
+        return get_user_info.model_dump()
+
+    def delete_user(self, username: str, password: str):
+        logging.info(f"Called delete_user for username: {username}")
+
+        if not username or not password:
+            logging.error("Invalid request, missing fields")
+            raise ValueError("Invalid request, missing fields")
+
+        db_user = self.db.query(User).filter(User.username == username).first()
+
+        if db_user is None:
+            logging.error("User not found")
+            raise ValueError("User not found")
+        if not self.verify_password(password, db_user.hashed_password):
+            logging.error("Invalid password")
+            raise ValueError("Invalid password")
+
+        self.db.delete(db_user)
+        self.db.commit()
+
+        db_user = self.db.query(User).filter(User.username == username).first()
+        if db_user is not None:
+            logging.error("Error deleting user")
+            raise ValueError("Error deleting user")
+
+        self.db.execute(text("DBCC CHECKIDENT ('users', RESEED, 0)"))
+        self.db.commit()
+
+        return True

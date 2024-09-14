@@ -6,6 +6,7 @@ from app.db.database import Base
 
 # TODO: check maybe if it can be put inside db package
 
+
 class User(Base):
     __tablename__ = "users"
 
