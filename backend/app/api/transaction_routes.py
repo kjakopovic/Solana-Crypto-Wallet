@@ -3,7 +3,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException
-from app.core.solana_service import SolanaService
+from app.services.solana_service import SolanaService
 
 
 # Initialize the router

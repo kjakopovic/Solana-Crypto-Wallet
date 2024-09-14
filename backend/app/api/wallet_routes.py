@@ -2,12 +2,11 @@
 import logging
 
 from fastapi import APIRouter, HTTPException
-from app.core.solana_service import SolanaService
+from app.services.solana_service import SolanaService
 
 
 # Initialize the router
 router = APIRouter()
-
 solana_service = SolanaService()
 
 
@@ -34,3 +33,5 @@ def wallet_balance(public_key: str):
     except Exception as e:
         logging.error(f"Error getting balance for wallet {public_key}: {e}")
         raise HTTPException(status_code=400, detail="Error getting balance")
+
+# TODO: add endpoint to fetch wallet info, such as keys
