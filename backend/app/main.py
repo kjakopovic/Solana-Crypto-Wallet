@@ -5,13 +5,14 @@ from fastapi import FastAPI
 
 from app.api.wallet_routes import router as wallet_router
 from app.api.transaction_routes import router as transaction_router
+from app.api.user_routes import router as user_router
 from app.db.database import Base, engine
 from app import init_script
 
 # Initialize logging
 logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+    level=logging.DEBUG
 )
 
 # Overwrite classes
@@ -39,6 +40,7 @@ app = FastAPI(lifespan=lifespan)
 # Include router routes
 app.include_router(wallet_router)
 app.include_router(transaction_router)
+app.include_router(user_router)
 
 
 @app.get("/")
