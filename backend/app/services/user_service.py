@@ -4,11 +4,13 @@ import bcrypt
 
 from sqlalchemy.orm import Session
 from app.models.user_model import User
+from app.models.json_models import UserCreateRequest
 
 
 class UserService:
     def __init__(self, db: Session):
         self.db = db
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def hash_password(self, password: str) -> str:
         logging.info("Hashing password")
@@ -19,6 +21,7 @@ class UserService:
         logging.info("Verifying password")
         return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
+    # TODO: change the inpur and return types to Pydantic models
     def create_user(self, username: str, email: str, full_name: str, password: str):
         logging.info(f"Called create_user for username: {username}")
 
@@ -41,7 +44,34 @@ class UserService:
             self.db.add(user)
             self.db.commit()
             self.db.refresh(user)
-            return user
+
+            user_json = {
+                "username": user.username,
+                "email": user.email,
+                "full_name": user.full_name,
+                "password": user.hashed_password
+            }
+
+            user_create_request = UserCreateRequest.model_construct(**user_json)
+            return user_create_request.model_dump()
         except Exception as e:
             logging.error(f"Error creating user: {e}")
             raise ValueError("Error creating user")
+
+    def get_user(self, username: str, password: str):
+        logging.info(f"Called get_user for username: {username}")
+
+        if not username or not password:
+            logging.error("Invalid request, missing fields")
+            raise ValueError("Invalid request, missing fields")
+
+        db_user = self.db.query(User).filter(User.username == username).first()
+
+        if db_user is None:
+            logging.error("User not found")
+            raise ValueError("User not found")
+        if not self.verify_password(password, db_user.hashed_password):
+            logging.error("Invalid password")
+            raise ValueError("Invalid password")
+
+        return db_user
