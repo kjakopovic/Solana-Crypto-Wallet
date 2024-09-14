@@ -2,6 +2,7 @@ import { Stack, SplashScreen } from 'expo-router'
 import React, { useEffect } from 'react'
 import { useFonts } from 'expo-font'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from "expo-status-bar";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -33,7 +34,7 @@ const RootLayout = () => {
     return (
         <GestureHandlerRootView className='flex-1'>
             <Stack>
-                {/* <Stack.Screen 
+                <Stack.Screen 
                     name="index" 
                     options={{ headerShown: false }} />
 
@@ -41,10 +42,12 @@ const RootLayout = () => {
                     name="(auth)" 
                     options={{ headerShown: false }} />
 
-                <Stack.Screen 
+                {/*<Stack.Screen 
                     name="(tabs)" 
                     options={{ headerShown: false }} /> */}
             </Stack>
+
+            <StatusBar backgroundColor="#02020D" style="light" />
         </GestureHandlerRootView>
     )
 }
