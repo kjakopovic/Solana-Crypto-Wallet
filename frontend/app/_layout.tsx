@@ -32,7 +32,7 @@ const RootLayout = () => {
     }
       
     return (
-        <GestureHandlerRootView className='flex-1'>
+        <GestureHandlerRootView className='flex-1 bg-background'>
             <Stack>
                 <Stack.Screen 
                     name="index" 
@@ -42,9 +42,9 @@ const RootLayout = () => {
                     name="(auth)" 
                     options={{ headerShown: false }} />
 
-                {/*<Stack.Screen 
+                <Stack.Screen
                     name="(tabs)" 
-                    options={{ headerShown: false }} /> */}
+                    options={{ headerShown: false }} />
             </Stack>
 
             <StatusBar backgroundColor="#02020D" style="light" />

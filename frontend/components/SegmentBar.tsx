@@ -12,7 +12,7 @@ const SegmentBar: React.FC<SegmentBarProps> = ({ numberOfSegments, currentSegmen
     return (
         <View className='mt-5 flex-row justify-between w-4/5 mx-auto'>
             {segments.map((segment) => (
-                <View key={segment} className={`m-1 flex-1 h-[5px] ${segment === currentSegment ? 'bg-secondaryHighlight' : 'bg-secondary'} rounded-full`} />
+                <View key={segment} className={`m-1 flex-1 h-[5px] ${segment === currentSegment ? 'bg-primary' : 'bg-secondary'} rounded-full`} />
             ))}
         </View>
     )
