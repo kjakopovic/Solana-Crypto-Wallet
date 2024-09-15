@@ -8,21 +8,38 @@ import os
 from sqlalchemy.orm import Session
 from app.models.database_models import UserDB
 from app.models.json_models import User
+from app.core.jwt import create_access_token, create_refresh_token
+
+
+def hash_password(password: str) -> str:
+    logging.info("Hashing password")
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    return hashed_password.decode("utf-8")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    logging.info("Verifying password")
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+
+
+def load_words_from_file(file_path):
+    """Load words from a file and return a list of words."""
+    logging.info(f"Loading words from file: {file_path}")
+    try:
+        with open(file_path, "r") as f:
+            return f.read().splitlines()
+    except FileNotFoundError:
+        logging.error(f"File not found: {file_path}")
+        raise ValueError(f"File not found: {file_path}")
+    except Exception as e:
+        logging.error(f"Error loading words from file: {e}")
+        raise ValueError(f"Error loading words from file: {e}")
 
 
 class UserService:
     def __init__(self, db: Session):
         self.db = db
         self.logger = logging.getLogger(self.__class__.__name__)
-
-    def hash_password(self, password: str) -> str:
-        logging.info("Hashing password")
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-        return hashed_password.decode("utf-8")
-
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        logging.info("Verifying password")
-        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
     # TODO: change the input and return types to Pydantic models
     def create_user(self, password: str):
@@ -41,7 +58,7 @@ class UserService:
             raise ValueError("Username already registered")
 
         try:
-            hashed_password = self.hash_password(password)
+            hashed_password = hash_password(password)
             random_uuid = str(uuid.uuid4())
 
             user = UserDB(username=username, password=hashed_password, id=random_uuid)
@@ -49,12 +66,7 @@ class UserService:
             self.db.commit()
             self.db.refresh(user)
 
-            user_json = {
-                "username": user.username
-            }
-
-            user_create_request = User.model_construct(**user_json)
-            return user_create_request.model_dump()
+            return username, random_uuid
         except Exception as e:
             logging.error(f"Error creating user: {e}")
             raise ValueError("Error creating user")
@@ -71,7 +83,7 @@ class UserService:
         if db_user is None:
             logging.error("User not found")
             raise ValueError("User not found")
-        if not self.verify_password(password, db_user.hashed_password):
+        if not verify_password(password, db_user.hashed_password):
             logging.error("Invalid password")
             raise ValueError("Invalid password")
 
@@ -95,7 +107,7 @@ class UserService:
         if db_user is None:
             logging.error("User not found")
             raise ValueError("User not found")
-        if not self.verify_password(password, db_user.hashed_password):
+        if not verify_password(password, db_user.hashed_password):
             logging.error("Invalid password")
             raise ValueError("Invalid password")
 
@@ -110,19 +122,6 @@ class UserService:
         self.db.commit()
 
         return True
-
-    def load_words_from_file(self, file_path):
-        """Load words from a file and return a list of words."""
-        logging.info(f"Loading words from file: {file_path}")
-        try:
-            with open(file_path, "r") as f:
-                return f.read().splitlines()
-        except FileNotFoundError:
-            logging.error(f"File not found: {file_path}")
-            raise ValueError(f"File not found: {file_path}")
-        except Exception as e:
-            logging.error(f"Error loading words from file: {e}")
-            raise ValueError(f"Error loading words from file: {e}")
 
     def generate_random_username(self):
         """Generate a random username using a random attribute and a random noun."""
@@ -141,8 +140,8 @@ class UserService:
             logging.error(f"File not found: {nouns_file}")
             raise ValueError(f"File not found: {nouns_file}")
 
-        attributes = self.load_words_from_file(attributes_file)
-        nouns = self.load_words_from_file(nouns_file)
+        attributes = load_words_from_file(attributes_file)
+        nouns = load_words_from_file(nouns_file)
 
         if not attributes or not nouns:
             logging.error("Error loading words")
@@ -164,3 +163,12 @@ class UserService:
             logging.info("Generating another username")
 
         return username
+
+    @staticmethod
+    def generate_tokens(username: str):
+        logging.info(f"Generating tokens for user: {username}")
+
+        access_token = create_access_token(data={"sub": username})
+        refresh_token = create_refresh_token(data={"sub": username})
+
+        return access_token, refresh_token

@@ -4,6 +4,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+
 from app.db.database import get_db
 from app.services.user_service import UserService
 from app.models.json_models import RegisterUser, User
@@ -14,7 +15,7 @@ router = APIRouter()
 # TODO: When creating or deleting a user, it might be saved but the API might return an error.
 
 
-@router.post("/register-user/")
+@router.post("/register-user/", response_model=User)
 def create_user(request: RegisterUser, db: Session = Depends(get_db)):
     logging.info(f"Creating user")
     user_service = UserService(db)
@@ -22,8 +23,17 @@ def create_user(request: RegisterUser, db: Session = Depends(get_db)):
     if not request.password:
         raise HTTPException(status_code=400, detail="Invalid request")
     try:
-        user = user_service.create_user(request.password)
-        return JSONResponse(status_code=201, content={"user": user, "message": "User created successfully"})
+        username, uuid = user_service.create_user(request.password)
+        access_token, refresh_token = user_service.generate_tokens(username)
+
+        response = {
+            "uuid": uuid,
+            "username": username,
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }
+
+        return JSONResponse(status_code=201, content={"response": response, "message": "User created successfully"})
     except Exception as e:
         logging.error(f"Error creating user: {e}")
         raise HTTPException(status_code=400, detail="Error creating user")
