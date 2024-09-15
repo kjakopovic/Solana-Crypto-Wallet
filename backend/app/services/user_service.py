@@ -1,10 +1,11 @@
 # backend/app/services/user_service.py
 import logging
 import bcrypt
+import uuid
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from app.models.database_models import User
+from app.models.database_models import UserDB
 from app.models.json_models import User
 
 
@@ -22,35 +23,30 @@ class UserService:
         logging.info("Verifying password")
         return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
-    # TODO: change the inpur and return types to Pydantic models
-    def create_user(self, username: str, email: str, full_name: str, password: str):
+    # TODO: change the input and return types to Pydantic models
+    def create_user(self, username: str, password: str):
         logging.info(f"Called create_user for username: {username}")
 
-        if not username or not email or not full_name or not password:
+        if not username or not password:
             logging.error("Invalid request, missing fields")
             raise ValueError("Invalid request, missing fields")
 
-        db_user_email = self.db.query(User).filter(User.email == email).first()
-        db_user_username = self.db.query(User).filter(User.username == username).first()
-        if db_user_email is not None:
-            logging.error("Email already registered")
-            raise ValueError("Email already registered")
-        elif db_user_username is not None:
+        db_user_username = self.db.query(UserDB).filter(UserDB.username == username).first()
+        if db_user_username is not None:
             logging.error("Username already registered")
             raise ValueError("Username already registered")
 
         try:
             hashed_password = self.hash_password(password)
-            user = User(username=username, email=email, full_name=full_name, hashed_password=hashed_password)
+            random_uuid = str(uuid.uuid4())
+
+            user = UserDB(username=username, password=hashed_password, id=random_uuid)
             self.db.add(user)
             self.db.commit()
             self.db.refresh(user)
 
             user_json = {
-                "username": user.username,
-                "email": user.email,
-                "full_name": user.full_name,
-                "password": user.hashed_password
+                "username": user.username
             }
 
             user_create_request = User.model_construct(**user_json)
@@ -66,7 +62,7 @@ class UserService:
             logging.error("Invalid request, missing fields")
             raise ValueError("Invalid request, missing fields")
 
-        db_user = self.db.query(User).filter(User.username == username).first()
+        db_user = self.db.query(UserDB).filter(UserDB.username == username).first()
 
         if db_user is None:
             logging.error("User not found")
@@ -80,7 +76,7 @@ class UserService:
             "email": db_user.email,
             "full_name": db_user.full_name,
         }
-        get_user_info = User.model_construct(**user_json)
+        get_user_info = UserDB.model_construct(**user_json)
         return get_user_info.model_dump()
 
     def delete_user(self, username: str, password: str):
@@ -90,7 +86,7 @@ class UserService:
             logging.error("Invalid request, missing fields")
             raise ValueError("Invalid request, missing fields")
 
-        db_user = self.db.query(User).filter(User.username == username).first()
+        db_user = self.db.query(UserDB).filter(UserDB.username == username).first()
 
         if db_user is None:
             logging.error("User not found")
@@ -102,7 +98,7 @@ class UserService:
         self.db.delete(db_user)
         self.db.commit()
 
-        db_user = self.db.query(User).filter(User.username == username).first()
+        db_user = self.db.query(UserDB).filter(UserDB.username == username).first()
         if db_user is not None:
             logging.error("Error deleting user")
             raise ValueError("Error deleting user")

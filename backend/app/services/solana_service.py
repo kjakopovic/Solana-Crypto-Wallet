@@ -15,7 +15,7 @@ class SolanaService:
         keypair = Keypair()
         return {
             "public_key": str(keypair.public_key),
-            "private_key": str(keypair.private_key)
+            #"private_key": str(keypair.private_key)
         }
 
     def get_balance(self, public_key_str: str):
