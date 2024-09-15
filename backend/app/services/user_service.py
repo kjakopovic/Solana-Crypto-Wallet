@@ -5,7 +5,7 @@ import bcrypt
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.models.database_models import User
-from app.models.json_models import UserCreateRequest
+from app.models.json_models import User
 
 
 class UserService:
@@ -53,7 +53,7 @@ class UserService:
                 "password": user.hashed_password
             }
 
-            user_create_request = UserCreateRequest.model_construct(**user_json)
+            user_create_request = User.model_construct(**user_json)
             return user_create_request.model_dump()
         except Exception as e:
             logging.error(f"Error creating user: {e}")
@@ -80,7 +80,7 @@ class UserService:
             "email": db_user.email,
             "full_name": db_user.full_name,
         }
-        get_user_info = UserCreateRequest.model_construct(**user_json)
+        get_user_info = User.model_construct(**user_json)
         return get_user_info.model_dump()
 
     def delete_user(self, username: str, password: str):

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.database_models import User
 from app.services.user_service import UserService
-from app.models.json_models import UserCreateRequest, GetUserInfo
+from app.models.json_models import User, GetUserInfo
 
 # Initialize the router
 router = APIRouter()
@@ -15,7 +15,7 @@ router = APIRouter()
 # TODO: When creating or deleting a user, it might be saved but the API might return an error.
 
 @router.post("/create-user/")
-def create_user(request: UserCreateRequest, db: Session = Depends(get_db)):
+def create_user(request: User, db: Session = Depends(get_db)):
     logging.info(f"Creating user with username: {request.username}")
     user_service = UserService(db)
 
