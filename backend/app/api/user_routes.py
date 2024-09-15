@@ -5,9 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.models.database_models import UserDB
 from app.services.user_service import UserService
-from app.models.json_models import User, GetUserInfo
+from app.models.json_models import RegisterUser, User
 
 # Initialize the router
 router = APIRouter()
@@ -16,14 +15,14 @@ router = APIRouter()
 
 
 @router.post("/register-user/")
-def create_user(request: User, db: Session = Depends(get_db)):
-    logging.info(f"Creating user with username: {request.username}")
+def create_user(request: RegisterUser, db: Session = Depends(get_db)):
+    logging.info(f"Creating user")
     user_service = UserService(db)
 
-    if not request.username or not request.password:
+    if not request.password:
         raise HTTPException(status_code=400, detail="Invalid request")
     try:
-        user = user_service.create_user(request.username, request.password)
+        user = user_service.create_user(request.password)
         return JSONResponse(status_code=201, content={"user": user, "message": "User created successfully"})
     except Exception as e:
         logging.error(f"Error creating user: {e}")
@@ -31,7 +30,7 @@ def create_user(request: User, db: Session = Depends(get_db)):
 
 
 @router.get("/get-user/")
-def get_user(get_user_info: GetUserInfo, db: Session = Depends(get_db)):
+def get_user(get_user_info: User, db: Session = Depends(get_db)):
     logging.info(f"Getting user with username: {get_user_info.username}")
     user_service = UserService(db)
 
@@ -46,7 +45,7 @@ def get_user(get_user_info: GetUserInfo, db: Session = Depends(get_db)):
 
 
 @router.delete("/delete-user/")
-def delete_user(get_user_info: GetUserInfo, db: Session = Depends(get_db)):
+def delete_user(get_user_info: User, db: Session = Depends(get_db)):
     logging.info(f"Deleting user with username: {get_user_info.username}")
     user_service = UserService(db)
 

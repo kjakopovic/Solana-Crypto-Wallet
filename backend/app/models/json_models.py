@@ -5,11 +5,11 @@ from pydantic import BaseModel
 # TODO: Add more fields as needed
 
 
+class RegisterUser(BaseModel):
+    password: str
+
+
+# TODO: add fields related to tokens
 class User(BaseModel):
     username: str
-    password: str
 
-
-class GetUserInfo(BaseModel):
-    username: str
-    password: str
