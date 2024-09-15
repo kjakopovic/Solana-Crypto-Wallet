@@ -4,7 +4,7 @@ import bcrypt
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from app.models.user_model import User
+from app.models.database_models import User
 from app.models.json_models import UserCreateRequest
 
 

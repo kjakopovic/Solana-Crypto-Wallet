@@ -1,4 +1,4 @@
-# backend/app/models/user_model.py
+# backend/app/models/database_models.py
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.models.user_model import User
+from app.models.database_models import User
 from app.services.user_service import UserService
 from app.models.json_models import UserCreateRequest, GetUserInfo
 
