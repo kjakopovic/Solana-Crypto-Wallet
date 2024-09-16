@@ -63,3 +63,24 @@ export const getUserByIdController = async (req: Request, res: Response): Promis
         return res.status(500).json({ message: 'Error fetching user' });
     }
 };
+
+// Update user
+export const updateUserController = async (req: Request, res: Response): Promise<Response> => {
+    logger.info('Updating user information', { className });
+    const { id } = req.params;
+    const updates = req.body;
+
+    try {
+        const updatedUser = await UserModel.updateUser(id, updates);
+        if (updatedUser) {
+            logger.info('User updated successfully', { className });
+            return res.status(200).json(updatedUser);
+        } else {
+            logger.info('User not found', { className });
+            return res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        logger.error({ message: 'Error updating user', error, className });
+        return res.status(500).json({ message: 'Error updating user' });
+    }
+};

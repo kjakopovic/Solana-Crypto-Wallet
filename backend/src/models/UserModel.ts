@@ -148,6 +148,50 @@ class UserModel {
         }
     }
 
+    // Update user information
+    async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
+        logger.info('Updating user information', { className });
+
+        try {
+            const user = await this.findUserById(id);
+            if(!user){
+                logger.info('User not found', { className });
+                return null;
+            }
+
+            const updateFields = Object.keys(updates).map(field => `${field} = @${field}`).join(', ');
+            const request = this.db.request().input('id', id);
+
+            Object.entries(updates).forEach(([key, value]) => {
+                request.input(key, value);
+            });
+
+            const result = await request.query(`
+            UPDATE users
+            SET ${updateFields}
+            WHERE id = @id;
+            SELECT * FROM users WHERE id = @id;
+        `);
+
+            if (result.recordset.length > 0) {
+                const user = result.recordset[0];
+                logger.info('User updated successfully', { className });
+                return {
+                    id: user.id,
+                    username: user.username,
+                    publicKey: user.publicKey,
+                    refreshToken: user.refreshToken,
+                };
+            } else {
+                logger.info('User not found after update', { className });
+                return null;
+            }
+        } catch (err) {
+            logger.error('Error updating user', { error: err, className });
+            console.error("Error updating user:", err);
+            throw err;
+        }
+    }
     /************************************************************************************************/
     /* Find operations */
 
@@ -166,7 +210,6 @@ class UserModel {
                 return {
                     id: user.id,
                     username: user.username,
-                    //password: user.password,
                     publicKey: user.publicKey,
                     refreshToken: user.refreshToken,
                 };
