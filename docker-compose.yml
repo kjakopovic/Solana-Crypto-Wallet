@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      - "8000:8000"
+      - "3000:3000"
     volumes:
       - .:/app
     working_dir: /app/backend
@@ -18,10 +18,13 @@ services:
       DB_NAME: walletDB
       DB_USER: dbAdmin
       DB_PASSWORD: Password123!
+    # Wait for SQL Server to start and complete the init script
+    # before starting the backend
+    # sleep can be changed accordingly and as needed
     command: >
       bash -c "
       sleep 45s &&
-      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      npm run start
       "
 
   # SQL Server service
