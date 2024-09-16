@@ -3,6 +3,7 @@
 import express from 'express';
 import WalletRoutes from './routes/WalletRoutes';
 import dotenv from 'dotenv';
+import './config/Database';
 
 dotenv.config();
 
