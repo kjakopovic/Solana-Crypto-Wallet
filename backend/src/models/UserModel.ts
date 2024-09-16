@@ -5,14 +5,17 @@ import pool from '../config/Database';
 import logger from '../config/Logger';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+import {promisify} from "node:util";
 
 const className = 'UserModel';
-
+const readFile = promisify(fs.readFile);
 
 interface User{
     id: string;
     username: string;
-    password: string;
+    //password: string;
     publicKey: string;
     refreshToken: string;
 }
@@ -24,13 +27,67 @@ class UserModel {
         this.db = pool;
     }
 
+    /************************************************************************************************/
+    /* Random generators */
+
     private generateRandomString(): string {
         const length = Math.floor(Math.random() * (32 - 16 + 1)) + 16;
         return crypto.randomBytes(length).toString('hex');
     }
 
+    private async generateRandomUsername(): Promise<string> {
+        logger.info('Generating a random username', { className });
+
+        try {
+            const attributesPath = path.join(__dirname, '../../words/attributes.txt');
+            const nounsPath = path.join(__dirname, '../../words/nouns.txt');
+
+            if(!fs.existsSync(attributesPath) || !fs.existsSync(nounsPath)){
+                new Error('One or both word files were not found!');
+            }
+
+            const [attributes, nouns] = await Promise.all([
+                readFile(attributesPath, 'utf-8'),
+                readFile(nounsPath, 'utf-8')
+            ]);
+
+            const attributesArray = attributes.split('\n').map(word => word.trim());
+            const nounsArray = nouns.split('\n').map(word => word.trim());
+
+            let username = '';
+            let isUnique = false;
+            const maxAttempts = 50;
+            let attempts = 0;
+
+            while (!isUnique && attempts < maxAttempts) {
+                const randomAttribute = attributesArray[Math.floor(Math.random() * attributesArray.length)];
+                const randomNoun = nounsArray[Math.floor(Math.random() * nounsArray.length)];
+                username = `${randomAttribute} ${randomNoun}`;
+
+                const existingUser = await this.findUserByUsername(username);
+                if (!existingUser) {
+                    isUnique = true;
+                }
+                attempts++;
+            }
+
+            if (!isUnique) {
+                new Error('Failed to generate a unique username after multiple attempts');
+            }
+
+            return username;
+        } catch (err) {
+            logger.error('Error generating random username', { error: err, className });
+            console.error('Error generating random username:', err);
+            throw err;
+        }
+    }
+
+    /************************************************************************************************/
+    /* Basic CRUD operations */
+
     // Check if the users table exists in the database
-    async checkAndCreateTable(): Promise<void> {
+    /*async checkAndCreateTable(): Promise<void> {
         logger.info('Checking if users table exists in the database', { className });
 
         try {
@@ -56,31 +113,43 @@ class UserModel {
             console.error("Error checking or creating users table:", err);
         }
 
-    }
+    }*/
 
     // Insert a new user into the users table
-    async createUser(user: User): Promise<void> {
+    async createUser(password: string, publicKey: string): Promise<User> {
         logger.info('Creating a new user', { className });
 
         try {
             const id = this.generateRandomString();
-            const hashedPassword = await bcrypt.hash(user.password, 10); // Hash the password with a salt round of 10
+            const username = await this.generateRandomUsername();
+            const hashedPassword = await bcrypt.hash(password, 10); // Hash the password with a salt round of 10
             await this.db.request()
                 .input('id', id)
-                .input('username', user.username)
+                .input('username', username)
                 .input('password', hashedPassword)
-                .input('publicKey', user.publicKey)
+                .input('publicKey', publicKey)
                 .query(`
                     INSERT INTO users (id, username, password, publicKey)
                     VALUES (@id, @username, @password, @publicKey);
                 `);
             logger.info('User created successfully', { className });
-            console.log(`User ${user.username} created successfully.`);
+            console.log(`User ${username} created successfully.`);
+
+            return {
+                id,
+                username,
+                publicKey,
+                refreshToken: '',
+            };
         } catch (err) {
             logger.error('Error creating user', { error: err, className });
             console.error("Error creating user:", err);
+            throw err;
         }
     }
+
+    /************************************************************************************************/
+    /* Find operations */
 
     // Find a user by a given field
     private async findUserByField(field: string, value: string): Promise<User | null> {
@@ -97,7 +166,7 @@ class UserModel {
                 return {
                     id: user.id,
                     username: user.username,
-                    password: user.password,
+                    //password: user.password,
                     publicKey: user.publicKey,
                     refreshToken: user.refreshToken,
                 };
@@ -118,6 +187,10 @@ class UserModel {
 
     async findUserById(id: string): Promise<User | null> {
         return this.findUserByField('id', id);
+    }
+
+    async findUserByPublicKey(publicKey: string): Promise<User | null> {
+        return this.findUserByField('publicKey', publicKey);
     }
 }
 

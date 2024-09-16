@@ -6,6 +6,7 @@ import logger from '../config/Logger';
 
 const className = 'WalletModel';
 
+// TODO: Remove secretKey from the response later
 // Create a new wallet (KeyPair)
 export const createWallet = () => {
     logger.info('Creating a new wallet', { className });
