@@ -2,6 +2,7 @@
 
 import express from 'express';
 import WalletRoutes from './routes/WalletRoutes';
+import UserRoutes from './routes/UserRoutes';
 import dotenv from 'dotenv';
 import './config/Database';
 
@@ -12,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use('/wallet', WalletRoutes);
+app.use('/user', UserRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
