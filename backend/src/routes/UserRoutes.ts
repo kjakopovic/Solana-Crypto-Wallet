@@ -6,6 +6,7 @@ import {
     getUserByIdController,
     getUserByUsernameController,
     loginUserController,
+    logoutUserController,
     updateUserController
 } from '../controllers/UserController';
 
@@ -16,5 +17,6 @@ router.get('/username/:username', getUserByUsernameController);
 router.get('/id/:id', getUserByIdController);
 router.put('/update/:id', updateUserController);
 router.post('/login', loginUserController);
+router.post('/logout', logoutUserController);
 
 export default router;

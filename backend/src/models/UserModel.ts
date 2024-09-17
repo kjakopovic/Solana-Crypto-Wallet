@@ -266,6 +266,7 @@ class UserModel {
     }
 
     public async deleteRefreshToken(id: string): Promise<void> {
+        logger.info('Deleting refresh token for id: ' + id, { className, id });
         await this.db.request()
             .input('id', id)
             .query(`

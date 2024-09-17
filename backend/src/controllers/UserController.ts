@@ -138,4 +138,21 @@ export const loginUserController = async (req: Request, res: Response): Promise<
         logger.error({ message: 'Error logging in user', error, className });
         return res.status(500).json({ message: 'Error logging in user', error });
     }
+};
+
+// TODO: Check if maybe refreshToken is needed to logout user
+// Logout user
+export const logoutUserController = async (req: Request, res: Response): Promise<Response> => {
+    const { id } = req.body;
+    logger.info('Logging out user with id: ' + id, { className });
+
+    try {
+        logger.info('Deleting refresh token', { className, userId: id });
+        await UserModel.deleteRefreshToken(id);
+        logger.info('User logged out successfully', { className });
+        return res.status(200).json({ message: 'User logged out successfully' });
+    } catch (error) {
+        logger.error({ message: 'Error logging out user', error, className });
+        return res.status(500).json({ message: 'Error logging out user' });
+    }
 }
