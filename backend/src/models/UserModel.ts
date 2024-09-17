@@ -214,7 +214,7 @@ class UserModel {
                 return {
                     id: user.id,
                     username: user.username,
-                    password: "hashed",
+                    password: user.password,
                     publicKey: user.publicKey,
                     refreshToken: user.refreshToken,
                 };
@@ -254,6 +254,7 @@ class UserModel {
     }
 
     public async updateRefreshToken(id: string, refreshToken: string): Promise<void> {
+        logger.info('Updating refresh token for id: ' + id, { className, id });
         await this.db.request()
             .input('id', id)
             .input('refreshToken', refreshToken)

@@ -97,6 +97,7 @@ export const loginUserController = async (req: Request, res: Response): Promise<
     }
 
     try{
+        logger.info('Verifying user password', { className });
         const isPasswordValid = await UserModel.verifyPassword(username, password);
         if(!isPasswordValid){
             logger.error('Invalid password', { className });
@@ -109,19 +110,30 @@ export const loginUserController = async (req: Request, res: Response): Promise<
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const refreshToken = generateRefreshToken({ id: user.id, username: user.username, publicKey: user.publicKey });
-        await UserModel.updateRefreshToken(user.id, refreshToken);
+        try {
+            logger.info('Generating refresh token', { className });
+            const refreshToken = generateRefreshToken(user);
+            logger.info('Refresh token generated successfully: ' + refreshToken, { className });
 
-        const accessToken = generateAccessToken({ id: user.id, username: user.username });
-        logger.info('User logged in successfully', { className });
+            logger.info('Updating refresh token', { className, userId: user.id });
+            await UserModel.updateRefreshToken(user.id, refreshToken);
+            logger.info('Refresh token updated successfully', { className, userId: user.id });
 
-        return res.status(200).json({
-            id: user.id,
-            username: user.username,
-            publicKey: user.publicKey,
-            refreshToken,
-            accessToken
-        });
+            logger.info('Generating access token', { className });
+            const accessToken = generateAccessToken({ id: user.id, username: user.username });
+            logger.info('User logged in successfully', { className });
+
+            return res.status(200).json({
+                id: user.id,
+                username: user.username,
+                publicKey: user.publicKey,
+                refreshToken,
+                accessToken
+            });
+        } catch (error) {
+            logger.error({ message: 'Error generating tokens', error, className });
+            return res.status(500).json({ message: 'Error generating tokens' });
+        }
     }catch(error){
         logger.error({ message: 'Error logging in user', error, className });
         return res.status(500).json({ message: 'Error logging in user', error });

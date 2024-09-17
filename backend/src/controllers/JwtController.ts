@@ -5,7 +5,7 @@ import logger from '../config/Logger';
 const className = 'JwtController';
 
 export const refreshAccessTokenController = async (req: Request, res: Response): Promise<Response> => {
-    logger.info('Refreshing token', { className });
+    logger.info('Refreshing access token', { className });
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
@@ -25,13 +25,13 @@ export const refreshAccessTokenController = async (req: Request, res: Response):
         return res.status(200).json({ accessToken });
     } catch (error) {
         logger.error({ message: 'Invalid refresh token', error, className });
-        return res.status(403).json({ message: 'Invalid refresh token' });
+        return res.status(403).json({ message: 'Invalid refresh token', error });
     }
 };
 
 export const createRefreshTokenController = async (req: Request, res: Response): Promise<Response> => {
-    logger.info('Creating refresh token', { className });
     const { id, username, publicKey } = req.body;
+    logger.info(`Creating refresh token for user id: ${id}`, { className });
 
     if (!id || !username) {
         logger.error('User ID and username are required', { className });
@@ -44,17 +44,17 @@ export const createRefreshTokenController = async (req: Request, res: Response):
         return res.status(200).json({ refreshToken });
     } catch (error) {
         logger.error({ message: 'Error creating refresh token', error, className });
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({ message: 'Internal server error', error });
     }
 };
 
 export const verifyAccessTokenController = async (req: Request, res: Response): Promise<Response> => {
-    logger.info('Verifying access token', { className });
     const { accessToken } = req.body;
+    logger.info(`Verifying access token: ${accessToken}`, { className });
 
     if (!accessToken) {
         logger.error('Access token is required', { className });
-        return res.status(401).json({ message: 'Access token is required' });
+        return res.status(401).json({ message: 'Access token is required', error: 'Access token is required' });
     }
 
     try {
@@ -63,6 +63,6 @@ export const verifyAccessTokenController = async (req: Request, res: Response): 
         return res.status(200).json({ valid: true, decoded });
     } catch (error) {
         logger.error({ message: 'Invalid access token', error, className });
-        return res.status(403).json({ message: 'Invalid access token' });
+        return res.status(403).json({ message: 'Invalid access token', error });
     }
 }
