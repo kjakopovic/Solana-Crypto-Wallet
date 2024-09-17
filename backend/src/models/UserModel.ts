@@ -15,7 +15,7 @@ const readFile = promisify(fs.readFile);
 interface User{
     id: string;
     username: string;
-    //password: string;
+    password: string;
     publicKey: string;
     refreshToken: string;
 }
@@ -138,6 +138,7 @@ class UserModel {
             return {
                 id,
                 username,
+                password: 'hashed',
                 publicKey,
                 refreshToken: '',
             };
@@ -179,6 +180,7 @@ class UserModel {
                 return {
                     id: user.id,
                     username: user.username,
+                    password: "hashed",
                     publicKey: user.publicKey,
                     refreshToken: user.refreshToken,
                 };
@@ -192,6 +194,8 @@ class UserModel {
             throw err;
         }
     }
+
+
     /************************************************************************************************/
     /* Find operations */
 
@@ -210,6 +214,7 @@ class UserModel {
                 return {
                     id: user.id,
                     username: user.username,
+                    password: "hashed",
                     publicKey: user.publicKey,
                     refreshToken: user.refreshToken,
                 };
@@ -235,6 +240,40 @@ class UserModel {
     async findUserByPublicKey(publicKey: string): Promise<User | null> {
         return this.findUserByField('publicKey', publicKey);
     }
+
+    /************************************************************************************************/
+
+    public async verifyPassword(username: string, password: string): Promise<boolean> {
+        const user = await this.findUserByUsername(username);
+
+        if(!user){
+            return false;
+        }
+
+        return bcrypt.compare(password, user.password);
+    }
+
+    public async updateRefreshToken(id: string, refreshToken: string): Promise<void> {
+        await this.db.request()
+            .input('id', id)
+            .input('refreshToken', refreshToken)
+            .query(`
+                UPDATE users
+                SET refreshToken = @refreshToken
+                WHERE id = @id;
+            `);
+    }
+
+    public async deleteRefreshToken(id: string): Promise<void> {
+        await this.db.request()
+            .input('id', id)
+            .query(`
+                UPDATE users
+                SET refreshToken = ''
+                WHERE id = @id;
+            `);
+    }
+
 }
 
 export default new UserModel();

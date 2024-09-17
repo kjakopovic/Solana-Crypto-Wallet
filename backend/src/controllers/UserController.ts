@@ -2,6 +2,7 @@
 
 import { Request, Response } from 'express';
 import UserModel from '../models/UserModel';
+import { generateAccessToken, generateRefreshToken } from '../services/JwtService';
 import { createWallet } from '../models/WalletModel';
 import logger from '../config/Logger';
 
@@ -84,3 +85,45 @@ export const updateUserController = async (req: Request, res: Response): Promise
         return res.status(500).json({ message: 'Error updating user' });
     }
 };
+
+// Login user
+export const loginUserController = async (req: Request, res: Response): Promise<Response> => {
+    logger.info('Logging in user', { className });
+    const { username, password } = req.body;
+
+    if (!username || !password){
+        logger.error('Username and password are required', { className });
+        return res.status(400).json({ message: 'Username and password are required' });
+    }
+
+    try{
+        const isPasswordValid = await UserModel.verifyPassword(username, password);
+        if(!isPasswordValid){
+            logger.error('Invalid password', { className });
+            return res.status(401).json({ message: 'Invalid password' });
+        }
+
+        const user = await UserModel.findUserByUsername(username);
+        if(!user){
+            logger.error('User not found', { className });
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const refreshToken = generateRefreshToken({ id: user.id, username: user.username, publicKey: user.publicKey });
+        await UserModel.updateRefreshToken(user.id, refreshToken);
+
+        const accessToken = generateAccessToken({ id: user.id, username: user.username });
+        logger.info('User logged in successfully', { className });
+
+        return res.status(200).json({
+            id: user.id,
+            username: user.username,
+            publicKey: user.publicKey,
+            refreshToken,
+            accessToken
+        });
+    }catch(error){
+        logger.error({ message: 'Error logging in user', error, className });
+        return res.status(500).json({ message: 'Error logging in user', error });
+    }
+}
