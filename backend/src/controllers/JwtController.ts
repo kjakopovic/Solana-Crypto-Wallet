@@ -66,3 +66,22 @@ export const verifyAccessTokenController = async (req: Request, res: Response): 
         return res.status(403).json({ message: 'Invalid access token', error });
     }
 }
+
+export const verifyRefreshTokenController = async (req: Request, res: Response): Promise<Response> => {
+    const { refreshToken } = req.body;
+    logger.info(`Verifying refresh token: ${refreshToken}`, { className });
+
+    if (!refreshToken) {
+        logger.error('Refresh token is required', { className });
+        return res.status(401).json({ message: 'Refresh token is required', error: 'Refresh token is required' });
+    }
+
+    try {
+        const decoded = verifyRefreshToken(refreshToken);
+        logger.info('Refresh token is valid', { className });
+        return res.status(200).json({ valid: true, decoded });
+    } catch (error) {
+        logger.error({ message: 'Invalid refresh token', error, className });
+        return res.status(403).json({ message: 'Invalid refresh token', error });
+    }
+}

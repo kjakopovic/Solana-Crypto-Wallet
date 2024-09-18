@@ -139,7 +139,7 @@ class UserModel {
 
 
     // Insert a new user into the users table
-    async createUser(password: string, publicKey: string): Promise<User> {
+    private async createUser(password: string, publicKey: string): Promise<User> {
         logger.info('Creating a new user', { className });
 
         try {
@@ -288,9 +288,9 @@ class UserModel {
         UPDATE users
         SET refreshToken = @refreshToken
         WHERE id = @id;
-    `;
+        `;
 
-        console.log('Generated SQL Query:', sqlQuery);  // Log the query for debugging
+        logger.info('Generated SQL Query:', sqlQuery);  // Log the query for debugging
 
         try {
             const request = this.db.request();
@@ -309,17 +309,56 @@ class UserModel {
             throw err;
         }
     }
-    public async deleteRefreshToken(id: string): Promise<void> {
-        logger.info('Deleting refresh token for id: ' + id, { className, id });
-        await this.db.request()
-            .input('id', id)
-            .query(`
-                UPDATE users
-                SET refreshToken = ''
-                WHERE id = @id;
-            `);
-    }
 
+    public async deleteRefreshToken(publicKey: string): Promise<void> {
+        logger.info('Deleting refresh token for publicKey: ' + publicKey, {className, publicKey});
+
+        const checkRefreshToken = `
+        SELECT 1
+        FROM users
+        WHERE publicKey = @publicKey AND refreshToken IS NOT NULL;
+        `;
+
+        try {
+            const checkRequest = this.db.request();
+            checkRequest.input('publicKey', publicKey);
+
+            const checkResult = await checkRequest.query(checkRefreshToken);
+
+            if (checkResult.recordset.length === 0) {
+                logger.error('No refresh token found for publicKey: ' + publicKey, {className});
+                throw new Error('Unable to logout user, no refresh token found for publicKey: ' + publicKey);
+            }
+
+            const sqlQuery = `
+            UPDATE users
+            SET refreshToken = null
+            WHERE publicKey = @publicKey;
+            `;
+
+            logger.info('Generated SQL Query: \n' + sqlQuery, {className});
+
+            try {
+                const request = this.db.request();
+                request.input('publicKey', publicKey);
+
+                const result = await request.query(sqlQuery);
+
+                if (result.rowsAffected[0] > 0) {
+                    logger.info('Refresh token deleted successfully');
+                } else {
+                    logger.warn('No rows were updated');
+                }
+            } catch (err) {
+                logger.error('Error deleting refresh token', {error: err, className});
+                throw new Error('Error deleting refresh token');
+            }
+
+        } catch (err) {
+            logger.error('Error checking refresh token: ' + err, {error: err, className});
+            throw err;
+        }
+    }
 }
 
 export default new UserModel();
