@@ -15,12 +15,12 @@ export const refreshAccessTokenController = async (req: Request, res: Response):
 
     try {
         logger.info('Verifying refresh token', { className });
-        const { id, username } = verifyRefreshToken(refreshToken) as { id: string; username: string };
-        logger.info(`Refresh token verified for user: ${id}, ${username}`, { className });
+        const decoded = await verifyRefreshToken(refreshToken) as { id: string; username: string };
+        logger.info(`Refresh token verified for user: ${decoded.id}, ${decoded.username}`, { className });
 
         logger.info('Generating new access token', { className });
-        const accessToken = generateAccessToken({ id, username });
-        logger.info(`Access token generated successfully for user: ${id}, ${username}`, { className, accessToken });
+        const accessToken = generateAccessToken({ id: decoded.id, username: decoded.username });
+        logger.info(`Access token generated successfully for user: ${decoded.id}, ${decoded.username}`, { className, accessToken });
 
         return res.status(200).json({ accessToken });
     } catch (error) {

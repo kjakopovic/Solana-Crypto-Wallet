@@ -44,7 +44,7 @@ export const verifyRefreshToken = async (token: string) => {
 
     try{
         const decoded = jwt.verify(token, refreshTokenSecret) as { id: string, username: string, publicKey: string };
-        const user = await UserModel.findUserByRefreshToken(decoded.id, token);
+        const user = await UserModel.findUserByField("refreshToken", token);
 
         if(!user){
             throw new Error('Refresh token not found in the database');
