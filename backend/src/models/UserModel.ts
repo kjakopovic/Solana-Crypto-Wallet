@@ -268,6 +268,29 @@ class UserModel {
         return this.findUserByField('publicKey', publicKey);
     }
 
+    async findUserByRefreshToken(id:string, refreshToken: string): Promise<User | null> {
+        logger.info('Fetching user by refreshToken', { className });
+        const sqlQuery = `
+            SELECT * FROM users
+            WHERE id = @id AND refreshToken = @refreshToken;
+        `;
+
+
+        try {
+            const request = this.db.request();
+            request.input('id', id);
+            request.input('refreshToken', refreshToken);
+
+            const result = await request.query(sqlQuery);
+
+            logger.info('User fetched successfully, returning json with information', { className });
+            return result.recordset[0];
+        } catch (err) {
+            logger.error('Error fetching user by refreshToken', { error: err, className });
+            throw new Error('Error querying the database: ' + err);
+        }
+    }
+
     /************************************************************************************************/
 
     public async verifyPassword(publicKey: string, password: string): Promise<boolean> {

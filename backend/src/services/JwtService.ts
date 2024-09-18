@@ -2,6 +2,8 @@
 
 import jwt from 'jsonwebtoken';
 import logger from "../config/Logger";
+import UserModel from "../models/UserModel"; // Import the function to query the database
+
 
 const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET || 'supersercretaccesskey';
 const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET || 'supersercretrefreshkey';
@@ -37,7 +39,20 @@ export const verifyAccessToken = (token: string) => {
     return jwt.verify(token, accessTokenSecret);
 };
 
-export const verifyRefreshToken = (token: string) => {
+export const verifyRefreshToken = async (token: string) => {
     logger.info('Verifying refresh token: ' + token, {className});
-    return jwt.verify(token, refreshTokenSecret);
+
+    try{
+        const decoded = jwt.verify(token, refreshTokenSecret) as { id: string, username: string, publicKey: string };
+        const user = await UserModel.findUserByRefreshToken(decoded.id, token);
+
+        if(!user){
+            throw new Error('Refresh token not found in the database');
+        }
+
+        return jwt.verify(token, refreshTokenSecret);
+    }catch(error){
+        logger.error('Error verifying refresh token: ' + error, {className});
+        throw error;
+    }
 };
