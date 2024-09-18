@@ -270,8 +270,8 @@ class UserModel {
 
     /************************************************************************************************/
 
-    public async verifyPassword(username: string, password: string): Promise<boolean> {
-        const user = await this.findUserByUsername(username);
+    public async verifyPassword(publicKey: string, password: string): Promise<boolean> {
+        const user = await this.findUserByPublicKey(publicKey);
 
         if(!user){
             return false;
