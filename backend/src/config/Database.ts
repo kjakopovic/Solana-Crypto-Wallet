@@ -1,6 +1,6 @@
 // src/config/Database.ts
 
-import { ConnectionPool } from 'mssql';
+import { ConnectionPool,  } from 'mssql';
 import dotenv from 'dotenv';
 import logger from './Logger';
 
@@ -23,15 +23,33 @@ console.log('Database configuration:', config);
 
 const pool = new ConnectionPool(config);
 
+pool.on('error', err => {
+    console.error('SQL Error:', err);
+    logger.error('SQL Error:', { error: err, className });
+});
+
+pool.on('connect', () => {
+    console.log('Successfully connected to the database');
+    logger.info('Successfully connected to the database', { className });
+});
+
+pool.on('info', info => {
+    console.log('SQL Info:', info);
+    logger.info('SQL Info:', { info, className });
+});
+
+// Connect to the database and initialize it
 pool.connect()
     .then(async () => {
         console.log('Connected to SQL Server');
+        logger.info('Connected to SQL Server', { className });
         await initializeDatabase(pool);
     })
     .catch(err => {
         console.error('Database connection failed:', err);
         console.error('Error details:', err.message);
         console.error('Error stack:', err.stack);
+        logger.error({ message: 'Database connection failed', error: err, className });
     });
 
 export const initializeDatabase = async (pool: ConnectionPool) => {
@@ -54,6 +72,5 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
         logger.error({ message: 'Error initializing database', error, className });
     }
 };
-
 
 export default pool;

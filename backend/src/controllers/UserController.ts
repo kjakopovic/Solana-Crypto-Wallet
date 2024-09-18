@@ -16,9 +16,16 @@ export const createUserController = async (req: Request, res: Response): Promise
 
     try {
         const publicKey = createWallet().publicKey;
-        const user = await UserModel.createUser(password, publicKey);
+        const user = await UserModel.createUserWithTokens(password, publicKey);
         logger.info('User created successfully', { className });
-        return res.status(201).json({ message: 'User created successfully', user: user });
+        /*
+        const refreshToken = generateRefreshToken(user);
+        await UserModel.updateRefreshToken(user.id, refreshToken);
+        const accessToken = generateAccessToken({ id: user.id, username: user.username });
+        */
+        return res.status(201).json({
+            message: 'User created successfully',
+            user: user });
     } catch (error) {
         logger.error({ message: 'Error creating user', error, className });
         return res.status(500).json({ message: 'Error creating user' });
@@ -88,8 +95,8 @@ export const updateUserController = async (req: Request, res: Response): Promise
 
 // Login user
 export const loginUserController = async (req: Request, res: Response): Promise<Response> => {
-    logger.info('Logging in user', { className });
     const { username, password } = req.body;
+    logger.info('Logging in user: ' + username, { className });
 
     if (!username || !password){
         logger.error('Username and password are required', { className });
@@ -116,6 +123,7 @@ export const loginUserController = async (req: Request, res: Response): Promise<
             logger.info('Refresh token generated successfully: ' + refreshToken, { className });
 
             logger.info('Updating refresh token', { className, userId: user.id });
+            //await UserModel.deleteRefreshToken(user.id);
             await UserModel.updateRefreshToken(user.id, refreshToken);
             logger.info('Refresh token updated successfully', { className, userId: user.id });
 

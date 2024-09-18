@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import {promisify} from "node:util";
+import { generateAccessToken, generateRefreshToken } from '../services/JwtService';
 
 const className = 'UserModel';
 const readFile = promisify(fs.readFile);
@@ -83,6 +84,7 @@ class UserModel {
         }
     }
 
+
     /************************************************************************************************/
     /* Basic CRUD operations */
 
@@ -115,6 +117,27 @@ class UserModel {
 
     }*/
 
+    public async createUserWithTokens(password: string, receivedPublicKey: string): Promise<{ id:string, username:string, publicKey:string, refreshToken:string, accessToken: string }> {
+        logger.info('Creating a new user with tokens', { className });
+
+        try {
+            const user = await this.createUser(password, receivedPublicKey);
+
+            // Generate access token
+            const accessToken = generateAccessToken({ id: user.id, username: user.username });
+            const id = user.id;
+            const username = user.username;
+            const refreshToken = user.refreshToken;
+            const publicKey = user.publicKey;
+
+            return { id, username, publicKey, refreshToken, accessToken };
+        } catch (err) {
+            logger.error('Error creating user with tokens', { error: err, className });
+            throw err;
+        }
+    }
+
+
     // Insert a new user into the users table
     async createUser(password: string, publicKey: string): Promise<User> {
         logger.info('Creating a new user', { className });
@@ -123,14 +146,18 @@ class UserModel {
             const id = this.generateRandomString();
             const username = await this.generateRandomUsername();
             const hashedPassword = await bcrypt.hash(password, 10); // Hash the password with a salt round of 10
+
+            const refreshToken = generateRefreshToken({ id, username, publicKey });
+
             await this.db.request()
                 .input('id', id)
                 .input('username', username)
                 .input('password', hashedPassword)
                 .input('publicKey', publicKey)
+                .input('refreshToken', refreshToken)
                 .query(`
-                    INSERT INTO users (id, username, password, publicKey)
-                    VALUES (@id, @username, @password, @publicKey);
+                    INSERT INTO users (id, username, password, publicKey, refreshToken)
+                    VALUES (@id, @username, @password, @publicKey, @refreshToken);
                 `);
             logger.info('User created successfully', { className });
             console.log(`User ${username} created successfully.`);
@@ -140,7 +167,7 @@ class UserModel {
                 username,
                 password: 'hashed',
                 publicKey,
-                refreshToken: '',
+                refreshToken,
             };
         } catch (err) {
             logger.error('Error creating user', { error: err, className });
@@ -255,16 +282,33 @@ class UserModel {
 
     public async updateRefreshToken(id: string, refreshToken: string): Promise<void> {
         logger.info('Updating refresh token for id: ' + id, { className, id });
-        await this.db.request()
-            .input('id', id)
-            .input('refreshToken', refreshToken)
-            .query(`
-                UPDATE users
-                SET refreshToken = @refreshToken
-                WHERE id = @id;
-            `);
-    }
+        logger.info('New refresh token: ' + refreshToken);
 
+        const sqlQuery = `
+        UPDATE users
+        SET refreshToken = @refreshToken
+        WHERE id = @id;
+    `;
+
+        console.log('Generated SQL Query:', sqlQuery);  // Log the query for debugging
+
+        try {
+            const request = this.db.request();
+            request.input('id', id);
+            request.input('refreshToken', refreshToken);
+
+            const result = await request.query(sqlQuery);
+
+            if (result.rowsAffected[0] > 0) {
+                logger.info('Refresh token updated successfully');
+            } else {
+                logger.warn('No rows were updated');
+            }
+        } catch (err) {
+            logger.error('Error updating refresh token', { error: err, className });
+            throw err;
+        }
+    }
     public async deleteRefreshToken(id: string): Promise<void> {
         logger.info('Deleting refresh token for id: ' + id, { className, id });
         await this.db.request()

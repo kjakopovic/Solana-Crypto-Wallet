@@ -10,7 +10,7 @@ const className = 'JwtService';
 export const generateAccessToken = (user: { id: string, username: string }) => {
     try {
         logger.info('Generating access token', {className}, { user });
-        const token = jwt.sign(user, accessTokenSecret, { expiresIn: '10m' });
+        const token = jwt.sign({ id: user.id, username: user.username }, accessTokenSecret, { expiresIn: '10m' });
         logger.info('Access token generated successfully', {className}, { token });
         return token;
     } catch (error) {
@@ -20,7 +20,7 @@ export const generateAccessToken = (user: { id: string, username: string }) => {
 };
 
 export const generateRefreshToken = (user: { id: string, username: string, publicKey: string }) => {
-    return jwt.sign(user, refreshTokenSecret, { expiresIn: '2h' });
+    return jwt.sign({ id: user.id, username: user.username, publicKey: user.publicKey }, refreshTokenSecret, { expiresIn: '2h' });
 };
 
 export const verifyAccessToken = (token: string) => {
