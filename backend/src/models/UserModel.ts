@@ -6,7 +6,7 @@ import logger from '../config/Logger';
 
 const className = 'UserModel';
 
-interface User{
+export interface User{
     id: string;
     username: string;
     password: string;

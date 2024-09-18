@@ -4,6 +4,7 @@ import logger from '../config/Logger';
 
 const className = 'JwtController';
 
+// Controller to refresh the access token
 export const refreshAccessTokenController = async (req: Request, res: Response): Promise<Response> => {
     logger.info('Refreshing access token', { className });
     const { refreshToken } = req.body;
@@ -14,11 +15,9 @@ export const refreshAccessTokenController = async (req: Request, res: Response):
     }
 
     try {
-        logger.info('Verifying refresh token', { className });
-        const decoded = await verifyRefreshToken(refreshToken) as { id: string; username: string };
+        const decoded = await verifyRefreshToken(refreshToken);
         logger.info(`Refresh token verified for user: ${decoded.id}, ${decoded.username}`, { className });
 
-        logger.info('Generating new access token', { className });
         const accessToken = generateAccessToken({ id: decoded.id, username: decoded.username });
         logger.info(`Access token generated successfully for user: ${decoded.id}, ${decoded.username}`, { className, accessToken });
 
@@ -29,6 +28,7 @@ export const refreshAccessTokenController = async (req: Request, res: Response):
     }
 };
 
+// Controller to create a refresh token
 export const createRefreshTokenController = async (req: Request, res: Response): Promise<Response> => {
     const { id, username, publicKey } = req.body;
     logger.info(`Creating refresh token for user id: ${id}`, { className });
@@ -48,6 +48,7 @@ export const createRefreshTokenController = async (req: Request, res: Response):
     }
 };
 
+// Controller to verify an access token
 export const verifyAccessTokenController = async (req: Request, res: Response): Promise<Response> => {
     const { accessToken } = req.body;
     logger.info(`Verifying access token: ${accessToken}`, { className });
@@ -67,6 +68,7 @@ export const verifyAccessTokenController = async (req: Request, res: Response): 
     }
 }
 
+// Controller to verify a refresh token
 export const verifyRefreshTokenController = async (req: Request, res: Response): Promise<Response> => {
     const { refreshToken } = req.body;
     logger.info(`Verifying refresh token: ${refreshToken}`, { className });
@@ -77,7 +79,7 @@ export const verifyRefreshTokenController = async (req: Request, res: Response):
     }
 
     try {
-        const decoded = verifyRefreshToken(refreshToken);
+        const decoded = await verifyRefreshToken(refreshToken);
         logger.info('Refresh token is valid', { className });
         return res.status(200).json({ valid: true, decoded });
     } catch (error) {
