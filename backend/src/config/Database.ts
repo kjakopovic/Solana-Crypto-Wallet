@@ -67,6 +67,17 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                 )
             END
         `);
+
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'images')
+            BEGIN
+                CREATE TABLE images (
+                    symbol NVARCHAR(50) PRIMARY KEY NOT NULL,
+                    url NVARCHAR(MAX) NOT NULL,
+                    png NVARCHAR(MAX) NOT NULL
+                )
+            END
+        `);
         logger.info('Database initialized successfully', { className });
     } catch (error) {
         logger.error({ message: 'Error initializing database', error, className });
