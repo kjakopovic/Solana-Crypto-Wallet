@@ -8,27 +8,26 @@ const className = 'ImageController';
 
 class ImageController {
 
-    async getImage(req: Request, res: Response) {
+    async getImages(req: Request, res: Response) {
         logger.info('Getting image by symbol', { className });
 
-        const symbol = req.body.symbol as string;
-        const url = req.body.url as string;
+        const images = req.body.images as { symbol: string, url: string }[];
 
-        logger.info('Symbol: ' + symbol, { className });
-        logger.info('URL: ' + url, { className });
+        logger.info('Images: ' + images, { className });
 
         try {
-            const image = await ImageService.getImage(symbol, url);
-            if (image && 'png' in image) {
-                const imageBuffer = Buffer.from(image.png, 'base64');
-                res.setHeader('Content-Type', 'image/png');
-                res.status(200).send(imageBuffer);
-            } else {
-                res.status(404).send('Image not found');
-            }
+            const results = await Promise.all(images.map(async (image) => {
+                const result = await ImageService.getImage(image.symbol, image.url);
+                if (result && 'png' in result) {
+                    return { symbol: image.symbol, png: result.png };
+                } else {
+                    return { symbol: image.symbol, png: null };
+                }
+            }));
 
+            res.status(200).json(results);
         } catch (error) {
-            logger.error('Error getting image by symbol: ' + error, { className });
+            logger.error('Error getting images by symbols: ' + error, { className });
             res.status(500).send(error);
         }
     }

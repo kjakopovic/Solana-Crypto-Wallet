@@ -36,16 +36,15 @@ class ImageService{
         const existingImage = await ImageModel.findImageBySymbol(symbol);
         if(existingImage){
             logger.info('Image already exists in the database', { className });
-            return Error('Image already exists in the database');
+            return existingImage;
         }
-
 
         try {
             const pngBuffer = await this.convertSvgToPng(url);
-            const pngBase64 = pngBuffer.toString('base64');
-            const image = await ImageModel.saveImage(symbol, url, pngBase64);
+            const png = pngBuffer.toString('base64');
+            const image = await ImageModel.saveImage(symbol, url, png);
             logger.info('Image saved to database successfully', { className });
-            return image;
+            return { symbol, png };
 
         } catch (error) {
             logger.error('Error saving image to database: ' + error, { className });

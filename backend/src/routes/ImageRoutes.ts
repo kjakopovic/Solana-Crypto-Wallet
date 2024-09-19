@@ -5,6 +5,6 @@ import ImageController from '../controllers/ImageController';
 
 const router = express.Router();
 
-router.get('/get', ImageController.getImage);
+router.post('/get', ImageController.getImages);
 
 export default router;
