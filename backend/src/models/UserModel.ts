@@ -124,6 +124,26 @@ export class UserModel {
 
     }
 
+    public async updateUserPoints(userId: string, points: number): Promise<void> {
+        logger.info('Updating user points for user: ' + userId, { className });
+        const sqlQuery = `
+            UPDATE users
+            SET dailyQuizPoints = ISNULL(dailyQuizPoints, 0) + @points
+            WHERE id = @userId;
+        `;
+
+        try{
+            await this.db.request()
+                .input('userId', userId)
+                .input('points', points)
+                .query(sqlQuery);
+            logger.info('User points updated successfully', { className });
+        }catch(err){
+            logger.error('Error updating user points: ' + err, { error: err, className });
+            throw err;
+        }
+
+    }
 }
 
 export default new UserModel();

@@ -17,7 +17,9 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                     username NVARCHAR(50) NOT NULL,
                     password NVARCHAR(255) NOT NULL,
                     publicKey NVARCHAR(255),
-                    refreshToken NVARCHAR(MAX)
+                    refreshToken NVARCHAR(MAX),
+                    dailyQuizCounter INT,
+                    dailyQuizPoints INT 
                 )
             END
         `);
@@ -53,19 +55,43 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
             BEGIN
                 CREATE TABLE dailyQuiz (
                     date DATE PRIMARY KEY NOT NULL,
-                    question1Id INT NOT NULL,
-                    question2Id INT NOT NULL,
-                    question3Id INT NOT NULL,
-                    question4Id INT NOT NULL,
-                    question5Id INT NOT NULL,
-                    question6Id INT NOT NULL,
-                    question7Id INT NOT NULL,
-                    question8Id INT NOT NULL,
-                    question9Id INT NOT NULL,
-                    question10Id INT NOT NULL
+                    question1Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question2Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question3Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question4Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question5Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question6Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question7Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question8Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question9Id INT FOREIGN KEY REFERENCES quizzes(id),
+                    question10Id INT FOREIGN KEY REFERENCES quizzes(id),
                 )
             END
         `);
+
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'monthlyPoints')
+            BEGIN
+                CREATE TABLE monthlyPoints (
+                    userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
+                    year INT NOT NULL,
+                    January INT,
+                    February INT,
+                    March INT,
+                    April INT,
+                    May INT,
+                    June INT,
+                    July INT,
+                    August INT,
+                    September INT,
+                    October INT,
+                    November INT,
+                    December INT
+                )
+            END
+        `);
+
+
 
         const result = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
         const count = result.recordset[0].count;
@@ -81,7 +107,6 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
         logger.error({ message: 'Error initializing database: '+ error, error, className });
     }
 };
-
 
 const populateQuizzesTable = async (pool: ConnectionPool) => {
     logger.info('Populating quizzes table', { className });

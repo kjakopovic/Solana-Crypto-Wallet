@@ -52,7 +52,7 @@ export class QuizModel {
             }
 
             logger.info('Daily quiz question found', { className });
-            const quiz = this.getQuizQuestionById(result.recordset[0][questionId]);
+            const quiz = this.fetchQuizQuestionById(result.recordset[0][questionId]);
             logger.info('Daily quiz question found, returning quiz', { className });
             return quiz;
         } catch (err) {
@@ -62,7 +62,7 @@ export class QuizModel {
 
     }
 
-    private async getQuizQuestionById(id: number): Promise<Quiz | null> {
+    private async fetchQuizQuestionById(id: number): Promise<Quiz | null> {
         logger.info('Getting quiz question by id', { className });
         const sqlQuery = `
             SELECT * FROM quizzes WHERE id = @id;
@@ -112,6 +112,51 @@ export class QuizModel {
         }
     }
 
+    async getQuizQuestionById(id: number): Promise<Quiz | null> {
+        logger.info('Getting quiz question by id', { className });
+        const sqlQuery = `
+            SELECT * FROM quizzes WHERE id = @id;
+        `;
+
+        try {
+            const result = await this.db.request()
+                .input('id', id)
+                .query(sqlQuery);
+
+            if (result.recordset.length === 0) {
+                return null;
+            }
+
+            logger.info('Quiz question found by id', { className });
+            return result.recordset[0];
+        } catch (err) {
+            logger.error('Error getting quiz question by id', { error: err, className });
+            throw err;
+        }
+    }
+
+    async getCorrectAnswer(questionId: number): Promise<string | null> {
+        logger.info('Getting correct answer for question', { className });
+        const sqlQuery = `
+            SELECT correctAnswer FROM quizzes WHERE id = @questionId;
+        `;
+
+        try {
+            const result = await this.db.request()
+                .input('questionId', questionId)
+                .query(sqlQuery);
+
+            if (result.recordset.length === 0) {
+                return null;
+            }
+
+            logger.info('Correct answer found', { className });
+            return result.recordset[0].correctAnswer;
+        } catch (err) {
+            logger.error('Error getting correct answer', { error: err, className });
+            throw err;
+        }
+    }
 }
 
 export default new QuizModel();
