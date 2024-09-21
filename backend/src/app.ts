@@ -8,8 +8,7 @@ import JwtRoutes from './routes/JwtRoutes';
 import ImageRoutes from './routes/ImageRoutes';
 import dotenv from 'dotenv';
 import './config/database/Database';
-import { checkForNewDay } from './utils/dailyTasks';
-
+import QuizRoutes from './routes/QuizRoutes';
 dotenv.config();
 
 const app = express();
@@ -20,6 +19,7 @@ app.use('/wallet', WalletRoutes);
 app.use('/user', UserRoutes);
 app.use('/jwt', JwtRoutes);
 app.use('/image', ImageRoutes);
+app.use('/quiz', QuizRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);
