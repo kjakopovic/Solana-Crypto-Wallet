@@ -26,8 +26,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     res.status(500).json({ error: 'Something went wrong!' });
 });
 
-checkForNewDay();
-
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
