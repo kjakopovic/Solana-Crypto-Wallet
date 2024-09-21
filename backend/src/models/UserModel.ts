@@ -1,7 +1,7 @@
 // src/models/UserModel.ts
 
 import { ConnectionPool } from 'mssql';
-import pool from '../config/Database';
+import pool from '../config/database/Database';
 import logger from '../config/Logger';
 
 const className = 'UserModel';

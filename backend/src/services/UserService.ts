@@ -23,8 +23,8 @@ class UserService{
         logger.info('Generating a random username', { className });
 
         try {
-            const attributesPath = path.join(__dirname, '../../words/attributes.txt');
-            const nounsPath = path.join(__dirname, '../../words/nouns.txt');
+            const attributesPath = path.join(__dirname, '../data/words/attributes.txt');
+            const nounsPath = path.join(__dirname, '../data/words/nouns.txt');
 
             if(!fs.existsSync(attributesPath) || !fs.existsSync(nounsPath)){
                 new Error('One or both word files were not found!');

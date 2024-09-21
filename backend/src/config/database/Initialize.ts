@@ -1,59 +1,12 @@
-// src/config/Database.ts
+// src/config/database/Initialize.ts
 
-import { ConnectionPool,  } from 'mssql';
-import dotenv from 'dotenv';
-import logger from './Logger';
+import { ConnectionPool } from 'mssql';
+import logger from '../Logger';
 import xlsx from 'xlsx';
 
-dotenv.config();
-const className = 'Database';
+const className = 'Initialize';
 
-const config = {
-    user: process.env.DB_USER || 'dbAdmin',
-    password: process.env.DB_PASSWORD || 'Password123!',
-    server: process.env.DB_SERVER || 'localhost',
-    port: parseInt(process.env.DB_PORT || '1433', 10),
-    database: process.env.DB_DATABASE || 'walletDB',
-    options: {
-        encrypt: false,
-        trustServerCertificate: true,
-    }
-};
-
-console.log('Database configuration:', config);
-
-const pool = new ConnectionPool(config);
-
-pool.on('error', err => {
-    console.error('SQL Error:', err);
-    logger.error('SQL Error:', { error: err, className });
-});
-
-pool.on('connect', () => {
-    console.log('Successfully connected to the database');
-    logger.info('Successfully connected to the database', { className });
-});
-
-pool.on('info', info => {
-    console.log('SQL Info:', info);
-    logger.info('SQL Info:', { info, className });
-});
-
-// Connect to the database and initialize it
-pool.connect()
-    .then(async () => {
-        console.log('Connected to SQL Server');
-        logger.info('Connected to SQL Server', { className });
-        await initializeDatabase(pool);
-    })
-    .catch(err => {
-        console.error('Database connection failed:', err);
-        console.error('Error details:', err.message);
-        console.error('Error stack:', err.stack);
-        logger.error({ message: 'Database connection failed', error: err, className });
-    });
-
-const initializeDatabase = async (pool: ConnectionPool) => {
+export const initializeDatabase = async (pool: ConnectionPool) => {
     logger.info('Initializing database', { className });
     try {
         await pool.request().query(`
@@ -95,24 +48,46 @@ const initializeDatabase = async (pool: ConnectionPool) => {
             END
         `);
 
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'dailyQuiz')
+            BEGIN
+                CREATE TABLE dailyQuiz (
+                    date DATE PRIMARY KEY NOT NULL,
+                    question1Id INT NOT NULL,
+                    question2Id INT NOT NULL,
+                    question3Id INT NOT NULL,
+                    question4Id INT NOT NULL,
+                    question5Id INT NOT NULL,
+                    question6Id INT NOT NULL,
+                    question7Id INT NOT NULL,
+                    question8Id INT NOT NULL,
+                    question9Id INT NOT NULL,
+                    question10Id INT NOT NULL
+                )
+            END
+        `);
+
         const result = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
         const count = result.recordset[0].count;
 
+        // This is currently hardcoded to 90 because the quiz Excel file has 90 questions
+        // If number of questions gets updated in the Excel file, this number should be updated
         if (count < 90){
             await populateQuizzesTable(pool);
         }
 
         logger.info('Database initialized successfully', { className });
     } catch (error) {
-        logger.error({ message: 'Error initializing database', error, className });
+        logger.error({ message: 'Error initializing database: '+ error, error, className });
     }
 };
+
 
 const populateQuizzesTable = async (pool: ConnectionPool) => {
     logger.info('Populating quizzes table', { className });
 
     try{
-        const workbook = xlsx.readFile('../backend/src/data/quizz.xlsx');
+        const workbook = xlsx.readFile('../backend/src/data/excel/quiz.xlsx');
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
 
@@ -141,4 +116,3 @@ const populateQuizzesTable = async (pool: ConnectionPool) => {
     }
 }
 
-export default pool;

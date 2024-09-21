@@ -7,7 +7,8 @@ import UserRoutes from './routes/UserRoutes';
 import JwtRoutes from './routes/JwtRoutes';
 import ImageRoutes from './routes/ImageRoutes';
 import dotenv from 'dotenv';
-import './config/Database';
+import './config/database/Database';
+import { checkForNewDay } from './utils/dailyTasks';
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
 });
+
+checkForNewDay();
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
