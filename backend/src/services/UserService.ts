@@ -117,6 +117,12 @@ class UserService{
 
         return UserModel.findUserByField(field, value);
     }
+
+    async updateUserPoints(userId: string, points: number){
+        logger.info('Updating user points for userId: ' + userId, { className, userId });
+
+        return UserModel.updateUserPoints(userId, points);
+    }
 }
 
 export default new UserService();

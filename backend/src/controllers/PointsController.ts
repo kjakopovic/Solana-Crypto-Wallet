@@ -29,6 +29,7 @@ class PointsController{
             try{
                 logger.info('Saving points from challenge', { className });
                 await PointsService.savePointsChallenge(user.id, points);
+                await UserService.updateUser(user.id, points);
                 return res.status(200).json({ message: 'Points saved successfully' });
             }catch(err){
                 logger.error('Error saving points: ' + err, { error: err, className });
@@ -38,6 +39,7 @@ class PointsController{
             try{
                 logger.info('Saving points from daily quiz', { className });
                 await PointsService.savePointsQuiz(user.id, points, req.body.questionId);
+                await UserService.updateUser(user.id, points);
                 return res.status(200).json({ message: 'Points saved successfully' });
             }catch(err){
                 logger.error('Error saving points: ' + err, { error: err, className });
