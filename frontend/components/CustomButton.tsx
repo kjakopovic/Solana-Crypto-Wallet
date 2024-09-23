@@ -21,7 +21,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({ title, handlePress, contain
             ${isLoading ? 'bg-secondary' : primary ? 'bg-primary' : 'bg-secondary'}`}
         disabled={isLoading}
     >
-        <Text className={`text-white font-psemibold text-lg ${textStyles}`}>
+        <Text className={`${isLoading ? 'text-stone-400' : 'text-white'} font-psemibold text-lg ${textStyles}`}>
             {title}
         </Text>
     </TouchableOpacity>

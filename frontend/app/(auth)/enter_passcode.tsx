@@ -21,7 +21,7 @@ const EnterPasscode = () => {
         if (passcodes.confirmPasscode.length === 6) {
             if (passcodes.newPasscode === passcodes.confirmPasscode) {
                 //TODO: zovi backend za spremanje, odnosno tu je user registered i 
-                //saljem mu sve podatke (takodjer posalji i onaj random words generated)
+                //saljem mu public key i passcode
                 router.dismissAll()
                 router.replace('/(tabs)/wallet' as Href)
             }

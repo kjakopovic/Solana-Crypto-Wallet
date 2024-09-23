@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native'
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, Href } from "expo-router";
@@ -11,7 +11,10 @@ import CustomButton from '@/components/CustomButton'
 import ExplanationPage from '@/components/ExplanationPage';
 import SegmentBar from '@/components/SegmentBar'
 import TopLeftExitButton from '@/components/TopLeftExitButton';
-import FormField from '@/components/FormField';
+import Loader from '@/components/Loader';
+
+import { generateWallet } from '@/context/WalletFunctions'
+import { saveItem } from '@/context/SecureStorage';
 
 const RecoveryPhraseGeneration = () => {
     const swiperRef = useRef<Swiper>(null);
@@ -19,8 +22,19 @@ const RecoveryPhraseGeneration = () => {
     const numberOfSegments = 3
 
     const [isRecoveryPhraseVisible, setIsRecoveryPhraseVisible] = useState(false)
-    //TODO: change to '' when implementing backend
-    const [recoveryPhrase, setRecoveryPhrase] = useState('Default so I can continue')
+    const [recoveryPhrase, setRecoveryPhrase] = useState('')
+    const [isRecoveryPhraseLoading, setIsRecoveryPhraseLoading] = useState(true)
+
+    useEffect(() => {
+        const mnemonic = generateWallet()
+        setRecoveryPhrase(mnemonic)
+        saveItem('isUserFound', 'true');
+        setIsRecoveryPhraseLoading(false)
+    }, []);
+
+    if (isRecoveryPhraseLoading) {
+        return <Loader isLoading={true} />;
+    }
 
     return (
         <SafeAreaView className='bg-background h-full'>
@@ -79,12 +93,24 @@ const RecoveryPhraseGeneration = () => {
                             </View>
 
                             <View className='w-full justify-center items-center'>
-                                <FormField 
-                                    value={recoveryPhrase}
-                                    handleChangeText={(x) => setRecoveryPhrase(x)}
-                                    isTextVisible={isRecoveryPhraseVisible}
-                                    isReadOnly={true}
-                                />
+                                <View 
+                                    className='w-[90%] space-y-2 flex-row flex-wrap h-[220px] 
+                                            border-2 border-secondary rounded-2xl items-center'
+                                >
+                                    {isRecoveryPhraseVisible ? recoveryPhrase.split(' ').map((word, index) => (
+                                        <View 
+                                            key={index}
+                                            className='w-1/3 text-center justify-center items-center mt-2'
+                                        >
+                                            <Text className='text-secondaryHighlight font-psemibold text-[14px]'>
+                                                <Text className='text-primary'>
+                                                    {`${index + 1}. `}
+                                                </Text>
+                                                {word}
+                                            </Text>
+                                        </View>
+                                    )) : <></>}
+                                </View>
 
                                 <TouchableOpacity 
                                     onPress={() => setIsRecoveryPhraseVisible(!isRecoveryPhraseVisible)} 

@@ -1,14 +1,23 @@
 import { View, Text, Image, Animated, Dimensions } from 'react-native'
 import React, { useState, useRef, useEffect } from 'react'
+
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { router, Href } from "expo-router";
+import { router, Href, Redirect } from "expo-router";
+
 import SegmentBar from '@/components/SegmentBar'
 import { ScrollView } from 'react-native-gesture-handler'
 import Swiper from "react-native-swiper";
 import { images, icons } from '@/constants'
 import CustomButton from '@/components/CustomButton'
+import Loader from '@/components/Loader'
+import { useGlobalContext } from "../context/GlobalProvider";
 
 const Index = () => {
+    const { loading, isLogged, isFirstTime } = useGlobalContext();
+
+    if (!loading && isLogged) return <Redirect href="/(tabs)/wallet"/>;
+    if (!loading && !isFirstTime && !isLogged) return <Redirect href="/(auth)/login_with_passcode"/>;
+
     const swiperRef = useRef<Swiper>(null);
     const [currentSegment, setCurrentSegment] = useState(0);
     const numberOfSegments = 3
@@ -37,6 +46,8 @@ const Index = () => {
 
     return (
         <SafeAreaView className='bg-background h-full'>
+            <Loader isLoading={loading} />
+
             <ScrollView>
                 <View className='h-full'>
                     <SegmentBar 
@@ -76,9 +87,9 @@ const Index = () => {
                                 }}
                             >
                                 <Image
-                                source={icons.swipeLeft}
-                                className="w-[200px] h-[75px]"
-                                resizeMode="contain"
+                                    source={icons.swipeLeft}
+                                    className="w-[200px] h-[75px]"
+                                    resizeMode="contain"
                                 />
                             </Animated.View>
                         </View>

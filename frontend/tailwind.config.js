@@ -6,8 +6,8 @@ module.exports = {
       colors: {
         primary: "#BBA880",
         background: "#02020D",
-        secondary: "#444446",
-        secondaryUtils: "#101016",
+        secondary: "#6a6a6b",
+        secondaryUtils: "#191A21",
         secondaryHighlight: "#D6D6D6",
       },
       fontFamily: {
