@@ -5,9 +5,10 @@ import { Request, Response, NextFunction } from 'express';
 import WalletRoutes from './routes/WalletRoutes';
 import UserRoutes from './routes/UserRoutes';
 import JwtRoutes from './routes/JwtRoutes';
+import QuizRoutes from './routes/QuizRoutes';
+import PointsRoutes from './routes/PointsRoutes';
 import dotenv from 'dotenv';
 import './config/database/Database';
-import QuizRoutes from './routes/QuizRoutes';
 dotenv.config();
 
 const app = express();
@@ -18,6 +19,7 @@ app.use('/wallet', WalletRoutes);
 app.use('/user', UserRoutes);
 app.use('/jwt', JwtRoutes);
 app.use('/quiz', QuizRoutes);
+app.use('/points', PointsRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);

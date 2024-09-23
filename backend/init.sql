@@ -117,7 +117,7 @@ BEGIN
     CREATE TABLE points (
         id INT PRIMARY KEY IDENTITY(1,1),
         userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
-        date DATE NOT NULL,
+        timestamp DATETIME DEFAULT GETDATE(),
         points INT NOT NULL,
         fromChallenge BIT NOT NULL,
         fromDailyQuiz BIT NOT NULL,
