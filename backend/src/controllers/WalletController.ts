@@ -8,7 +8,7 @@ import logger from '../config/Logger';
 const className = 'WalletController';
 
 // Create a new wallet
-export const createWalletController = (req: Request, res: Response): Response => {
+export const createWalletController = (res: Response): Response => {
     logger.info('Creating a new wallet', { className });
 
     try{

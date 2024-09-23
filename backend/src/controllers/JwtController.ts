@@ -16,6 +16,11 @@ export const refreshAccessTokenController = async (req: Request, res: Response):
 
     try {
         const decoded = await verifyRefreshToken(refreshToken);
+        if(!decoded){
+            logger.error('Refresh token not found in the database', { className });
+            return res.status(403).json({ message: 'Invalid refresh token' });
+        }
+
         logger.info(`Refresh token verified for user: ${decoded.id}, ${decoded.username}`, { className });
 
         const accessToken = generateAccessToken({ id: decoded.id, username: decoded.username });

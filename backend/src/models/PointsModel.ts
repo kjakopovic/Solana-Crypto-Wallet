@@ -6,11 +6,6 @@ import logger from '../config/Logger';
 
 const className = 'PointsModel';
 
-export interface Points{
-    id: number;
-    points: number;
-}
-
 class PointsModel {
     private db: ConnectionPool;
 

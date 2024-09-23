@@ -36,7 +36,7 @@ class QuizService {
 
             if (!quiz) {
                 logger.error('Quiz question not found', { className });
-                throw new Error('Quiz question not found');
+                return null;
             }
 
             let points = 0;

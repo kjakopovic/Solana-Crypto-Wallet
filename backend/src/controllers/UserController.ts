@@ -113,6 +113,25 @@ class UserController{
         }
     }
 
+    async getUserInformation(req: Request, res: Response){
+        const publicKey = req.body.publicKey;
+        logger.info('Getting user information for publicKey: ' + publicKey, { className });
+
+        if(!publicKey){
+            logger.error('Public key is required', { className });
+            return res.status(400).json({ message: 'Public key is required' });
+        }
+
+        const result = await UserService.getUserInfo(publicKey);
+        if(!result){
+            logger.error('User not found', { className });
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        logger.info('User information found', { className });
+        return res.status(200).json(result);
+    }
+
 }
 
 export default new UserController();

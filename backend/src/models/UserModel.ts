@@ -11,7 +11,9 @@ export interface User{
     username: string;
     password: string;
     publicKey: string;
+    joinedAt: Date;
     refreshToken: string;
+    points?: number;
 }
 
 class UserModel {
@@ -74,7 +76,8 @@ class UserModel {
         }
     }
 
-    async findUserByField(field: string, value: string): Promise<User | null>{
+    // Fetch a user by a specific field
+    async findUserByField(field: string, value: string): Promise<User | null> {
         logger.info(`Fetching user by ${field}`, { className });
         const sqlQuery = `SELECT * FROM users WHERE ${field} = @${field}`;
 
@@ -91,6 +94,7 @@ class UserModel {
                     username: user.username,
                     password: user.password,
                     publicKey: user.publicKey,
+                    joinedAt: user.joinedAt,
                     refreshToken: user.refreshToken,
                 };
             } else {
@@ -104,6 +108,7 @@ class UserModel {
         }
     }
 
+    // Delete users refresh token
     async deleteRefreshToken(publicKey: string): Promise<void>{
         logger.info('Deleting refresh token for publicKey: ' + publicKey, { className, publicKey });
         const sqlQuery = `
@@ -124,7 +129,8 @@ class UserModel {
 
     }
 
-    public async updateUserPoints(userId: string, points: number): Promise<void> {
+    // Update users points
+    async updateUserPoints(userId: string, points: number): Promise<void> {
         logger.info('Updating user points for user: ' + userId, { className });
         const sqlQuery = `
             UPDATE users
@@ -143,6 +149,18 @@ class UserModel {
             throw err;
         }
 
+    }
+
+    async getUserInfo(publicKey: string): Promise<User | null>{
+        logger.info('Getting user info for publicKey: ' + publicKey, { className });
+        const user = await this.findUserByField('publicKey', publicKey);
+        if(user){
+            logger.info('User info found, returning user info', { className });
+            return user;
+        }else{
+            logger.info('User info not found', { className });
+            return null;
+        }
     }
 }
 

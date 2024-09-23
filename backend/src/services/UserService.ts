@@ -123,6 +123,22 @@ class UserService{
 
         return UserModel.updateUserPoints(userId, points);
     }
+
+    async getUserInfo(publicKey: string){
+        logger.info('Getting user info for publicKey: ' + publicKey, { className, publicKey });
+        const user = await UserModel.findUserByField('publicKey', publicKey);
+
+        if(user){
+            return {
+                id: user.id,
+                username: user.username,
+                publicKey: user.publicKey,
+                joinedAt: user.joinedAt,
+                points: user.points,
+            };
+        }
+        return null;
+    }
 }
 
 export default new UserService();

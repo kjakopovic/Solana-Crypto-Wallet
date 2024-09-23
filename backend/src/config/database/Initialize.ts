@@ -17,6 +17,7 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                     username NVARCHAR(50) NOT NULL,
                     password NVARCHAR(255) NOT NULL,
                     publicKey NVARCHAR(255),
+                    joinedAt DATETIME DEFAULT GETDATE(),
                     refreshToken NVARCHAR(MAX),
                     points BIGINT,
                 )

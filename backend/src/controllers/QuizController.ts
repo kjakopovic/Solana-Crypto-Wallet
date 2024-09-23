@@ -9,7 +9,7 @@ const className = 'QuizController';
 
 class QuizController {
 
-    async getDailyQuiz(req: Request, res: Response): Promise<Response> {
+    async getDailyQuiz(res: Response): Promise<Response> {
         logger.info('Getting daily quiz', { className });
 
         try {
@@ -33,6 +33,11 @@ class QuizController {
         try{
             const userId = user.id;
             const result = await QuizService.submitQuizAnswer(userId, req.body.questionId, req.body.answer);
+            if(!result){
+                logger.error('Quiz question not found', {className});
+                return res.status(404).json({message: 'Quiz question not found'});
+            }
+
             return res.status(200).json(result);
         }catch(error){
             logger.error('Error submitting quiz answer: ' + error, {error, className});

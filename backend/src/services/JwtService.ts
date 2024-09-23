@@ -53,7 +53,7 @@ export const verifyAccessToken = (token: string): JwtPayload | string => {
 };
 
 // Verify Refresh Token
-export const verifyRefreshToken = async (token: string): Promise<UserPayload> => {
+export const verifyRefreshToken = async (token: string): Promise<UserPayload | null> => {
     logger.info('Verifying refresh token: ' + token, { className });
 
     try {
@@ -61,7 +61,8 @@ export const verifyRefreshToken = async (token: string): Promise<UserPayload> =>
         const user = await UserModel.findUserByField("refreshToken", token);
 
         if (!user) {
-            throw new Error('Refresh token not found in the database');
+            logger.error('Refresh token not found in the database', { className });
+            return null;
         }
 
         return decoded;
