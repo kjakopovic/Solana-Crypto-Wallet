@@ -18,19 +18,7 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                     password NVARCHAR(255) NOT NULL,
                     publicKey NVARCHAR(255),
                     refreshToken NVARCHAR(MAX),
-                    dailyQuizCounter INT,
-                    dailyQuizPoints INT 
-                )
-            END
-        `);
-
-        await pool.request().query(`
-            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'images')
-            BEGIN
-                CREATE TABLE images (
-                    symbol NVARCHAR(50) PRIMARY KEY NOT NULL,
-                    url NVARCHAR(MAX) NOT NULL,
-                    png NVARCHAR(MAX) NOT NULL
+                    points BIGINT,
                 )
             END
         `);
@@ -65,6 +53,21 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                     question8Id INT FOREIGN KEY REFERENCES quizzes(id),
                     question9Id INT FOREIGN KEY REFERENCES quizzes(id),
                     question10Id INT FOREIGN KEY REFERENCES quizzes(id),
+                )
+            END
+        `);
+
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'points')
+            BEGIN
+                CREATE TABLE points (
+                    id INT PRIMARY KEY IDENTITY(1,1),
+                    userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
+                    date DATE NOT NULL,
+                    points INT NOT NULL,
+                    fromChallenge BIT NOT NULL,
+                    fromDailyQuiz BIT NOT NULL,
+                    questionId INT FOREIGN KEY REFERENCES quizzes(id),
                 )
             END
         `);

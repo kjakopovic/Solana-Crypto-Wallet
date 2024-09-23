@@ -3,7 +3,6 @@
 import { Request, Response } from 'express';
 import QuizService from '../services/QuizService';
 import logger from '../config/Logger';
-import QuizModel from '../models/QuizModel';
 import UserModel from "../models/UserModel";
 
 const className = 'QuizController';

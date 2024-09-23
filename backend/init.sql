@@ -61,6 +61,71 @@ BEGIN
 END;
 GO
 
+PRINT 'Making sure that tables exist';
+
+-- Create users table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'users')
+BEGIN
+    CREATE TABLE users (
+        id NVARCHAR(255) PRIMARY KEY,
+        username NVARCHAR(50) NOT NULL,
+        password NVARCHAR(255) NOT NULL,
+        publicKey NVARCHAR(255),
+        refreshToken NVARCHAR(MAX),
+        points BIGINT
+    );
+END;
+GO
+
+-- Create quizzes table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'quizzes')
+BEGIN
+    CREATE TABLE quizzes (
+        id INT PRIMARY KEY NOT NULL,
+        question NVARCHAR(MAX) NOT NULL,
+        difficulty NVARCHAR(50) NOT NULL,
+        correctAnswer NVARCHAR(MAX) NOT NULL,
+        option2 NVARCHAR(MAX) NOT NULL,
+        option3 NVARCHAR(MAX) NOT NULL,
+        option4 NVARCHAR(MAX) NOT NULL
+    );
+END;
+GO
+
+-- Create dailyQuiz table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'dailyQuiz')
+BEGIN
+    CREATE TABLE dailyQuiz (
+        date DATE PRIMARY KEY NOT NULL,
+        question1Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question2Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question3Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question4Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question5Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question6Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question7Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question8Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question9Id INT FOREIGN KEY REFERENCES quizzes(id),
+        question10Id INT FOREIGN KEY REFERENCES quizzes(id)
+    );
+END;
+GO
+
+-- Create points table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'points')
+BEGIN
+    CREATE TABLE points (
+        id INT PRIMARY KEY IDENTITY(1,1),
+        userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
+        date DATE NOT NULL,
+        points INT NOT NULL,
+        fromChallenge BIT NOT NULL,
+        fromDailyQuiz BIT NOT NULL,
+        questionId INT FOREIGN KEY REFERENCES quizzes(id)
+    );
+END;
+GO
+
 PRINT 'Initialization complete';
 GO
 

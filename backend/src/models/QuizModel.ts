@@ -98,6 +98,7 @@ export class QuizModel {
                 id: quiz.id,
                 question: quiz.question,
                 difficulty: quiz.difficulty,
+                correctAnswer: quiz.correctAnswer,
                 A: answers[0].text,
                 B: answers[1].text,
                 C: answers[2].text,
