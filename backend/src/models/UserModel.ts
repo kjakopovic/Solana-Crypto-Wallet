@@ -74,7 +74,6 @@ class UserModel {
         }
     }
 
-    // TODO: Implement this in UserService
     async findUserByField(field: string, value: string): Promise<User | null>{
         logger.info(`Fetching user by ${field}`, { className });
         const sqlQuery = `SELECT * FROM users WHERE ${field} = @${field}`;

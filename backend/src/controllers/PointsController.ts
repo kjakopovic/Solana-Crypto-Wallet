@@ -3,7 +3,7 @@
 import { Request, Response } from 'express';
 import PointsService from '../services/PointsService';
 import logger from '../config/Logger';
-import UserModel from '../models/UserModel';
+import UserService from "../services/UserService";
 
 const className = 'PointsController';
 
@@ -19,7 +19,7 @@ class PointsController{
             return res.status(400).json({ message: 'Invalid request' });
         }
 
-        const user = await UserModel.findUserByField('publicKey', publicKey);
+        const user = await UserService.findUserByField('publicKey', publicKey);
         if(!user){
             logger.error('User not found', { className });
             return res.status(404).json({ message: 'User not found' });

@@ -111,6 +111,12 @@ class UserService{
         }
         return user ? bcrypt.compare(password, user.password) : false;
     }
+
+    async findUserByField(field: string, value: string): Promise<any> {
+        logger.info('Finding user by field: ' + field, { className, field, value });
+
+        return UserModel.findUserByField(field, value);
+    }
 }
 
 export default new UserService();

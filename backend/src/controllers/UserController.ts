@@ -1,7 +1,6 @@
 // src/controllers/UserController.ts
 
 import { Request, Response } from 'express';
-import UserModel from '../models/UserModel';
 import { generateAccessToken, generateRefreshToken } from '../services/JwtService';
 import logger from '../config/Logger';
 import UserService from "../services/UserService";
@@ -77,7 +76,7 @@ class UserController{
                 return res.status(401).json({ message: 'Invalid password' });
             }
 
-            const user = await UserModel.findUserByField('publicKey', publicKey);
+            const user = await UserService.findUserByField('publicKey', publicKey);
             if(!user){
                 logger.error('User not found', { className });
                 return res.status(404).json({ message: 'User not found' });
@@ -90,7 +89,7 @@ class UserController{
 
                 logger.info('Updating refresh token', { className, userId: user.id });
                 //await UserModel.deleteRefreshToken(user.id);
-                await UserModel.updateUser(publicKey, { refreshToken });
+                await UserService.updateUser(publicKey, { refreshToken });
                 logger.info('Refresh token updated successfully', { className, userId: user.id });
 
                 logger.info('Generating access token', { className });

@@ -1,9 +1,9 @@
 // src/controllers/UserController.ts
 
 import { Request, Response } from 'express';
+import UserService from "../services/UserService";
 import QuizService from '../services/QuizService';
 import logger from '../config/Logger';
-import UserModel from "../models/UserModel";
 
 const className = 'QuizController';
 
@@ -24,7 +24,7 @@ class QuizController {
 
     async submitQuizAnswer(req: Request, res: Response): Promise<Response> {
         logger.info('Submitting quiz answer', {className});
-        const user = await UserModel.findUserByField('publicKey', req.body.publicKey);
+        const user = await UserService.findUserByField('publicKey', req.body.publicKey);
 
         if(!user){
             logger.error('User not found', {className});
