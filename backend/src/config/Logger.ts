@@ -9,7 +9,8 @@ const customFormat = format.printf(({ timestamp, level, message, className }) =>
 const logger = createLogger({
     level: 'debug',
     format: format.combine(
-        format.timestamp(),
+        format.colorize(),
+        format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         format((info) => {
             info.className = info.className || 'UnknownClass';
             return info;
@@ -17,8 +18,9 @@ const logger = createLogger({
         customFormat
     ),
     transports: [
-        new transports.Console(),
-        new transports.File({ filename: 'combined.log' })
+        new transports.Console({ level: 'info' }),
+        new transports.File({ filename: 'logs/error.log', level: 'error' }),
+        new transports.File({ filename: 'logs/combined.log', level: 'info' }),
     ],
 });
 

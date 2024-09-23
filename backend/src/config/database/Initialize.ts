@@ -69,30 +69,6 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
             END
         `);
 
-        await pool.request().query(`
-            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'monthlyPoints')
-            BEGIN
-                CREATE TABLE monthlyPoints (
-                    userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
-                    year INT NOT NULL,
-                    January INT,
-                    February INT,
-                    March INT,
-                    April INT,
-                    May INT,
-                    June INT,
-                    July INT,
-                    August INT,
-                    September INT,
-                    October INT,
-                    November INT,
-                    December INT
-                )
-            END
-        `);
-
-
-
         const result = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
         const count = result.recordset[0].count;
 

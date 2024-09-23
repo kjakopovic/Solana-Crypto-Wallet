@@ -5,7 +5,6 @@ import { Request, Response, NextFunction } from 'express';
 import WalletRoutes from './routes/WalletRoutes';
 import UserRoutes from './routes/UserRoutes';
 import JwtRoutes from './routes/JwtRoutes';
-import ImageRoutes from './routes/ImageRoutes';
 import dotenv from 'dotenv';
 import './config/database/Database';
 import QuizRoutes from './routes/QuizRoutes';
@@ -18,7 +17,6 @@ app.use(express.json());
 app.use('/wallet', WalletRoutes);
 app.use('/user', UserRoutes);
 app.use('/jwt', JwtRoutes);
-app.use('/image', ImageRoutes);
 app.use('/quiz', QuizRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
