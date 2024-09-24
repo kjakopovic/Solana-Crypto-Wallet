@@ -10,6 +10,7 @@ const router = Router();
  * /jwt/refresh-access:
  *   post:
  *     summary: Refresh access token
+ *     description: Generate access token by providing the refresh token
  *     requestBody:
  *       required: true
  *       content:
@@ -36,6 +37,7 @@ router.post('/refresh-access', JwtController.refreshAccessTokenController);
  * /jwt/create-refresh:
  *   post:
  *     summary: Create refresh token
+ *     description: Generate refresh token by providing the public key and username
  *     requestBody:
  *       required: true
  *       content:
@@ -62,6 +64,7 @@ router.post('/create-refresh', JwtController.createRefreshTokenController);
  * /jwt/verify-access:
  *   post:
  *     summary: Verify access token
+ *     description: Verify access token by providing the access token
  *     requestBody:
  *       required: true
  *       content:
@@ -88,6 +91,7 @@ router.post('/verify-access', JwtController.verifyAccessTokenController);
  * /jwt/verify-refresh:
  *   post:
  *     summary: Verify refresh token
+ *     description: Verify refresh token by providing the refresh token
  *     requestBody:
  *       required: true
  *       content:

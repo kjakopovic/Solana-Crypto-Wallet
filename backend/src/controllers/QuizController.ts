@@ -9,8 +9,8 @@ const className = 'QuizController';
 class QuizController {
 
     async getRandomQuiz(req: Request, res: Response): Promise<Response> {
-        logger.info('Getting daily quiz', { className });
-        let { difficulty } = req.body.difficulty;
+        logger.info('Getting daily quiz for difficulty: ' + req.body.difficulty, { className });
+        let difficulty = req.body.difficulty;
 
         if (!difficulty) {
             logger.error('No difficulty provided', { className });
@@ -18,6 +18,7 @@ class QuizController {
         }
 
         difficulty = difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase();
+        logger.info('Difficulty: ' + difficulty, { className });
 
         if (difficulty !== 'Easy' && difficulty !== 'Medium' && difficulty !== 'Hard') {
             logger.error('Invalid difficulty provided', { className });

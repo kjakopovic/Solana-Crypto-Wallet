@@ -25,7 +25,7 @@ class PointsController{
             return res.status(404).json({ message: 'User not found' });
         }
 
-        if(req.body.fromChallenge){
+        if(req.body.fromChallenge && !req.body.fromDailyQuiz && !req.body.questionId){
             try{
                 logger.info('Saving points from challenge', { className });
                 await PointsService.savePointsChallenge(user.id, points);
@@ -35,7 +35,7 @@ class PointsController{
                 logger.error('Error saving points: ' + err, { error: err, className });
                 return res.status(500).json({ message: 'Error saving points: ' + err });
             }
-        }else if(req.body.fromDailyQuiz){
+        }else if(!req.body.fromChallenge && req.body.fromDailyQuiz && req.body.questionId){
             try{
                 logger.info('Saving points from daily quiz', { className });
                 await PointsService.savePointsQuiz(user.id, points, req.body.questionId);
@@ -50,7 +50,6 @@ class PointsController{
             logger.error('Invalid request', { className });
             return res.status(400).json({ message: 'Invalid request' });
         }
-
     }
 }
 

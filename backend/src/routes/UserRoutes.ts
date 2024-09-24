@@ -10,6 +10,7 @@ const router = Router();
  * /user/register:
  *   post:
  *     summary: Register a new user
+ *     description: Register a new user by providing the public key and password
  *     requestBody:
  *       required: true
  *       content:
@@ -17,10 +18,12 @@ const router = Router();
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               publicKey:
  *                 type: string
+ *                 required: true
  *               password:
  *                 type: string
+ *                 required: true
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -47,6 +50,7 @@ router.post('/register', UserController.createUser);
  * /user/update:
  *   put:
  *     summary: Update user information
+ *     description: Update user's information by providing the public key and the new information
  *     parameters:
  *       - in: path
  *         name: publicKey
@@ -62,8 +66,10 @@ router.post('/register', UserController.createUser);
  *             properties:
  *               username:
  *                 type: string
+ *                 required: false
  *               newPassword:
  *                 type: string
+ *                 required: false
  *     responses:
  *       200:
  *          description: User updated successfully
@@ -80,6 +86,7 @@ router.put('/update', UserController.updateUser);
  * /user/login:
  *   post:
  *     summary: Login a user
+ *     description: Login a user by providing the public key and password
  *     requestBody:
  *       required: true
  *       content:
@@ -110,6 +117,7 @@ router.post('/login', UserController.loginUser);
  * /user/logout:
  *   post:
  *     summary: Logout a user
+ *     description: Logout a user by providing the public key
  *     requestBody:
  *       required: true
  *       content:
@@ -134,6 +142,13 @@ router.post('/logout', UserController.logoutUser);
  * /user/info:
  *   get:
  *     summary: Get user information
+ *     description: Get user information by providing the public key in the path
+ *     parameters:
+ *          - in: path
+ *          name: publicKey
+ *          required: true
+ *          schema:
+ *          type: string
  *     responses:
  *       200:
  *          description: User information retrieved successfully

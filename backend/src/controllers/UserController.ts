@@ -42,6 +42,10 @@ class UserController{
             logger.error('Public key is required', { className });
             return res.status(400).json({ message: 'Public key is required' });
         }
+        if(req.body.id || req.body.joinedAt || req.body.refreshToken || req.body.accessToken || req.body.points){
+            logger.error('Invalid input, user not allowed to update given values!', { className });
+            return res.status(400).json({ message: 'Invalid input, user not allowed to update given values!' });
+        }
 
         try {
             await UserService.updateUser(publicKey, updates);
@@ -128,7 +132,7 @@ class UserController{
     }
 
     async getUserInformation(req: Request, res: Response){
-        const publicKey = req.body.publicKey;
+        const publicKey = req.params.publicKey;
 
         if(!publicKey){
             logger.error('Public key is required', { className });

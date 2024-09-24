@@ -5,11 +5,13 @@ import QuizController from '../controllers/QuizController';
 
 const router = Router();
 
+// TODO: If set as GET, Swagger UI will not work
 /**
  * @swagger
- * /quiz/random:
+ * /quiz/get:
  *   post:
  *     summary: Get a random quiz question
+ *     description: Get a random quiz question based on the difficulty level provided.
  *     requestBody:
  *       required: true
  *       content:
@@ -30,6 +32,6 @@ const router = Router();
  *       500:
  *          description: Error getting random quiz
  */
-router.get('/get', QuizController.getRandomQuiz);
+router.post('/get', QuizController.getRandomQuiz);
 
 export default router;
