@@ -85,7 +85,7 @@ class UserService{
             throw new Error('Invalid refresh token');
         }
 
-        const accessToken = generateAccessToken({ id, username });
+        const accessToken = generateAccessToken({ id, username, publicKey });
 
         return { id, username, publicKey, refreshToken, accessToken };
     }

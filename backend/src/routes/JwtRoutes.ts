@@ -1,12 +1,7 @@
 // src/routes/JwtRoutes.ts
 
 import { Router } from 'express';
-import {
-    refreshAccessTokenController,
-    createRefreshTokenController,
-    verifyAccessTokenController,
-    verifyRefreshTokenController
-} from '../controllers/JwtController';
+import JwtController from '../controllers/JwtController';
 
 const router = Router();
 
@@ -34,7 +29,7 @@ const router = Router();
  *       500:
  *         description: Error refreshing access token
  */
-router.post('/refresh-access', refreshAccessTokenController);
+router.post('/refresh-access', JwtController.refreshAccessTokenController);
 
 /**
  * @swagger
@@ -48,8 +43,10 @@ router.post('/refresh-access', refreshAccessTokenController);
  *           schema:
  *             type: object
  *             properties:
- *               userId:
+ *               publicKey:
  *                 type: string
+ *               username:
+ *                  type: string
  *     responses:
  *       200:
  *         description: Refresh token created successfully
@@ -58,7 +55,7 @@ router.post('/refresh-access', refreshAccessTokenController);
  *       500:
  *         description: Error creating refresh token
  */
-router.post('/create-refresh', createRefreshTokenController);
+router.post('/create-refresh', JwtController.createRefreshTokenController);
 
 /**
  * @swagger
@@ -84,7 +81,7 @@ router.post('/create-refresh', createRefreshTokenController);
  *       500:
  *         description: Error verifying access token
  */
-router.post('/verify-access', verifyAccessTokenController);
+router.post('/verify-access', JwtController.verifyAccessTokenController);
 
 /**
  * @swagger
@@ -110,6 +107,6 @@ router.post('/verify-access', verifyAccessTokenController);
  *       500:
  *         description: Error verifying refresh token
  */
-router.post('/verify-refresh', verifyRefreshTokenController);
+router.post('/verify-refresh', JwtController.verifyRefreshTokenController);
 
 export default router;

@@ -12,7 +12,7 @@ const className = 'JwtService';
 interface UserPayload {
     id: string;
     username: string;
-    publicKey?: string;
+    publicKey: string;
 }
 
 // Generate Access Token

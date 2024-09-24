@@ -107,7 +107,7 @@ class UserController{
                 logger.info('Refresh token updated successfully', { className, userId: user.id });
 
                 logger.info('Generating access token', { className });
-                const accessToken = generateAccessToken({ id: user.id, username: user.username });
+                const accessToken = generateAccessToken({ id: user.id, username: user.username, publicKey: user.publicKey });
                 logger.info('User logged in successfully', { className });
 
                 return res.status(200).json({
