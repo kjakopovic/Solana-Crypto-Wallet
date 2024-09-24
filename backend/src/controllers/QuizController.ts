@@ -10,12 +10,15 @@ class QuizController {
 
     async getRandomQuiz(req: Request, res: Response): Promise<Response> {
         logger.info('Getting daily quiz', { className });
-        const difficulty = req.body.difficulty;
+        let { difficulty } = req.body.difficulty;
 
         if (!difficulty) {
             logger.error('No difficulty provided', { className });
             return res.status(400).json({ message: 'No difficulty provided' });
         }
+
+        difficulty = difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase();
+
         if (difficulty !== 'Easy' && difficulty !== 'Medium' && difficulty !== 'Hard') {
             logger.error('Invalid difficulty provided', { className });
             return res.status(400).json({ message: 'Invalid difficulty provided' });
