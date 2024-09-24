@@ -5,23 +5,12 @@ import pool from '../config/database/Database';
 import logger from '../config/Logger';
 
 const className = 'QuizModel';
-const dailyQuizQuestions: string[] = [
-    "question1Id",
-    "question2Id",
-    "question3Id",
-    "question4Id",
-    "question5Id",
-    "question6Id",
-    "question7Id",
-    "question8Id",
-    "question9Id",
-    "question10Id"
-];
 
 export interface Quiz{
     id: number;
     question: string;
     difficulty: string;
+    correctAnswer: string;
     A: string;
     B: string;
     C: string;
@@ -35,50 +24,46 @@ export class QuizModel {
         this.db = pool;
     }
 
-    public async getDailyQuizQuestionId(question: number){
-        logger.info('Getting daily quiz', { className });
-        const questionId = dailyQuizQuestions[question - 1];
-
+    async fetchQuizByDifficulty(difficulty: string): Promise<Quiz | null> {
+        logger.info('Getting quiz question by difficulty: ' + difficulty, { className });
         const sqlQuery = `
-            SELECT ${questionId} FROM dailyQuiz
+            SELECT id, question, difficulty, correctAnswer, option2, option3, option4 
+            FROM (
+                SELECT ROW_NUMBER() OVER(PARTITION BY difficulty ORDER BY difficulty ASC) AS Number, *
+                FROM quizzes
+                WHERE difficulty = @difficulty
+                ) AS subquery
+            WHERE Number = @number;
+        `;
+        const countSqlQuery = `
+            SELECT COUNT(*) AS count FROM quizzes WHERE difficulty = @difficulty;
         `;
 
         try {
-            const result = await this.db.request()
-                .query(sqlQuery);
+            const count = await this.db.request()
+                .input('difficulty', difficulty)
+                .query(countSqlQuery);
 
-            if (result.recordset.length === 0) {
+            if (count.recordset.length === 0) {
+                logger.error('No quiz questions found by difficulty', { className });
                 return null;
             }
 
-            logger.info('Daily quiz question found', { className });
-            const quiz = this.fetchQuizQuestionById(result.recordset[0][questionId]);
-            logger.info('Daily quiz question found, returning quiz', { className });
-            return quiz;
-        } catch (err) {
-            logger.error('Error getting daily quiz question', { error: err, className });
-            throw err;
-        }
+            const randomNumber = Math.floor(Math.random() * count.recordset[0].count) + 1;
 
-    }
-
-    private async fetchQuizQuestionById(id: number): Promise<Quiz | null> {
-        logger.info('Getting quiz question by id', { className });
-        const sqlQuery = `
-            SELECT * FROM quizzes WHERE id = @id;
-        `;
-
-        try {
             const result = await this.db.request()
-                .input('id', id)
+                .input('difficulty', difficulty)
+                .input('number', randomNumber)
                 .query(sqlQuery);
 
             if (result.recordset.length === 0) {
+                logger.error('No quiz questions found by difficulty', { className });
                 return null;
             }
-
-            logger.info('Quiz question found by id', { className });
             const quiz = result.recordset[0];
+
+            logger.info('Random quiz chosen. Selected question id: ' + quiz.id, { className });
+            logger.info('Shuffling quiz answers', { className });
 
             const answers = [
                 { letter: 'A', text: quiz.correctAnswer },
@@ -108,30 +93,7 @@ export class QuizModel {
             logger.info('Quiz question shuffled, returning shuffled quiz', { className });
             return shuffledQuiz;
         } catch (err) {
-            logger.error('Error getting quiz question by id', { error: err, className });
-            throw err;
-        }
-    }
-
-    async getQuizQuestionById(id: number): Promise<Quiz | null> {
-        logger.info('Getting quiz question by id', { className });
-        const sqlQuery = `
-            SELECT * FROM quizzes WHERE id = @id;
-        `;
-
-        try {
-            const result = await this.db.request()
-                .input('id', id)
-                .query(sqlQuery);
-
-            if (result.recordset.length === 0) {
-                return null;
-            }
-
-            logger.info('Quiz question found by id', { className });
-            return result.recordset[0];
-        } catch (err) {
-            logger.error('Error getting quiz question by id', { error: err, className });
+            logger.error('Error getting quiz question by difficulty', { error: err, className });
             throw err;
         }
     }

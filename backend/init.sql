@@ -93,25 +93,6 @@ BEGIN
 END;
 GO
 
--- Create dailyQuiz table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'dailyQuiz')
-BEGIN
-    CREATE TABLE dailyQuiz (
-        date DATE PRIMARY KEY NOT NULL,
-        question1Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question2Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question3Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question4Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question5Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question6Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question7Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question8Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question9Id INT FOREIGN KEY REFERENCES quizzes(id),
-        question10Id INT FOREIGN KEY REFERENCES quizzes(id)
-    );
-END;
-GO
-
 -- Create points table if it doesn't exist
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'points')
 BEGIN

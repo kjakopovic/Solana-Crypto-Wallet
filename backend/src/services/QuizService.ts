@@ -8,17 +8,12 @@ const className = 'QuizService';
 
 class QuizService {
 
-    private generateRandomNumber(): number {
-        return Math.floor(Math.random() * (10 - 1 + 1) + 1);
-    }
-
-    public async getDailyQuizQuestion() {
+    public async getRandomQuiz(difficulty: string) {
         logger.info('Getting daily quiz', { className });
 
         try {
-            const question = this.generateRandomNumber();
-            const quiz = await QuizModel.getDailyQuizQuestionId(question);
-            logger.info('Daily quiz found, returning quiz', { className });
+            const quiz = await QuizModel.fetchQuizByDifficulty(difficulty);
+            logger.info('Random quiz fetched successfully!', { className });
             return quiz;
         } catch (err) {
             logger.error('Error getting daily quiz: ' + err, { error: err, className });

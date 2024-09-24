@@ -5,6 +5,6 @@ import QuizController from '../controllers/QuizController';
 
 const router = Router();
 
-router.get('/daily', QuizController.getDailyQuiz);
+router.get('/get', QuizController.getRandomQuiz);
 
 export default router;

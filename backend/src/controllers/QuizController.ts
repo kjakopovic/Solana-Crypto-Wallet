@@ -1,7 +1,6 @@
 // src/controllers/UserController.ts
 
 import { Request, Response } from 'express';
-import UserService from "../services/UserService";
 import QuizService from '../services/QuizService';
 import logger from '../config/Logger';
 
@@ -9,19 +8,34 @@ const className = 'QuizController';
 
 class QuizController {
 
-    async getDailyQuiz(res: Response): Promise<Response> {
+    async getRandomQuiz(req: Request, res: Response): Promise<Response> {
         logger.info('Getting daily quiz', { className });
+        const difficulty = req.body.difficulty;
+
+        if (!difficulty) {
+            logger.error('No difficulty provided', { className });
+            return res.status(400).json({ message: 'No difficulty provided' });
+        }
+        if (difficulty !== 'Easy' && difficulty !== 'Medium' && difficulty !== 'Hard') {
+            logger.error('Invalid difficulty provided', { className });
+            return res.status(400).json({ message: 'Invalid difficulty provided' });
+        }
 
         try {
-            const quiz = await QuizService.getDailyQuizQuestion();
-            logger.info('Daily quiz found', { className });
+            const quiz = await QuizService.getRandomQuiz(difficulty);
+
+            if (!quiz) {
+                logger.error('No quiz found', { className });
+                return res.status(404).json({ message: 'No quiz found' });
+            }
+
+            logger.info('Returning quiz in json!', { className });
             return res.status(200).json(quiz);
         } catch (error) {
             logger.error('Error getting daily quiz', { error, className });
             return res.status(500).json({ message: 'Error getting daily quiz: ' + error });
         }
     }
-
 
 }
 
