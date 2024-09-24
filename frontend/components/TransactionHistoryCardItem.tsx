@@ -6,7 +6,7 @@ import { images } from '@/constants'
 
 const TransactionHistoryCardItem: React.FC<TransactionHistoryData> = ({ fromPublicWallet, toPublicWallet, coinLogoBase64, coinName, transferBalanceInToken, transferTimestamp }) => {
     return (
-        <View className='w-[90%] min-h-[10vh] items-center justify-between flex-row mb-2'>
+        <View className='w-[100%] px-3 min-h-[10vh] items-center justify-between flex-row mb-2'>
             <View className='flex-row items-start'>
                 <View className='w-11 h-11 items-center justify-center'>
                     <Image

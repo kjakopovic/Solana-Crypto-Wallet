@@ -20,7 +20,7 @@ const CryptoAssetCardItem: React.FC<CryptoAssetCardItemProps> = ({ sourcePicutre
                 <View className='w-11 h-11 items-center justify-center'>
                     <Image
                         source={sourcePicutre !== '' ? { uri: sourcePicutre } : images.logoSmall}
-                        className='w-11 h-11'
+                        className='w-11 h-11 rounded-full'
                         resizeMode='contain'
                     />
                 </View>

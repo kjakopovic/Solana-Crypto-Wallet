@@ -18,13 +18,14 @@ import {
   TOKEN_PROGRAM_ID,
   getOrCreateAssociatedTokenAccount,
   createTransferInstruction,
-  getMint
+  getMint,
+  AccountLayout
 } from "@solana/spl-token";
-// import { TokenListProvider, TokenInfo as RegistryTokenInfo } from '@solana/spl-token-registry';
+import { TokenListProvider, TokenInfo, TokenListContainer } from '@solana/spl-token-registry';
 
 import { saveItem, getItem } from './SecureStorage';
 
-import tokens from '../assets/solana.tokenlist.json';
+// import tokens from '../assets/solana.tokenlist.json';
 
 bip39.setDefaultWordlist('english');
 
@@ -32,16 +33,16 @@ const fetch = require('node-fetch');
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112'
 
-interface TokenInfo {
-  name: string;
-  symbol: string;
-  address: string;
-  logoURI: string;
-}
+// interface TokenInfo {
+//   name: string;
+//   symbol: string;
+//   address: string;
+//   logoURI: string;
+// }
 
-interface TokensData {
-  tokens: TokenInfo[];
-}
+// interface TokensData {
+//   tokens: TokenInfo[];
+// }
 
 interface TokenInfoPreview {
   name: string;
@@ -79,7 +80,7 @@ interface TransactionHistoryData {
   toPublicWallet: string;
 }
 
-const tokensData = tokens as TokensData;
+// const tokensData = tokens as TokensData;
 
 const generateWalletFromMnemonic = (mnemonic: string) => {
   const seed = bip39.mnemonicToSeedSync(mnemonic, "");
@@ -138,7 +139,6 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
 
     // Getting users coins that are not solana
     const tokens = await connection.getTokenAccountsByOwner(publicKey, {
-      // programId: new PublicKey(TOKEN_PROGRAM_ID),
       programId: TOKEN_PROGRAM_ID,
     });
 
@@ -146,9 +146,14 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
     const tokenInfoPreviews: TokenInfoPreview[] = [];
     let listOfSymbols: string[] = [ 'SOL'];
 
+    // Getting list of supported tokens
+    const tokenListProvider = await new TokenListProvider().resolve();
+    const tokenList = tokenListProvider.filterByClusterSlug(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? '').getList();
+
     // Getting users solana balance
     const solBalance = (await connection.getBalance(publicKey)) / LAMPORTS_PER_SOL;
-    const additionalSolInfo = tokensData.tokens.find(tokenInfo => tokenInfo.symbol === 'SOL');
+    // const additionalSolInfo = tokensData.tokens.find(tokenInfo => tokenInfo.symbol === 'SOL');
+    const additionalSolInfo = tokenList.find(token => token.address === SOL_MINT);
 
     const solInfo: TokenInfoPreview = {
       name: 'Solana',
@@ -162,28 +167,28 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
 
     tokenInfoPreviews.push(solInfo);
 
-    // Getting data about other coins
-    for (const token of tokens.value) {
-      const additionalInfo = tokensData.tokens.find(tokenInfo => tokenInfo.address === token.pubkey.toBase58());
-      
-      if (additionalInfo !== undefined) {
-        listOfSymbols.push(additionalInfo.symbol);
-      }
-
-      const mintInfo = await getMint(connection, new PublicKey(additionalInfo?.address ?? ''));
-
+    tokens.value.map(({ pubkey, account }) => {
+      // Decode the token account data
+      const accountInfo = AccountLayout.decode(account.data);
+  
+      // Extract the mint address and balance
+      const mintAddress = new PublicKey(accountInfo.mint).toBase58();
+  
+      // Find token metadata (name, symbol, logo) using the mint address
+      const tokenInfo = tokenList.find((token) => token.address === mintAddress);
+  
       const info: TokenInfoPreview = {
-        name: additionalInfo?.name ?? '',
-        symbol: additionalInfo?.symbol ?? '',
-        address: additionalInfo?.address ?? '',
+        name: tokenInfo?.name ?? '',
+        symbol: tokenInfo?.symbol ?? '',
+        address: mintAddress,
         oneDayMovement: '',
         marketValueInDollars: '',
-        userAmount: (token.account.lamports / mintInfo.decimals).toFixed(2),
-        logoURIbase64: additionalInfo?.logoURI ?? '',
+        userAmount: (accountInfo.amount).toString(),
+        logoURIbase64: tokenInfo?.logoURI ?? '',
       };
 
       tokenInfoPreviews.push(info);
-    }
+    });
 
     // Data for apis from coingecko
     const url = 'https://api.coingecko.com/api/v3/coins/list';
@@ -222,14 +227,19 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
     for (const token of tokenInfoPreviews) {
       const currentCoin = coinMarketData.find(x => x.symbol === token.symbol.toLowerCase());
 
-      token.oneDayMovement = currentCoin?.price_change_percentage_24h.toFixed(2).toString() + '%' ?? '0.00%';
-      token.marketValueInDollars = currentCoin?.current_price.toString() ?? '0.00';
+      if (currentCoin === undefined) {
+        token.oneDayMovement = '0.00%';
+        token.marketValueInDollars = '0.00';
+      }
+
+      token.oneDayMovement = currentCoin?.price_change_percentage_24h?.toFixed(2) + '%' ?? '0.00%';
+      token.marketValueInDollars = currentCoin?.current_price?.toString() ?? '0.00';
 
       balance += (parseFloat(token.userAmount) * parseFloat(token.marketValueInDollars));
     }
 
     const walletInfo: WalletInfo = {
-      balance: balance.toString(),
+      balance: balance.toFixed(2),
       tokens: tokenInfoPreviews,
     };
 
@@ -265,7 +275,9 @@ export const calculateTransactionFees = async (toPublicKey: string, amount: numb
 
     const fromWallet = Keypair.fromSecretKey(Buffer.from(getItem('privateKey') ?? '', 'hex'));
 
+    // Getting lamports per coin
     const mintInfo = await getMint(connection, new PublicKey(tokenMint));
+    const LAMPORTS_PER_COIN = Math.pow(10, mintInfo.decimals);
     
     const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection,
@@ -289,14 +301,14 @@ export const calculateTransactionFees = async (toPublicKey: string, amount: numb
         fromTokenAccount.address,
         toTokenAccount.address,
         fromWallet.publicKey,
-        amount * mintInfo.decimals,
+        amount * LAMPORTS_PER_COIN,
         [],
         TOKEN_PROGRAM_ID
       )
     );
 
     return {
-      fee: await transaction.getEstimatedFee(connection) ?? 0,
+      fee: (await transaction.getEstimatedFee(connection) ?? 0) / LAMPORTS_PER_COIN,
       transaction: transaction
     }
   } catch (error) {
@@ -306,7 +318,7 @@ export const calculateTransactionFees = async (toPublicKey: string, amount: numb
 
 export const sendTokensTransaction = async (transaction: Transaction | null) => {
   if (!transaction){
-    return;
+    throw new Error('Transaction is not defined');
   }
   
   const connection = getWalletConnection();
@@ -322,113 +334,123 @@ export const getTransactionsHistory = async (currentPage: number): Promise<Trans
     const publicKey = new PublicKey(getItem('publicKey') ?? '');
 
     const pageLimit = 10;
+    const offset = (currentPage - 1) * pageLimit;
 
-    // If it's not the first page, calculate the 'before' parameter
-    let beforeSignature = undefined;
-    if (currentPage > 1) {
-      const previousPageHistory = await connection.getSignaturesForAddress(
-        publicKey,
-        { limit: pageLimit * (currentPage - 1) }
-      );
+    // Pre-fetch token list once
+    const tokenListProvider = await new TokenListProvider().resolve();
+    const tokenList = tokenListProvider
+      .filterByClusterSlug(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? '')
+      .getList();
 
-      // Get the last transaction signature of the previous page
-      if (previousPageHistory.length > 0) {
-        beforeSignature = previousPageHistory[previousPageHistory.length - 1].signature;
-      }
-    }
+    // Fetch signatures for the current page
+    const signatures = await connection.getSignaturesForAddress(publicKey, { limit: pageLimit, before: undefined });
 
-    const history = await connection.getSignaturesForAddress(
-      publicKey,
-      {
-        limit: pageLimit,
-        before: beforeSignature,
-      }
-    );
+    const history = signatures.slice(offset, offset + pageLimit);
 
+    // Fetch detailed transaction history in parallel
     const detailedHistory = await Promise.all(
       history.map(async (tx) => {
         const transactionDetails = await connection.getParsedTransaction(tx.signature);
 
-        const tokenPreTransferAmount = transactionDetails?.meta?.preTokenBalances![1]
-        const tokenPostTransferAmount = transactionDetails?.meta?.postTokenBalances![1]
-        
-        // Checking is transaction for a token transfer
-        if (tokenPreTransferAmount?.uiTokenAmount !== undefined && 
-            tokenPostTransferAmount?.uiTokenAmount !== undefined &&
-            tokenPreTransferAmount.uiTokenAmount.uiAmount !== tokenPostTransferAmount.uiTokenAmount.uiAmount
-        ){
+        // Extract token transfer details if available
+        const tokenPreTransferAmount = transactionDetails?.meta?.preTokenBalances?.[1];
+        const tokenPostTransferAmount = transactionDetails?.meta?.postTokenBalances?.[1];
+
+        // Check if transaction is token transfer or SOL transfer
+        if (
+          tokenPreTransferAmount?.uiTokenAmount !== undefined &&
+          tokenPostTransferAmount?.uiTokenAmount !== undefined &&
+          tokenPreTransferAmount.uiTokenAmount.uiAmount !== tokenPostTransferAmount.uiTokenAmount.uiAmount
+        ) {
+          const mintInfo = await getMint(connection, new PublicKey(tokenPreTransferAmount.mint));
+          const LAMPORTS_PER_COIN = Math.pow(10, mintInfo.decimals);
+
           return {
-            transferBalanceInToken: (tokenPostTransferAmount.uiTokenAmount.uiAmount ?? 0) - (tokenPreTransferAmount.uiTokenAmount.uiAmount ?? 0),
-            coinMint: transactionDetails?.meta?.preTokenBalances![1].mint ?? '',
+            transferBalanceInToken:
+              ((tokenPostTransferAmount.uiTokenAmount.uiAmount ?? 0) - (tokenPreTransferAmount.uiTokenAmount.uiAmount ?? 0))
+              / LAMPORTS_PER_COIN, //TODO: kada bude tih transfera treba pogledati jel ovo tocno
+            coinMint: tokenPreTransferAmount.mint ?? '',
             transferTimestamp: new Date((tx.blockTime ?? 0) * 1000).toLocaleString('en-GB', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit',
-              hour12: false
-            }) ?? 'Unknown',
+              hour12: false,
+            }),
             fromPublicWallet: transactionDetails?.transaction.message.accountKeys[0].pubkey.toBase58() ?? '',
             toPublicWallet: transactionDetails?.transaction.message.accountKeys[1].pubkey.toBase58() ?? '',
-          }
+          };
+        }
+
+        const accountKeys = transactionDetails?.transaction.message.accountKeys;
+
+        if (accountKeys === undefined) {
+          return;
+        }
+
+        const userAccountIndex = accountKeys.findIndex(account => account.pubkey.toBase58() === getItem('publicKey'));
+
+        if (userAccountIndex === -1) {
+          return;
         }
 
         return {
-          transferBalanceInToken: ((transactionDetails?.meta?.postBalances[1] ?? 0) - (transactionDetails?.meta?.preBalances[1] ?? 0)) / LAMPORTS_PER_SOL,
+          transferBalanceInToken:
+            ((transactionDetails?.meta?.postBalances[userAccountIndex] ?? 0) - (transactionDetails?.meta?.preBalances[userAccountIndex] ?? 0)) /
+            LAMPORTS_PER_SOL,
           coinMint: SOL_MINT,
           transferTimestamp: new Date((tx.blockTime ?? 0) * 1000).toLocaleString('en-GB', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            }) ?? 'Unknown',
-          fromPublicWallet: transactionDetails?.transaction.message.accountKeys[0].pubkey.toBase58() ?? '',
-          toPublicWallet: transactionDetails?.transaction.message.accountKeys[1].pubkey.toBase58() ?? '',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }),
+          fromPublicWallet: accountKeys[0].pubkey.toBase58() ?? '',
+          toPublicWallet: accountKeys[1].pubkey.toBase58() ?? '',
         };
       })
     );
 
-    let historyResponse: TransactionHistoryData[] = [];
+    // Build the final history response
+    const historyResponse: TransactionHistoryData[] = detailedHistory.map((transaction) => {
+      const additionalInfo = tokenList.find((token) => token.address === transaction?.coinMint);
 
-    for (const transaction of detailedHistory) {
-      const additionalInfo = tokensData.tokens.find(token => token.address === transaction.coinMint);
-
-      historyResponse.push({
-        transferBalanceInToken: transaction.transferBalanceInToken,
+      return {
+        transferBalanceInToken: transaction?.transferBalanceInToken ?? 0,
         coinLogoBase64: additionalInfo?.logoURI ?? '',
-        coinName: additionalInfo?.name ?? 'Solana',
-        fromPublicWallet: transaction.fromPublicWallet,
-        toPublicWallet: transaction.toPublicWallet,
-        transferTimestamp: transaction.transferTimestamp,
-      })
-    }
+        coinName: (additionalInfo?.symbol === 'wSOL' ? 'Solana' : additionalInfo?.name) ?? '',
+        fromPublicWallet: transaction?.fromPublicWallet ?? '',
+        toPublicWallet: transaction?.toPublicWallet ?? '',
+        transferTimestamp: transaction?.transferTimestamp ?? '',
+      };
+    });
 
     return historyResponse;
   } catch (error) {
     throw error;
   }
-}
+};
 
-export const getAllAvailableTokens = () => {
-  const solIndex = tokensData.tokens.findIndex(token => token.symbol === 'SOL');
+export const getAllAvailableTokens = async (): Promise<TokenInfo[]> => {
+  const tokenListProvider = await new TokenListProvider().resolve()
 
-  // If 'SOL' is found and is not already at the first position
-  if (solIndex !== -1 && solIndex !== 0) {
-    // Remove the token from its current position
-    const [solToken] = tokensData.tokens.splice(solIndex, 1);
+  let tokenList =  tokenListProvider.filterByClusterSlug(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? '').getList();
 
-    // Insert the token at the first position
-    tokensData.tokens.unshift(solToken);
-  }
+  tokenList = tokenList.filter(token => token.symbol !== 'wSOL');
 
-  return tokensData.tokens;
+  tokenList.unshift({
+    chainId: 101,
+    address: SOL_MINT,
+    name: 'Solana',
+    symbol: 'SOL',
+    decimals: 9,
+    logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
+  });
 
-  // new TokenListProvider().resolve().then((tokens) => {
-  //   const tokenList = tokens.filterByClusterSlug(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? '').getList();
-  //   console.log(tokenList);
-  // });
+  return tokenList;
 }
 
 export const getSelectedCoinAmount = async (coinMint: string) => {
@@ -438,7 +460,7 @@ export const getSelectedCoinAmount = async (coinMint: string) => {
     const publicKey = new PublicKey(getItem('publicKey') ?? '');
 
     if (coinMint === SOL_MINT) {
-      return ((await connection.getBalance(publicKey)) / LAMPORTS_PER_SOL).toFixed(2).toString();
+      return ((await connection.getBalance(publicKey)) / LAMPORTS_PER_SOL).toString();
     }
 
     // Getting users coins that are not solana
@@ -448,8 +470,9 @@ export const getSelectedCoinAmount = async (coinMint: string) => {
 
     const currentCoin = tokens.value.find(token => token.pubkey.toBase58() === coinMint);
     const mintInfo = await getMint(connection, new PublicKey(coinMint));
+    const LAMPORTS_PER_COIN = Math.pow(10, mintInfo.decimals);
 
-    return (currentCoin?.account.lamports ?? 0 / mintInfo.decimals).toFixed(2);
+    return (currentCoin?.account.lamports ?? 0 / LAMPORTS_PER_COIN).toString();
   }
   catch (error) {
     throw error;

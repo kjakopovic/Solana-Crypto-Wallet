@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native'
+import { View, Text, Image, TouchableOpacity, FlatList, Modal } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView, RefreshControl } from 'react-native-gesture-handler'
 import { router, Href } from 'expo-router'
@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react'
 import CircleButton from '@/components/CircleButton'
 import CryptoAssetCardItem from '@/components/CryptoAssetCardItem'
 import Loader from '@/components/Loader'
+import SkeletonLoader from '@/components/SkeletonLoader'
 
 import { icons, images } from '@/constants'
 
@@ -29,6 +30,11 @@ const Wallet = () => {
     } as WalletInfo)
     const [history, setHistory] = useState([] as TransactionHistoryData[])
 
+    const [modalData, setModalData] = useState({
+        isModalVisible: false,
+        selectedTransaction: null as TransactionHistoryData | null
+    })
+
     const fetchWalletInfo = async () => {
         const fetching = await Promise.all([
             // await getWalletInfo(),
@@ -36,7 +42,7 @@ const Wallet = () => {
         ])
 
         // setWalletInfo(fetching[0])
-        setHistory(fetching[0]) //TODO: inace je index 1
+        setHistory(fetching[0])
         setCurrentTransactionsHistoryPage(2)
 
         setLoading(false)
@@ -66,7 +72,78 @@ const Wallet = () => {
     }, [])
 
     if (loading) {
-        return <Loader isLoading={true} />
+        return (
+            <SafeAreaView className='bg-background h-full'>
+                <View className='min-h-[85vh] w-full mt-7 items-center mb-[100px]'>
+                    {/*TODO: onclick na tu sliku moze birati ostale avatare za profilne slike*/}
+                    <View className='w-full items-center'>
+                        <SkeletonLoader 
+                            width={80}
+                            height={80}
+                            customStyles={{ borderRadius: 9999 }}
+                        />
+
+                        <SkeletonLoader 
+                            width={200}
+                            height={20}
+                            customStyles={{ borderRadius: 20, marginTop: 20 }}
+                        />
+
+                        <SkeletonLoader 
+                            width={80}
+                            height={30}
+                            customStyles={{ borderRadius: 20, marginTop: 8 }}
+                        />
+                    </View>
+
+                    <View className='w-[90%] justify-between flex-row mt-5'>
+                        <SkeletonLoader 
+                            width={55}
+                            height={55}
+                            customStyles={{ borderRadius: 9999 }}
+                        />
+
+                        <SkeletonLoader 
+                            width={55}
+                            height={55}
+                            customStyles={{ borderRadius: 9999 }}
+                        />
+
+                        <SkeletonLoader 
+                            width={55}
+                            height={55}
+                            customStyles={{ borderRadius: 9999 }}
+                        />
+
+                        <SkeletonLoader 
+                            width={55}
+                            height={55}
+                            customStyles={{ borderRadius: 9999 }}
+                        />
+                    </View>
+
+                    <View className='min-h-[18vh] w-[90%] rounded-3xl mt-5'>
+                        <SkeletonLoader 
+                            width='100%'
+                            height={90}
+                            customStyles={{ borderRadius: 24, marginTop: 10 }}
+                        />
+
+                        <SkeletonLoader 
+                            width='100%'
+                            height={90}
+                            customStyles={{ borderRadius: 24, marginTop: 10 }}
+                        />
+
+                        <SkeletonLoader 
+                            width='100%'
+                            height={90}
+                            customStyles={{ borderRadius: 24, marginTop: 10 }}
+                        />
+                    </View>
+                </View>
+            </SafeAreaView>
+        )
     }
 
     return (
@@ -117,7 +194,7 @@ const Wallet = () => {
                         <CircleButton 
                             title='Swap'
                             icon={icons.trade}
-                            handleClick={() => {}}
+                            handleClick={() => {router.push('/(tabs)/swap' as Href)}}
                         />
 
                         <CircleButton 
@@ -166,14 +243,16 @@ const Wallet = () => {
                         {selectedMenu === 0 && (
                             <View className='w-[90%] mx-4'>
                                 {walletInfo.tokens.map((token, index) => (
-                                    <CryptoAssetCardItem 
-                                        sourcePicutre={token.logoURIbase64}
-                                        assetName={token.name}
-                                        currentPrice={`$${token.marketValueInDollars}`}
-                                        oneDayMovement={token.oneDayMovement}
-                                        userAmount={token.userAmount}
-                                        key={index}
-                                    />
+                                    token.userAmount !== '0' ? (
+                                        <CryptoAssetCardItem 
+                                            sourcePicutre={token.logoURIbase64}
+                                            assetName={token.name}
+                                            currentPrice={`$${token.marketValueInDollars}`}
+                                            oneDayMovement={token.oneDayMovement}
+                                            userAmount={token.userAmount}
+                                            key={index}
+                                        />
+                                    ) : (<></>)
                                 ))}
                             </View>
                         )}
@@ -197,14 +276,24 @@ const Wallet = () => {
                                         scrollEnabled={false}
                                         data={history}
                                         renderItem={({ item }: any) => (
-                                            <TransactionHistoryCardItem
-                                              transferBalanceInToken={item.transferBalanceInToken}
-                                              coinLogoBase64={item.coinLogoBase64}
-                                              coinName={item.coinName}
-                                              fromPublicWallet={item.fromPublicWallet}
-                                              toPublicWallet={item.toPublicWallet}
-                                              transferTimestamp={item.transferTimestamp}
-                                            />
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    setModalData({
+                                                        isModalVisible: true,
+                                                        selectedTransaction: item
+                                                    })
+                                                }}
+                                                activeOpacity={0.5}
+                                            >
+                                                <TransactionHistoryCardItem
+                                                    transferBalanceInToken={item.transferBalanceInToken}
+                                                    coinLogoBase64={item.coinLogoBase64}
+                                                    coinName={item.coinName}
+                                                    fromPublicWallet={item.fromPublicWallet}
+                                                    toPublicWallet={item.toPublicWallet}
+                                                    transferTimestamp={item.transferTimestamp}
+                                                />
+                                            </TouchableOpacity>
                                         )}
                                         keyExtractor={(item, index) => index.toString()}
                                         onEndReached={fetchMoreTransactionHistory}
@@ -219,6 +308,38 @@ const Wallet = () => {
                             </View>
                         )}
                     </View>
+
+                    <Modal
+                        animationType="fade"
+                        transparent={true}
+                        visible={modalData.isModalVisible}
+                    >
+                        <View className='flex-1 justify-center items-center bg-black/50'>
+                            <View className='bg-secondaryUtils w-[90%] p-5 rounded-lg'>
+                                {modalData.selectedTransaction && (
+                                    <>
+                                        <Text className='text-lg font-bold mb-3 text-primary text-center'>Transaction Details</Text>
+                                        <Text className='text-white'>From:</Text>
+                                        <Text className='text-white mb-2'>{modalData.selectedTransaction.fromPublicWallet}</Text>
+                                        <Text className='text-white'>To:</Text>
+                                        <Text className='text-white'>{modalData.selectedTransaction.toPublicWallet}</Text>
+                                        
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setModalData({
+                                                    isModalVisible: false,
+                                                    selectedTransaction: null
+                                                })
+                                            }}
+                                            className='mt-5 bg-secondaryUtils p-2 rounded-lg'
+                                        >
+                                            <Text className='text-center text-white'>Close</Text>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
+                            </View>
+                        </View>
+                    </Modal>
                 </View>
             </ScrollView>
         </SafeAreaView>

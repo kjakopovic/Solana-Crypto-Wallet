@@ -31,6 +31,7 @@ const SendCrypto = () => {
 
     const [transaction, setTransaction] = useState(null as Transaction | null);
     const [transactionFee, setTransactionFee] = useState('0.00');
+    const [isFetching, setIsFetching] = useState(false);
 
     const [accountBalance, setAccountBalance] = useState('0.00');
     const [dialogProps, setDialogProps] = useState({
@@ -40,23 +41,35 @@ const SendCrypto = () => {
     });
 
     useEffect(() => {
-        const tokens = getAllAvailableTokens();
-        const data = tokens.map((token: TokenInfo, index: number) => ({
-            label: token.name,
-            logo: token.logoURI,
-            symbol: token.symbol,
-            id: index,
-            address: token.address
-        }));
+        const fetchAllTokensData = async () => {
+            const tokens = await getAllAvailableTokens();
+            const data = tokens.map((token: TokenInfo, index: number) => ({
+                label: token.name,
+                logo: token.logoURI,
+                symbol: token.symbol,
+                id: index,
+                address: token.address
+            }));
 
-        setCryptoData(data);
+            setCryptoData(data);
+        }
+
+        fetchAllTokensData();
     }, []);
 
     useEffect(() => {
         const fetchSelectedCoinData = async () => {
-            if (selectedCrypto) {
-                const amount = await getSelectedCoinAmount(selectedCrypto.address);
-                setAccountBalance(amount);
+            try {
+                if (selectedCrypto) {
+                    const amount = await getSelectedCoinAmount(selectedCrypto.address);
+                    setAccountBalance(amount);
+                }
+            } catch (error) {
+                setDialogProps({ 
+                    title: 'Transaction failure', 
+                    description: 'That coin is not supported at the moment.',
+                    visible: true
+                });
             }
         }
 
@@ -65,13 +78,24 @@ const SendCrypto = () => {
 
     useEffect(() => {
         const fetchFees = async () => {
-            if (sendData.amount !== '' && selectedCrypto !== null) {
-                const fees = await calculateTransactionFees(sendData.toAddress, parseFloat(sendData.amount), selectedCrypto.address);
-
-                if (fees){
-                    setTransaction(fees.transaction);
-                    setTransactionFee(fees.fee.toFixed(2));
+            try {
+                setIsFetching(true);
+                if (sendData.amount !== '' && selectedCrypto !== null) {
+                    const fees = await calculateTransactionFees(sendData.toAddress, parseFloat(sendData.amount), selectedCrypto.address);
+    
+                    if (fees){
+                        setTransaction(fees.transaction);
+                        setTransactionFee(fees.fee.toString());
+                    }
                 }
+            } catch (error) {
+                setDialogProps({ 
+                    title: 'Transaction failure', 
+                    description: 'That coin is not supported at the moment.',
+                    visible: true
+                });
+            } finally {
+                setIsFetching(false);
             }
         }
 
@@ -88,7 +112,7 @@ const SendCrypto = () => {
                 onOkPress={() => {setDialogProps({ title: '', description: '', visible: false })}}
             />
             <ScrollView>
-                <View className="flex-1 h-full justify-between px-5 w-full mt-7 pb-5 mb-3">
+                <View className="flex-1 h-full justify-between px-5 w-full mt-10 pb-5 mb-3">
                     <CustomDropDown 
                         data={cryptoData}
                         emptyTextPlaceholder='Please select a coin'
@@ -103,7 +127,7 @@ const SendCrypto = () => {
                         <FormField
                             value={sendData.fromAddress}
                             handleChangeText={() => {}}
-                            otherStyles='w-full h-[80px] border-[1px]'
+                            otherStyles='w-full h-[65px] border-[1px]'
                             textStyles='text-[13px]'
                             isReadOnly
                         />
@@ -116,7 +140,7 @@ const SendCrypto = () => {
                         <FormField
                             value={sendData.toAddress}
                             handleChangeText={(text: string) => setSendData({ ...sendData, toAddress: text })}
-                            otherStyles='w-full h-[80px] border-[1px]'
+                            otherStyles='w-full h-[65px] border-[1px]'
                             textStyles='text-[13px]'
                         />
                     </View>
@@ -129,28 +153,28 @@ const SendCrypto = () => {
                         <FormField
                             value={sendData.amount}
                             handleChangeText={(text: string) => setSendData({ ...sendData, amount: text })}
-                            otherStyles='w-full h-[80px] border-[1px]'
+                            otherStyles='w-full h-[50px] border-[1px]'
                             textStyles='text-[13px]'
                             digitsOnly
                         />
 
-                        <View className='flex-row justify-between'>
-                            <Text className='text-secondaryHighlight font-pmedium ml-3 text-[12px] mt-3'>
-                                {`Available: ${accountBalance} ${selectedCrypto?.symbol ?? ''}`}
-                            </Text>
+                        <Text className='text-secondaryHighlight font-pmedium ml-3 text-[12px] mt-3'>
+                            {`Available: ${accountBalance} ${selectedCrypto?.symbol ?? ''}`}
+                        </Text>
 
-                            <Text className='text-secondaryHighlight font-pmedium mr-3 text-[12px] mt-3 text-right'>
-                                {`Fees: ${transactionFee} ${selectedCrypto?.symbol ?? ''}`}
-                            </Text>
-                        </View>
+                        <Text className='text-secondaryHighlight font-pmedium ml-3 text-[12px] mt-3'>
+                            {`Fee: ${transactionFee} ${selectedCrypto?.symbol ?? ''}`}
+                        </Text> 
                     </View>
 
                     <CustomButton
-                        title='Send'
+                        title={isFetching ? 'Processing...' : 'Send'}
                         containerStyles={'w-full mt-10'}
                         primary
                         handlePress={async () => {
                             try {
+                                setIsFetching(true);
+
                                 if (parseFloat(sendData.amount) > parseFloat(accountBalance)) {
                                     setDialogProps({ 
                                         title: 'Insufficient balance', 
@@ -166,8 +190,11 @@ const SendCrypto = () => {
                                     description: 'We couldn\'t make that transaction, please contact support.', 
                                     visible: true 
                                 });
+                            } finally {
+                                setIsFetching(false);
                             }
                         }}
+                        isLoading={isFetching}
                     />
                 </View>
             </ScrollView>
