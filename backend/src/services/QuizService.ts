@@ -26,45 +26,6 @@ class QuizService {
         }
     }
 
-    public async submitQuizAnswer(userId: string, questionId: number, answer: string) {
-        logger.info('Submitting quiz answer for user: ' + userId, { className });
-        logger.info('Question ID: ' + questionId, { className });
-
-        try{
-            const quiz = await QuizModel.getQuizQuestionById(questionId);
-            const correctAnswer = await QuizModel.getCorrectAnswer(questionId);
-
-            if (!quiz) {
-                logger.error('Quiz question not found', { className });
-                return null;
-            }
-
-            let points = 0;
-            const isCorrect = correctAnswer === answer;
-            if (isCorrect) {
-                logger.info('Correct answer submitted', { className });
-                switch (quiz.difficulty.toLowerCase()) {
-                    case 'easy':
-                        points = 1;
-                        break;
-                    case 'medium':
-                        points = 2;
-                        break;
-                    case 'hard':
-                        points = 3;
-                        break;
-                }
-            }
-
-            await UserModel.updateUserPoints(userId, points);
-            logger.info('Quiz answer submitted successfully', { className });
-            return { correct: isCorrect, points };
-        }catch (err) {
-            logger.error('Error submitting quiz answer: ' + err, { error: err, className });
-            throw err;
-        }
-    }
-
 }
 
 export default new QuizService;

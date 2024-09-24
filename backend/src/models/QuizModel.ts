@@ -136,28 +136,6 @@ export class QuizModel {
         }
     }
 
-    async getCorrectAnswer(questionId: number): Promise<string | null> {
-        logger.info('Getting correct answer for question', { className });
-        const sqlQuery = `
-            SELECT correctAnswer FROM quizzes WHERE id = @questionId;
-        `;
-
-        try {
-            const result = await this.db.request()
-                .input('questionId', questionId)
-                .query(sqlQuery);
-
-            if (result.recordset.length === 0) {
-                return null;
-            }
-
-            logger.info('Correct answer found', { className });
-            return result.recordset[0].correctAnswer;
-        } catch (err) {
-            logger.error('Error getting correct answer', { error: err, className });
-            throw err;
-        }
-    }
 }
 
 export default new QuizModel();
