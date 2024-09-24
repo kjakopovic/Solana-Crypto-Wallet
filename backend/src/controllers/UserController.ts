@@ -13,8 +13,12 @@ class UserController{
         logger.info('Creating a new user', { className });
         const { password, publicKey } = req.body;
 
+        if (!password || !publicKey) {
+            logger.error('Invalid input, password or publicKey is missing', { className });
+            return res.status(400).json({ message: 'Invalid input, password or publicKey is missing' });
+        }
+
         try {
-            //const publicKey = createWallet().publicKey;
             const user = await UserService.registerUser(password, publicKey);
             logger.info('User created successfully', { className });
 
@@ -34,6 +38,11 @@ class UserController{
         const { publicKey } = req.params;
         const updates = req.body;
 
+        if (!publicKey) {
+            logger.error('Public key is required', { className });
+            return res.status(400).json({ message: 'Public key is required' });
+        }
+
         try {
             await UserService.updateUser(publicKey, updates);
             logger.info('User updated successfully', { className });
@@ -46,6 +55,12 @@ class UserController{
 
     async logoutUser(req: Request, res: Response) {
         const { publicKey } = req.body;
+
+        if (!publicKey) {
+            logger.error('Public key is required', { className });
+            return res.status(400).json({ message: 'Public key is required' });
+        }
+
         logger.info('Logging out user with publicKey: ' + publicKey, { className });
 
         try {
@@ -88,7 +103,6 @@ class UserController{
                 logger.info('Refresh token generated successfully: ' + refreshToken, { className });
 
                 logger.info('Updating refresh token', { className, userId: user.id });
-                //await UserModel.deleteRefreshToken(user.id);
                 await UserService.updateUser(publicKey, { refreshToken });
                 logger.info('Refresh token updated successfully', { className, userId: user.id });
 
@@ -115,12 +129,13 @@ class UserController{
 
     async getUserInformation(req: Request, res: Response){
         const publicKey = req.body.publicKey;
-        logger.info('Getting user information for publicKey: ' + publicKey, { className });
 
         if(!publicKey){
             logger.error('Public key is required', { className });
             return res.status(400).json({ message: 'Public key is required' });
         }
+
+        logger.info('Getting user information for publicKey: ' + publicKey, { className });
 
         const result = await UserService.getUserInfo(publicKey);
         if(!result){
