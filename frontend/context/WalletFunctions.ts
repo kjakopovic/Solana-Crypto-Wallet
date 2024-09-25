@@ -1,5 +1,6 @@
 import '../context/polyfills';
-import 'react-native-get-random-values';
+// import 'react-native-get-random-values';
+import { createJupiterApiClient, ResponseError } from '@jup-ag/api';
 
 import * as bip39 from 'bip39';
 import { 
@@ -12,7 +13,8 @@ import {
   Transaction,
   SystemProgram,
   sendAndConfirmTransaction,
-  Cluster
+  Cluster,
+  VersionedTransaction
 } from '@solana/web3.js';
 import {
   TOKEN_PROGRAM_ID,
@@ -22,6 +24,7 @@ import {
   AccountLayout
 } from "@solana/spl-token";
 import { TokenListProvider, TokenInfo, TokenListContainer } from '@solana/spl-token-registry';
+import { TokenSwap, CurveType, TOKEN_SWAP_PROGRAM_ID } from "@solana/spl-token-swap";
 
 import { saveItem, getItem } from './SecureStorage';
 
@@ -77,7 +80,7 @@ const generateWalletFromMnemonic = (mnemonic: string) => {
   saveItem('privateKey', privateKey);
 };
 
-const getWalletConnection = () => {
+export const getWalletConnection = () => {
   const connection = new Connection(
     clusterApiUrl(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER as Cluster),
     'confirmed'
@@ -458,6 +461,147 @@ export const getSelectedCoinAmount = async (coinMint: string) => {
     return (currentCoin?.account.lamports ?? 0 / LAMPORTS_PER_COIN).toString();
   }
   catch (error) {
+    throw error;
+  }
+}
+
+//Jupiter API, radi samo na mainnetu
+// export const swapTokens = async (fromTokenMint: string, toTokenMint: string, swapAmount: number) => {
+//   try {
+//     const connection = getWalletConnection();
+//     const jupiterQuoteApi = createJupiterApiClient();
+  
+//     const mintInfo = await getMint(connection, new PublicKey(fromTokenMint));
+//     const LAMPORTS_PER_COIN = Math.pow(10, mintInfo.decimals);
+
+//     const amountInLamports = swapAmount * LAMPORTS_PER_COIN;
+    
+//     const quote = await jupiterQuoteApi.quoteGet({
+//       inputMint: fromTokenMint,
+//       outputMint: toTokenMint,
+//       amount: amountInLamports,
+//     });
+
+//     console.log(quote);
+
+//     const serializedQuote = await jupiterQuoteApi.swapPost({
+//       swapRequest: {
+//         userPublicKey: getItem('publicKey') ?? '',
+//         wrapAndUnwrapSol: true,
+//         quoteResponse: quote
+//       }
+//     });
+
+//     const swapTransactionBuf = Buffer.from(serializedQuote.swapTransaction, 'base64');
+//     var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+
+//     const latestBlockHash = await connection.getLatestBlockhash();
+//     const rawTransaction = transaction.serialize();
+
+//     const txid = await connection.sendRawTransaction(rawTransaction, {
+//       skipPreflight: true,
+//       maxRetries: 2
+//     });
+
+//     await connection.confirmTransaction({
+//       blockhash: latestBlockHash.blockhash,
+//       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+//       signature: txid
+//     });
+//   } catch (error: any) {
+//     console.log(error.response);
+//     throw error;
+//   }
+// }
+
+export const swapTokens = async (fromTokenMint: string, toTokenMint: string, swapAmount: number) => {
+  try {
+    const SWAP_POOL_ADDRESS = new PublicKey(process.env.EXPO_PUBLIC_SWAP_POOL_ADDRESS ?? '');
+
+    const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+
+    // Retrieve the payer (user wallet)
+    const payer = Keypair.fromSecretKey(Buffer.from(getItem('privateKey') ?? '', 'hex'));
+    const userPublicKey = payer.publicKey;
+
+    // Load the TokenSwap instance for the specific pool
+    const tokenSwap = await TokenSwap.loadTokenSwap(
+      connection,
+      SWAP_POOL_ADDRESS,
+      TOKEN_SWAP_PROGRAM_ID,
+      payer
+    );
+
+    // Fetch the mint info to calculate lamports per coin
+    const mintInfo = await getMint(connection, new PublicKey(fromTokenMint));
+    const LAMPORTS_PER_COIN = Math.pow(10, mintInfo.decimals);
+
+    // Convert the swap amount to lamports
+    const amountInLamports = BigInt(swapAmount * LAMPORTS_PER_COIN);
+
+    // Create or get the associated token accounts for the user
+    const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      payer,
+      new PublicKey(fromTokenMint),
+      userPublicKey
+    );
+
+    const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      payer,
+      new PublicKey(toTokenMint),
+      userPublicKey
+    );
+
+    // Pool accounts
+    const poolSourceTokenAccount = tokenSwap.tokenAccountA; // Pool's token A account
+    const poolDestinationTokenAccount = tokenSwap.tokenAccountB; // Pool's token B account
+
+    // Create user transfer authority (this can be a temporary keypair)
+    const userTransferAuthority = Keypair.generate();
+
+    // Approve transfer of tokens from the user's account to the pool
+    const minimumAmountOut = BigInt(1); // Set to a minimum acceptable output, adjust for slippage
+
+    // Swap Transaction
+    const swapTransaction = new Transaction().add(
+      TokenSwap.swapInstruction(
+        tokenSwap.swapProgramId, // Swap pool address
+        tokenSwap.authority, // Pool authority
+        userTransferAuthority.publicKey, // User's transfer authority
+        fromTokenAccount.address, // User's source token account
+        poolSourceTokenAccount, // Pool's source token account
+        poolDestinationTokenAccount, // Pool's destination token account
+        toTokenAccount.address, // User's destination token account
+        tokenSwap.poolToken, // Pool token mint account
+        tokenSwap.feeAccount, // Pool's fee account
+        null, // Host fee account (optional, use null if no host fee)
+        new PublicKey(fromTokenMint), // Source mint
+        new PublicKey(toTokenMint), // Destination mint
+        TOKEN_SWAP_PROGRAM_ID, // Swap program ID
+        TOKEN_PROGRAM_ID, // Token program ID
+        TOKEN_PROGRAM_ID, // Token program ID (destinationTokenProgramId is often the same)
+        tokenSwap.poolTokenProgramId, // Pool token program ID
+        amountInLamports, // Amount of source token to swap (in lamports)
+        minimumAmountOut // Minimum amount of destination token (adjust slippage tolerance)
+      )
+    );
+
+    // Sign and send the transaction
+    const signature = await sendAndConfirmTransaction(
+      connection,
+      swapTransaction,
+      [payer, userTransferAuthority], // Signers: payer and user transfer authority
+      {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+      }
+    );
+
+    console.log("Transaction confirmed with signature: ", signature);
+  } catch (error) {
+    console.error("Error during token swap:", error);
     throw error;
   }
 }

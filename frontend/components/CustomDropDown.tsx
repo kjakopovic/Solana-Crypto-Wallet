@@ -111,7 +111,8 @@ const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlacehol
   
   const styles = StyleSheet.create({
     container: {
-      padding: 20,
+      padding: 10,
+      width: '100%',
     },
     label: {
       fontSize: 18,
@@ -119,15 +120,11 @@ const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlacehol
       fontWeight: 'bold',
     },
     dropdownButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       paddingVertical: 12,
       paddingHorizontal: 16,
       borderWidth: 1,
       borderColor: '#6a6a6b',
       borderRadius: 8,
-      backgroundColor: '#191A21',
     },
     selectedItem: {
       flexDirection: 'row',
@@ -160,6 +157,7 @@ const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlacehol
       padding: 10,
       borderRadius: 5,
       marginBottom: 10,
+      color: '#fff',
     },
     option: {
       flexDirection: 'row',

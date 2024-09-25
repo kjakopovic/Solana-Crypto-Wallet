@@ -12,7 +12,7 @@ const ReceiveCrypto = () => {
     
     return (
         <SafeAreaView className='bg-background h-full'>
-            <View className='w-[100%] h-[60vh] items-center justify-between mt-[60px]'>
+            <View className='w-[100%] h-[50vh] items-center justify-between mt-[150px]'>
                 <View className='flex-row w-[65%] items-center justify-center'>
                     <TouchableOpacity
                         onPress={async () => {
