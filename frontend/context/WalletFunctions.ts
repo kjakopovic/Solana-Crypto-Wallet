@@ -25,24 +25,9 @@ import { TokenListProvider, TokenInfo, TokenListContainer } from '@solana/spl-to
 
 import { saveItem, getItem } from './SecureStorage';
 
-// import tokens from '../assets/solana.tokenlist.json';
-
 bip39.setDefaultWordlist('english');
 
-const fetch = require('node-fetch');
-
 const SOL_MINT = 'So11111111111111111111111111111111111111112'
-
-// interface TokenInfo {
-//   name: string;
-//   symbol: string;
-//   address: string;
-//   logoURI: string;
-// }
-
-// interface TokensData {
-//   tokens: TokenInfo[];
-// }
 
 interface TokenInfoPreview {
   name: string;
@@ -79,8 +64,6 @@ interface TransactionHistoryData {
   fromPublicWallet: string;
   toPublicWallet: string;
 }
-
-// const tokensData = tokens as TokensData;
 
 const generateWalletFromMnemonic = (mnemonic: string) => {
   const seed = bip39.mnemonicToSeedSync(mnemonic, "");
@@ -194,7 +177,7 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
     const url = 'https://api.coingecko.com/api/v3/coins/list';
     const options = {
       method: 'GET',
-      headers: {accept: 'application/json', 'x-cg-api-key': process.env.EXPO_PUBLIC_COIN_GECKO_API_KEY}
+      headers: {accept: 'application/json', 'x-cg-api-key': process.env.EXPO_PUBLIC_COIN_GECKO_API_KEY || ''}
     };
 
     // List of all coin gecko supported coins
