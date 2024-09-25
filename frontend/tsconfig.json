@@ -15,6 +15,6 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts", 
     "context/WalletFunctions.ts", 
-    "context/WalletFunctions.ts"  
+    "context/WalletFunctions.ts"
   ]
 }

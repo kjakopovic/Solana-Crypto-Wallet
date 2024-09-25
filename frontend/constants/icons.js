@@ -12,6 +12,7 @@ import digitalWallet from '../assets/icons/digital-wallet.png';
 import plus from '../assets/icons/plus.png';
 import arrowDown from '../assets/icons/arrow-down.png';
 import moneyBox from '../assets/icons/moneybox.png';
+import copy from '../assets/icons/copy.png';
 
 export default {
   clearText,
@@ -28,4 +29,5 @@ export default {
   plus,
   arrowDown,
   moneyBox,
+  copy
 };

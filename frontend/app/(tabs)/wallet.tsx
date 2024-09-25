@@ -206,7 +206,7 @@ const Wallet = () => {
                         <CircleButton 
                             title='Receive'
                             icon={icons.arrowDown}
-                            handleClick={() => {}}
+                            handleClick={() => {router.push('/receive_crypto' as Href)}}
                         />
                     </View>
 

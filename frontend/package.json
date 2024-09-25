@@ -44,6 +44,8 @@
     "nativewind": "^2.0.11",
     "node-fetch": "^2.7.0",
     "react": "18.2.0",
+    "react-native-qrcode-svg": "^6.3.2",
+    "expo-clipboard": "^6.0.3",
     "react-dom": "18.2.0",
     "react-native": "0.74.5",
     "react-native-dialog": "^9.3.0",
