@@ -1,0 +1,60 @@
+services:
+  # Backend service
+  wallet-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    working_dir: /app/backend
+    depends_on:
+      - wallet-sqlserver
+    networks:
+      - wallet-network
+    environment:
+      DB_SERVER: wallet-sqlserver
+      DB_NAME: walletDB
+      DB_USER: dbAdmin
+      DB_PASSWORD: Password123!
+    # Wait for SQL Server to start and complete the init script
+    # before starting the backend
+    # sleep can be changed accordingly and as needed
+    command: >
+      bash -c "
+      sleep 45s &&
+      npm run start
+      "
+
+  # SQL Server service
+  wallet-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: wallet-sqlserver
+    environment:
+      SA_PASSWORD: "Password123!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    networks:
+      - wallet-network
+    volumes:
+      - ./backend/init.sql:/init.sql:ro
+    healthcheck:
+      test: [ "CMD", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Password123! -Q 'SELECT 1'" ]
+      interval: 10s
+      retries: 10
+      start_period: 60s
+      timeout: 10s
+    command: >
+      /bin/bash -c "
+      /opt/mssql/bin/sqlservr &
+      sleep 20s &&
+      /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Password123! -d master -i /init.sql -C &&
+      wait
+      "
+
+# Networks
+networks:
+  wallet-network:
+    driver: bridge
