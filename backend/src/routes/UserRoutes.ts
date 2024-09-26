@@ -78,7 +78,6 @@ router.post('/register', UserController.createUser);
  *       500:
  *          description: Error updating user
  */
-
 router.put('/update', UserController.updateUser);
 
 /**
@@ -144,18 +143,18 @@ router.post('/logout', UserController.logoutUser);
  *     summary: Get user information
  *     description: Get user information by providing the public key in the path
  *     parameters:
- *          - in: path
- *          name: publicKey
- *          required: true
- *          schema:
- *          type: string
+ *       - in: path
+ *         name: publicKey
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *          description: User information retrieved successfully
+ *         description: User information retrieved successfully
  *       400:
- *          description: Public key is required
+ *         description: Public key is required
  *       500:
- *          description: Error getting user information
+ *         description: Error getting user information
  */
 router.get('/info', UserController.getUserInformation);
 

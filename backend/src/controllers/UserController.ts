@@ -83,8 +83,8 @@ class UserController{
         logger.info('Logging in user with publicKey: ' + publicKey, { className });
 
         if (!publicKey || !password){
-            logger.error('Username and password are required', { className });
-            return res.status(400).json({ message: 'Username and password are required' });
+            logger.error('PublicKey and password are required', { className });
+            return res.status(400).json({ message: 'PublicKey and password are required' });
         }
 
         try{
@@ -115,15 +115,13 @@ class UserController{
                 logger.info('User logged in successfully', { className });
 
                 return res.status(200).json({
-                    id: user.id,
                     username: user.username,
-                    publicKey: user.publicKey,
                     refreshToken,
                     accessToken
                 });
             } catch (error) {
                 logger.error({ message: 'Error generating tokens', error, className });
-                return res.status(500).json({ message: 'Error generating tokens' });
+                return res.status(501).json({ message: 'Error generating tokens' });
             }
         }catch(error){
             logger.error({ message: 'Error logging in user', error, className });

@@ -130,7 +130,6 @@ class UserService{
 
         if(user){
             return {
-                id: user.id,
                 username: user.username,
                 publicKey: user.publicKey,
                 joinedAt: user.joinedAt,
