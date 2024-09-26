@@ -2,6 +2,7 @@
 
 import { Router } from 'express';
 import PointsController from '../controllers/PointsController';
+import authMiddleware from "../middleware/AuthMiddleware";
 
 const router = Router();
 
@@ -42,6 +43,6 @@ const router = Router();
  *       500:
  *          description: Error saving points
  */
-router.post('/save', PointsController.savePoints);
+router.post('/save', authMiddleware, PointsController.savePoints);
 
 export default router;

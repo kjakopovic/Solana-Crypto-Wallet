@@ -2,6 +2,7 @@
 
 import { Router } from 'express';
 import QuizController from '../controllers/QuizController';
+import authMiddleware from "../middleware/AuthMiddleware";
 
 const router = Router();
 
@@ -32,6 +33,6 @@ const router = Router();
  *       500:
  *          description: Error getting random quiz
  */
-router.post('/get', QuizController.getRandomQuiz);
+router.post('/get', authMiddleware, QuizController.getRandomQuiz);
 
 export default router;

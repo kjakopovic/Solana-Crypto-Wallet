@@ -2,6 +2,7 @@
 
 import { Router } from 'express';
 import UserController from "../controllers/UserController";
+import authMiddleware from "../middleware/AuthMiddleware";
 
 const router = Router();
 
@@ -78,7 +79,7 @@ router.post('/register', UserController.createUser);
  *       500:
  *          description: Error updating user
  */
-router.put('/update', UserController.updateUser);
+router.put('/update', authMiddleware, UserController.updateUser);
 
 /**
  * @swagger
@@ -134,7 +135,7 @@ router.post('/login', UserController.loginUser);
  *       500:
  *          description: Error logging out user
  */
-router.post('/logout', UserController.logoutUser);
+router.post('/logout', authMiddleware, UserController.logoutUser);
 
 /**
  * @swagger
@@ -156,6 +157,6 @@ router.post('/logout', UserController.logoutUser);
  *       500:
  *         description: Error getting user information
  */
-router.get('/info', UserController.getUserInformation);
+router.get('/info', authMiddleware, UserController.getUserInformation);
 
 export default router;
