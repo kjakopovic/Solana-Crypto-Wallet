@@ -13,6 +13,7 @@ import plus from '../assets/icons/plus.png';
 import arrowDown from '../assets/icons/arrow-down.png';
 import moneyBox from '../assets/icons/moneybox.png';
 import copy from '../assets/icons/copy.png';
+import qrCodeScan from '../assets/icons/qr-code-scan.png';
 
 export default {
   clearText,
@@ -29,5 +30,6 @@ export default {
   plus,
   arrowDown,
   moneyBox,
-  copy
+  copy,
+  qrCodeScan
 };

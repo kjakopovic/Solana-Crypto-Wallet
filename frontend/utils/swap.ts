@@ -33,7 +33,7 @@ const getTokenAccountCreationInstruction = async (
     return [tokenAccountAddress, tokenAccountInstruction];
 };
 
-export const createSwapPool = async (convertFromMint: string, convertToMint: string) => {
+export const createSwapPool = async (convertFromMint: string, convertToMint: string, amountToSwap: number) => {
     const connection = getWalletConnection();
 
     try {

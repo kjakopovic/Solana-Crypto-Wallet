@@ -247,7 +247,7 @@ export const airdropMoney = async (amount: number) => {
       amount * LAMPORTS_PER_SOL
     );
   
-    await connection.confirmTransaction({ signature: airdropSignature } as TransactionConfirmationStrategy);
+    await connection.confirmTransaction(airdropSignature);
   } catch (error) {
     throw error;
   }

@@ -4,7 +4,7 @@ import React from 'react'
 interface CircleButtonProps {
     handleClick: () => void
     icon: any
-    title: string
+    title?: string
     additionalStyles?: string
     additionalImageStyles?: string
 }
@@ -24,10 +24,12 @@ const CircleButton: React.FC<CircleButtonProps> = ({ handleClick, icon, title, a
                     resizeMode="contain"
                 />
             </TouchableOpacity>
-
-            <Text className='text-secondaryHighlight items-center text-center font-pregular mt-1'>
-                {title}
-            </Text>
+            
+            {title && 
+                <Text className='text-secondaryHighlight items-center text-center font-pregular mt-1'>
+                    {title}
+                </Text>
+            }
         </View>
     )
 }

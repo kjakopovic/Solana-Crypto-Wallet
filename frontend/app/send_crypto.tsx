@@ -1,6 +1,8 @@
-import { View, Text, Image } from 'react-native'
+import { View, Text, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
+import { StatusBar } from 'expo-status-bar'
+import { CameraView, useCameraPermissions } from 'expo-camera'
 
 import React, { useState, useEffect } from 'react'
 
@@ -19,7 +21,12 @@ import {
 } from '@/context/WalletFunctions';
 import { Transaction } from '@solana/web3.js';
 
+import { icons } from '@/constants'
+
 const SendCrypto = () => {
+    const [permission, requestPermission] = useCameraPermissions();
+    const [isCameraVisible, setIsCameraVisible] = useState(false);
+
     const [cryptoData, setCryptoData] = useState([] as any[]);
     const [selectedCrypto, setSelectedCrypto] = useState(null as any);
 
@@ -102,6 +109,24 @@ const SendCrypto = () => {
         fetchFees();
     }, [selectedCrypto, sendData.amount]);
 
+    if (isCameraVisible) {
+        return (
+            <SafeAreaView className='h-full'>
+                {Platform.OS === 'android' ? <StatusBar hidden /> : null}
+
+                <CameraView 
+                    className='h-full'
+                    facing='back'
+                    onBarcodeScanned={({ data }) => {
+                        console.log(data);
+                        setSendData({ ...sendData, toAddress: data });
+                        setIsCameraVisible(false);
+                    }}
+                />
+            </SafeAreaView>
+        )
+    }
+
     return (
         <SafeAreaView className='bg-background h-full'>
             <CustomDialog 
@@ -134,7 +159,7 @@ const SendCrypto = () => {
                     </View>
 
                     <View className='w-full mt-10'>
-                        <Text className='text-secondary font-pmedium ml-3 text-[12px]'>
+                        <Text className='text-secondary ml-3 font-pmedium text-[12px]'>
                             To Address
                         </Text>
                         <FormField
@@ -142,6 +167,15 @@ const SendCrypto = () => {
                             handleChangeText={(text: string) => setSendData({ ...sendData, toAddress: text })}
                             otherStyles='w-full h-[65px] border-[1px]'
                             textStyles='text-[13px]'
+                            hasPressableIcon
+                            handleIconPress={() => {
+                                if (!permission?.granted) {
+                                    requestPermission();
+                                } else{
+                                    setIsCameraVisible(true);
+                                }
+                            }}
+                            icon={icons.qrCodeScan}
                         />
                     </View>
 

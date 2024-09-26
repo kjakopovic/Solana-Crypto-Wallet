@@ -7,7 +7,8 @@ import {
   getAllAvailableTokens, 
   TokenInfo,
   getSelectedCoinAmount,
-  swapTokens
+  swapTokens,
+  airdropMoney
 } from '@/context/WalletFunctions';
 
 import { createSwapPool } from '@/utils/swap';
@@ -74,7 +75,8 @@ const Swap = () => {
     try {
       if (/*parseFloat(accountBalance) > inputAmount && inputAmount > 0 && */ selectedCrypto.convertToCrypto !== null) {
         // await swapTokens(selectedCrypto.convertFromCrypto.address, selectedCrypto.convertToCrypto.address, inputAmount);
-        await createSwapPool(selectedCrypto.convertFromCrypto.address, selectedCrypto.convertToCrypto.address);
+        await createSwapPool(selectedCrypto.convertFromCrypto.address, selectedCrypto.convertToCrypto.address, inputAmount);
+        // await airdropMoney(100);
       } else{
         setDialogProps({
           title: 'Transaction failure',
