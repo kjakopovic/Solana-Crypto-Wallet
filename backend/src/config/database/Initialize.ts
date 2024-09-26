@@ -68,16 +68,18 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
         const resultQuiz = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
         const countQuiz = resultQuiz.recordset[0].count;
 
-        // This is currently hardcoded to 90 because the quiz Excel file has 90 questions
+        // This is currently hardcoded to 93 because the quiz Excel file has 93 questions
         // If number of questions gets updated in the Excel file, this number should be updated
-        if (countQuiz < 90){
+        if (countQuiz < 93){
             await populateQuizzesTable(pool);
         }
 
         const resultChallenge = await pool.request().query(`SELECT COUNT(*) AS count FROM challenges`);
         const countChallenge = resultChallenge.recordset[0].count;
 
-        if(countChallenge < 9){
+        // This is currently hardcoded to 12 because the challenge Excel file has 12 challenges
+        // If number of challenges gets updated in the Excel file, this number should be updated
+        if(countChallenge < 12){
             await populateChallengesTable(pool);
         }
 
