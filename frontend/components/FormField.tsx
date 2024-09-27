@@ -1,8 +1,6 @@
 import { View, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
-import { TextInput } from 'react-native-gesture-handler';
-
-import { icons } from '@/constants'
+import { TextInput } from 'react-native-gesture-handler'
 
 interface FormFieldProps {
     value: any;
@@ -30,7 +28,7 @@ const FormField: React.FC<FormFieldProps> = ({ iconStyles, icon, handleIconPress
                 className={`text-secondaryHighlight font-psemibold mt-3 ${textStyles}`}
                 value={(isTextVisible ?? true) ? value : ''}
                 placeholder={placeholder}
-                placeholderTextColor={'#7B7B8B'}
+                placeholderTextColor={'#6a6a6b'}
                 onChangeText={handleChangeText}
                 textAlignVertical='top'
                 multiline={true}

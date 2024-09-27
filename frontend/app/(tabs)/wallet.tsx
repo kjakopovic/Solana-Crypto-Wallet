@@ -185,10 +185,10 @@ const Wallet = () => {
                 description={dialogProps.description}
                 visible={dialogProps.visible}
                 showCancel
-                onOkPress={async () => {
+                onOkPress={() => {
                     setDialogProps({ title: '', description: '', visible: false })
 
-                    await unstakeSolana(selectedStakingItemData?.stakePubkey ?? '', selectedStakingItemData?.stakeBalance ?? 0);
+                    unstakeSolana(selectedStakingItemData?.stakePubkey ?? '', selectedStakingItemData?.stakeBalance ?? 0);
                     
                     setSelectedStakingItemData(null);
                 }}

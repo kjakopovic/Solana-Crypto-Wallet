@@ -212,7 +212,7 @@ export const airdropMoney = async (amount: number) => {
   }
 }
 
-export const calculateTransactionFees = async (toPublicKey: string, amount: number, tokenMint: string) => {
+export const sendTokensTransaction = async (toPublicKey: string, amount: number, tokenMint: string) => {
   try {
     const connection = getWalletConnection();
 
@@ -252,25 +252,12 @@ export const calculateTransactionFees = async (toPublicKey: string, amount: numb
       )
     );
 
-    return {
-      fee: (await transaction.getEstimatedFee(connection) ?? 0) / LAMPORTS_PER_COIN,
-      transaction: transaction
-    }
+    console.log('Transaction:', transaction);
+
+    await sendAndConfirmTransaction(connection, transaction, [fromWallet]);
   } catch (error) {
-    console.log('Error calculating transaction fees:', error);
+    throw error;
   }
-}
-
-export const sendTokensTransaction = async (transaction: Transaction | null) => {
-  if (!transaction){
-    throw new Error('Transaction is not defined');
-  }
-  
-  const connection = getWalletConnection();
-
-  const fromWallet = Keypair.fromSecretKey(Buffer.from(getItem('privateKey') ?? '', 'hex'));
-
-  await sendAndConfirmTransaction(connection, transaction, [fromWallet]);
 };
 
 export const getTransactionsHistory = async (currentPage: number): Promise<TransactionHistoryData[]> => {
