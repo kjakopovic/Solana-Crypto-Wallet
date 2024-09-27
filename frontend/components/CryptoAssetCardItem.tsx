@@ -9,11 +9,10 @@ interface CryptoAssetCardItemProps {
     sourcePicutre: string
     assetName: string
     currentPrice: string
-    oneDayMovement: string
     userAmount: string
 }
 
-const CryptoAssetCardItem: React.FC<CryptoAssetCardItemProps> = ({ sourcePicutre, assetName, currentPrice, oneDayMovement, userAmount }) => {
+const CryptoAssetCardItem: React.FC<CryptoAssetCardItemProps> = ({ sourcePicutre, assetName, currentPrice, userAmount }) => {
     return (
         <View className='w-full flex-row min-h-[10vh] justify-between items-center'>
             <View className='flex-row space-x-3'>
@@ -34,11 +33,6 @@ const CryptoAssetCardItem: React.FC<CryptoAssetCardItemProps> = ({ sourcePicutre
                         <Text className='text-secondary font-pregular text-center'>
                             {currentPrice}
                         </Text>
-
-                        <CryptoPriceMovement 
-                            percentage={oneDayMovement}
-                            customStyles='w-[62px]'
-                        />
                     </View>
                 </View>
             </View>

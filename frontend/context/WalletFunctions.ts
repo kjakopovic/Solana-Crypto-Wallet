@@ -1,6 +1,5 @@
 import '../context/polyfills';
-// import 'react-native-get-random-values';
-import { createJupiterApiClient, ResponseError } from '@jup-ag/api';
+import { createJupiterApiClient, QuoteResponse } from '@jup-ag/api';
 
 import * as bip39 from 'bip39';
 import { 
@@ -8,10 +7,8 @@ import {
   Connection, 
   clusterApiUrl, 
   LAMPORTS_PER_SOL, 
-  PublicKey, 
-  TransactionConfirmationStrategy,
+  PublicKey,
   Transaction,
-  SystemProgram,
   sendAndConfirmTransaction,
   Cluster,
   VersionedTransaction
@@ -23,8 +20,7 @@ import {
   getMint,
   AccountLayout
 } from "@solana/spl-token";
-import { TokenListProvider, TokenInfo, TokenListContainer } from '@solana/spl-token-registry';
-import { TokenSwap, CurveType, TOKEN_SWAP_PROGRAM_ID } from "@solana/spl-token-swap";
+import { TokenListProvider, TokenInfo } from '@solana/spl-token-registry';
 
 import { saveItem, getItem } from './SecureStorage';
 
@@ -36,7 +32,6 @@ interface TokenInfoPreview {
   name: string;
   symbol: string;
   address: string;
-  oneDayMovement: string;
   marketValueInDollars: string;
   userAmount: string;
   logoURIbase64: string;
@@ -45,18 +40,6 @@ interface TokenInfoPreview {
 interface WalletInfo {
   balance: string;
   tokens: TokenInfoPreview[];
-}
-
-interface CoinGeckoCoinsList {
-  id: string;
-  symbol: string;
-  name: string;
-}
-
-interface CoinMarketInfo {
-  current_price: number;
-  price_change_percentage_24h: number;
-  symbol: string;
 }
 
 interface TransactionHistoryData {
@@ -109,7 +92,6 @@ export const restoreWallet = (mnemonic: string) => {
     }
 
     generateWalletFromMnemonic(mnemonic);
-    console.log(`TODO temp: ${getItem('publicKey')}`);
   } catch (error) {
     console.error('Error restoring wallet:', error);
     throw error;
@@ -117,7 +99,6 @@ export const restoreWallet = (mnemonic: string) => {
 };
 
 export const getWalletInfo = async (): Promise<WalletInfo> => {
-  //TODO: refactor, imam coingecko id za svaki coin ne treba mi dohvacanje IDjeva sa coin gecka
   try {
     // Getting metadata about the wallet
     const connection = getWalletConnection();
@@ -130,7 +111,7 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
 
     // Preparing variables for calculations
     const tokenInfoPreviews: TokenInfoPreview[] = [];
-    let listOfSymbols: string[] = [ 'SOL'];
+    let listOfMints: string[] = [ SOL_MINT ];
 
     // Getting list of supported tokens
     const tokenListProvider = await new TokenListProvider().resolve();
@@ -138,14 +119,13 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
 
     // Getting users solana balance
     const solBalance = (await connection.getBalance(publicKey)) / LAMPORTS_PER_SOL;
-    // const additionalSolInfo = tokensData.tokens.find(tokenInfo => tokenInfo.symbol === 'SOL');
+
     const additionalSolInfo = tokenList.find(token => token.address === SOL_MINT);
 
     const solInfo: TokenInfoPreview = {
-      name: 'Solana',
+      name: 'Wrapped SOL',
       symbol: 'SOL',
       address: additionalSolInfo?.address ?? '',
-      oneDayMovement: '',
       marketValueInDollars: '',
       userAmount: solBalance.toString(),
       logoURIbase64: additionalSolInfo?.logoURI ?? '',
@@ -156,70 +136,41 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
     tokens.value.map(({ pubkey, account }) => {
       // Decode the token account data
       const accountInfo = AccountLayout.decode(account.data);
-  
-      // Extract the mint address and balance
-      const mintAddress = new PublicKey(accountInfo.mint).toBase58();
-  
-      // Find token metadata (name, symbol, logo) using the mint address
-      const tokenInfo = tokenList.find((token) => token.address === mintAddress);
-  
-      const info: TokenInfoPreview = {
-        name: tokenInfo?.name ?? '',
-        symbol: tokenInfo?.symbol ?? '',
-        address: mintAddress,
-        oneDayMovement: '',
-        marketValueInDollars: '',
-        userAmount: (accountInfo.amount).toString(),
-        logoURIbase64: tokenInfo?.logoURI ?? '',
-      };
 
-      tokenInfoPreviews.push(info);
+      const userAmount = (accountInfo.amount).toString();
+
+      if (userAmount === '0') {
+        // Extract the mint address and balance
+        const mintAddress = new PublicKey(accountInfo.mint).toBase58();
+    
+        // Find token metadata (name, symbol, logo) using the mint address
+        const tokenInfo = tokenList.find((token) => token.address === mintAddress);
+    
+        const info: TokenInfoPreview = {
+          name: tokenInfo?.name ?? '',
+          symbol: tokenInfo?.symbol ?? '',
+          address: mintAddress,
+          marketValueInDollars: '',
+          userAmount: (accountInfo.amount).toString(),
+          logoURIbase64: tokenInfo?.logoURI ?? '',
+        };
+
+        listOfMints.push(mintAddress);
+        tokenInfoPreviews.push(info); 
+      }
     });
 
-    // Data for apis from coingecko
-    const url = 'https://api.coingecko.com/api/v3/coins/list';
-    const options = {
-      method: 'GET',
-      headers: {accept: 'application/json', 'x-cg-api-key': process.env.EXPO_PUBLIC_COIN_GECKO_API_KEY || ''}
-    };
-
-    // List of all coin gecko supported coins
-    const coinGeckoCoinsResponse = await fetch(url, options);
-
-    const coinGeckoCoins: CoinGeckoCoinsList[] = await coinGeckoCoinsResponse.json();
-
-    // List of coingecko ids for our wallet coins
-    let listOfIds: string[] = [];
-
-    // Getting ids for our coins
-    for (const symbol of listOfSymbols) {
-      const currentGeckoCoin = coinGeckoCoins.find(coin => coin.symbol === symbol);
-      
-      if (currentGeckoCoin !== undefined) {
-        listOfIds.push(currentGeckoCoin.id);
-      }
-    }
-
-    // Fetching data about coins from wallet from coingecko
-    const coinMarketData: CoinMarketInfo[] = await (await fetch(
-      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + listOfIds.join(','),
-      options
-    )).json();
+    // fetch jupiter API for token prices
+    const priceData = await (await fetch('https://api.jup.ag/price/v2?ids=' + listOfMints.join(','))).json();
 
     // Setting balance variable for total wallet balance
     let balance: number = 0;
 
     // Calculating total wallet balance and coins live data
     for (const token of tokenInfoPreviews) {
-      const currentCoin = coinMarketData.find(x => x.symbol === token.symbol.toLowerCase());
+      const priceNumber = parseFloat(priceData.data[token.address]?.price ?? '0.00');
 
-      if (currentCoin === undefined) {
-        token.oneDayMovement = '0.00%';
-        token.marketValueInDollars = '0.00';
-      }
-
-      token.oneDayMovement = currentCoin?.price_change_percentage_24h?.toFixed(2) + '%' ?? '0.00%';
-      token.marketValueInDollars = currentCoin?.current_price?.toString() ?? '0.00';
+      token.marketValueInDollars = priceNumber.toFixed(3);
 
       balance += (parseFloat(token.userAmount) * parseFloat(token.marketValueInDollars));
     }
@@ -420,23 +371,23 @@ export const getTransactionsHistory = async (currentPage: number): Promise<Trans
   }
 };
 
-export const getAllAvailableTokens = async (): Promise<TokenInfo[]> => {
-  const tokenListProvider = await new TokenListProvider().resolve()
+export const getAllTradeableTokens = async (): Promise<TokenInfo[]> => {
+  const tokenListProvider = await new TokenListProvider().resolve();
+  const jupiterQuoteApi = createJupiterApiClient();
+
+  const tradeableMints = await jupiterQuoteApi.tokensGet();
 
   let tokenList =  tokenListProvider.filterByClusterSlug(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? '').getList();
 
-  tokenList = tokenList.filter(token => token.symbol !== 'wSOL');
-
-  tokenList.unshift({
-    chainId: 101,
-    address: SOL_MINT,
-    name: 'Solana',
-    symbol: 'SOL',
-    decimals: 9,
-    logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
-  });
+  tokenList = tokenList.filter(token => tradeableMints.includes(token.address));
 
   return tokenList;
+}
+
+export const getAllAvailableTokens = async (): Promise<TokenInfo[]> => {
+  const tokenListProvider = await new TokenListProvider().resolve();
+
+  return tokenListProvider.filterByClusterSlug(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? '').getList();
 }
 
 export const getSelectedCoinAmount = async (coinMint: string) => {
@@ -465,145 +416,58 @@ export const getSelectedCoinAmount = async (coinMint: string) => {
   }
 }
 
-//Jupiter API, radi samo na mainnetu
-// export const swapTokens = async (fromTokenMint: string, toTokenMint: string, swapAmount: number) => {
-//   try {
-//     const connection = getWalletConnection();
-//     const jupiterQuoteApi = createJupiterApiClient();
-  
-//     const mintInfo = await getMint(connection, new PublicKey(fromTokenMint));
-//     const LAMPORTS_PER_COIN = Math.pow(10, mintInfo.decimals);
-
-//     const amountInLamports = swapAmount * LAMPORTS_PER_COIN;
-    
-//     const quote = await jupiterQuoteApi.quoteGet({
-//       inputMint: fromTokenMint,
-//       outputMint: toTokenMint,
-//       amount: amountInLamports,
-//     });
-
-//     console.log(quote);
-
-//     const serializedQuote = await jupiterQuoteApi.swapPost({
-//       swapRequest: {
-//         userPublicKey: getItem('publicKey') ?? '',
-//         wrapAndUnwrapSol: true,
-//         quoteResponse: quote
-//       }
-//     });
-
-//     const swapTransactionBuf = Buffer.from(serializedQuote.swapTransaction, 'base64');
-//     var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-
-//     const latestBlockHash = await connection.getLatestBlockhash();
-//     const rawTransaction = transaction.serialize();
-
-//     const txid = await connection.sendRawTransaction(rawTransaction, {
-//       skipPreflight: true,
-//       maxRetries: 2
-//     });
-
-//     await connection.confirmTransaction({
-//       blockhash: latestBlockHash.blockhash,
-//       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-//       signature: txid
-//     });
-//   } catch (error: any) {
-//     console.log(error.response);
-//     throw error;
-//   }
-// }
-
+// ALERT: This function works only on mainnet
 export const swapTokens = async (fromTokenMint: string, toTokenMint: string, swapAmount: number) => {
+  const connection = getWalletConnection();
+  const jupiterQuoteApi = createJupiterApiClient();
+
+  const mintInfo = await getMint(connection, new PublicKey(fromTokenMint));
+  const LAMPORTS_PER_COIN = Math.pow(10, mintInfo.decimals);
+
+  const amountInLamports = swapAmount * LAMPORTS_PER_COIN;
+  
+  let quote: QuoteResponse;
+
   try {
-    const SWAP_POOL_ADDRESS = new PublicKey(process.env.EXPO_PUBLIC_SWAP_POOL_ADDRESS ?? '');
-
-    const connection = new Connection("https://api.devnet.solana.com", "confirmed");
-
-    // Retrieve the payer (user wallet)
-    const payer = Keypair.fromSecretKey(Buffer.from(getItem('privateKey') ?? '', 'hex'));
-    const userPublicKey = payer.publicKey;
-
-    // Load the TokenSwap instance for the specific pool
-    const tokenSwap = await TokenSwap.loadTokenSwap(
-      connection,
-      SWAP_POOL_ADDRESS,
-      TOKEN_SWAP_PROGRAM_ID,
-      payer
-    );
-
-    // Fetch the mint info to calculate lamports per coin
-    const mintInfo = await getMint(connection, new PublicKey(fromTokenMint));
-    const LAMPORTS_PER_COIN = Math.pow(10, mintInfo.decimals);
-
-    // Convert the swap amount to lamports
-    const amountInLamports = BigInt(swapAmount * LAMPORTS_PER_COIN);
-
-    // Create or get the associated token accounts for the user
-    const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      payer,
-      new PublicKey(fromTokenMint),
-      userPublicKey
-    );
-
-    const toTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      payer,
-      new PublicKey(toTokenMint),
-      userPublicKey
-    );
-
-    // Pool accounts
-    const poolSourceTokenAccount = tokenSwap.tokenAccountA; // Pool's token A account
-    const poolDestinationTokenAccount = tokenSwap.tokenAccountB; // Pool's token B account
-
-    // Create user transfer authority (this can be a temporary keypair)
-    const userTransferAuthority = Keypair.generate();
-
-    // Approve transfer of tokens from the user's account to the pool
-    const minimumAmountOut = BigInt(1); // Set to a minimum acceptable output, adjust for slippage
-
-    // Swap Transaction
-    const swapTransaction = new Transaction().add(
-      TokenSwap.swapInstruction(
-        tokenSwap.swapProgramId, // Swap pool address
-        tokenSwap.authority, // Pool authority
-        userTransferAuthority.publicKey, // User's transfer authority
-        fromTokenAccount.address, // User's source token account
-        poolSourceTokenAccount, // Pool's source token account
-        poolDestinationTokenAccount, // Pool's destination token account
-        toTokenAccount.address, // User's destination token account
-        tokenSwap.poolToken, // Pool token mint account
-        tokenSwap.feeAccount, // Pool's fee account
-        null, // Host fee account (optional, use null if no host fee)
-        new PublicKey(fromTokenMint), // Source mint
-        new PublicKey(toTokenMint), // Destination mint
-        TOKEN_SWAP_PROGRAM_ID, // Swap program ID
-        TOKEN_PROGRAM_ID, // Token program ID
-        TOKEN_PROGRAM_ID, // Token program ID (destinationTokenProgramId is often the same)
-        tokenSwap.poolTokenProgramId, // Pool token program ID
-        amountInLamports, // Amount of source token to swap (in lamports)
-        minimumAmountOut // Minimum amount of destination token (adjust slippage tolerance)
-      )
-    );
-
-    // Sign and send the transaction
-    const signature = await sendAndConfirmTransaction(
-      connection,
-      swapTransaction,
-      [payer, userTransferAuthority], // Signers: payer and user transfer authority
-      {
-        skipPreflight: false,
-        preflightCommitment: "confirmed",
-      }
-    );
-
-    console.log("Transaction confirmed with signature: ", signature);
+    quote = await jupiterQuoteApi.quoteGet({
+      inputMint: fromTokenMint,
+      outputMint: toTokenMint,
+      amount: amountInLamports,
+    });
   } catch (error) {
-    console.error("Error during token swap:", error);
-    throw error;
+    throw new Error('Token is not tradeable');
   }
+
+  const serializedQuote = await jupiterQuoteApi.swapPost({
+    swapRequest: {
+      userPublicKey: getItem('publicKey') ?? '',
+      wrapAndUnwrapSol: true,
+      quoteResponse: quote
+    }
+  });
+
+  const swapTransactionBuf = Buffer.from(serializedQuote.swapTransaction, 'base64');
+  var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+
+  const latestBlockHash = await connection.getLatestBlockhash();
+  const rawTransaction = transaction.serialize();
+
+  let txid: string;
+
+  try {
+    txid = await connection.sendRawTransaction(rawTransaction, {
+      skipPreflight: true,
+      maxRetries: 2
+    });
+  } catch (error) {
+    throw new Error('You do not have enough tokens to swap or the input is not valid.');
+  }
+
+  await connection.confirmTransaction({
+    blockhash: latestBlockHash.blockhash,
+    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+    signature: txid
+  });
 }
 
 export {

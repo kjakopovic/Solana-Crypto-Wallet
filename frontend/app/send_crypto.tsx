@@ -13,7 +13,7 @@ import CustomDropDown from '@/components/CustomDropDown';
 
 import { getItem } from '@/context/SecureStorage';
 import { 
-    getAllAvailableTokens, 
+    getAllTradeableTokens, 
     TokenInfo, 
     getSelectedCoinAmount, 
     sendTokensTransaction, 
@@ -49,7 +49,7 @@ const SendCrypto = () => {
 
     useEffect(() => {
         const fetchAllTokensData = async () => {
-            const tokens = await getAllAvailableTokens();
+            const tokens = await getAllTradeableTokens();
             const data = tokens.map((token: TokenInfo, index: number) => ({
                 label: token.name,
                 logo: token.logoURI,

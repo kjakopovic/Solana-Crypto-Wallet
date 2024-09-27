@@ -37,12 +37,12 @@ const Wallet = () => {
 
     const fetchWalletInfo = async () => {
         const fetching = await Promise.all([
-            // await getWalletInfo(),
+            await getWalletInfo(),
             await getTransactionsHistory(1)
         ])
 
-        // setWalletInfo(fetching[0])
-        setHistory(fetching[0])
+        setWalletInfo(fetching[0])
+        setHistory(fetching[1])
         setCurrentTransactionsHistoryPage(2)
 
         setLoading(false)
@@ -243,16 +243,15 @@ const Wallet = () => {
                         {selectedMenu === 0 && (
                             <View className='w-[90%] mx-4'>
                                 {walletInfo.tokens.map((token, index) => (
-                                    token.userAmount !== '0' ? (
+                                    token.userAmount !== '0' && (
                                         <CryptoAssetCardItem 
                                             sourcePicutre={token.logoURIbase64}
                                             assetName={token.name}
                                             currentPrice={`$${token.marketValueInDollars}`}
-                                            oneDayMovement={token.oneDayMovement}
                                             userAmount={token.userAmount}
                                             key={index}
                                         />
-                                    ) : (<></>)
+                                    )
                                 ))}
                             </View>
                         )}

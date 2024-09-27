@@ -4,14 +4,12 @@ import { ScrollView } from 'react-native-gesture-handler'
 import React, { useEffect, useState } from 'react'
 
 import {
-  getAllAvailableTokens, 
+  getAllTradeableTokens, 
   TokenInfo,
   getSelectedCoinAmount,
   swapTokens,
   airdropMoney
 } from '@/context/WalletFunctions';
-
-import { createSwapPool } from '@/utils/swap';
 
 import CustomDialog from '@/components/CustomDialog';
 import CustomDropDown from '@/components/CustomDropDown';
@@ -37,7 +35,7 @@ const Swap = () => {
 
   useEffect(() => {
     const fetchAllTokensData = async () => {
-        const tokens = await getAllAvailableTokens();
+        const tokens = await getAllTradeableTokens();
         const data = tokens.map((token: TokenInfo, index: number) => ({
             label: token.name,
             logo: token.logoURI,
@@ -73,10 +71,8 @@ const Swap = () => {
 
   const handleCoinsSwap = async () => {
     try {
-      if (/*parseFloat(accountBalance) > inputAmount && inputAmount > 0 && */ selectedCrypto.convertToCrypto !== null) {
-        // await swapTokens(selectedCrypto.convertFromCrypto.address, selectedCrypto.convertToCrypto.address, inputAmount);
-        await createSwapPool(selectedCrypto.convertFromCrypto.address, selectedCrypto.convertToCrypto.address, inputAmount);
-        // await airdropMoney(100);
+      if (parseFloat(accountBalance) > inputAmount && inputAmount > 0 && selectedCrypto.convertToCrypto !== null) {
+        await swapTokens(selectedCrypto.convertFromCrypto.address, selectedCrypto.convertToCrypto.address, inputAmount);
       } else{
         setDialogProps({
           title: 'Transaction failure',
@@ -84,10 +80,10 @@ const Swap = () => {
           visible: true
         })
       }
-    } catch (error) {
+    } catch (error: any) {
       setDialogProps({
         title: 'Transaction failure',
-        description: 'An error occurred while trying to swap coins.',
+        description: error.message ?? 'An error occurred while trying to swap coins.',
         visible: true
       })
     }
