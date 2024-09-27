@@ -83,8 +83,8 @@ class UserController{
         logger.info('Logging in user with publicKey: ' + publicKey, { className });
 
         if (!publicKey || !password){
-            logger.error('Username and password are required', { className });
-            return res.status(400).json({ message: 'Username and password are required' });
+            logger.error('PublicKey and password are required', { className });
+            return res.status(400).json({ message: 'PublicKey and password are required' });
         }
 
         try{
@@ -115,15 +115,13 @@ class UserController{
                 logger.info('User logged in successfully', { className });
 
                 return res.status(200).json({
-                    id: user.id,
                     username: user.username,
-                    publicKey: user.publicKey,
                     refreshToken,
                     accessToken
                 });
             } catch (error) {
                 logger.error({ message: 'Error generating tokens', error, className });
-                return res.status(500).json({ message: 'Error generating tokens' });
+                return res.status(501).json({ message: 'Error generating tokens' });
             }
         }catch(error){
             logger.error({ message: 'Error logging in user', error, className });
@@ -131,26 +129,30 @@ class UserController{
         }
     }
 
-    async getUserInformation(req: Request, res: Response){
-        const publicKey = req.params.publicKey;
+    async getUserInformation(req: Request, res: Response) {
+        const publicKey = req.query.publicKey as string;
 
-        if(!publicKey){
-            logger.error('Public key is required', { className });
-            return res.status(400).json({ message: 'Public key is required' });
+        if (!publicKey) {
+            logger.error('Public key is required', {className});
+            return res.status(400).json({message: 'Public key is required'});
         }
 
-        logger.info('Getting user information for publicKey: ' + publicKey, { className });
+        logger.info('Getting user information for publicKey: ' + publicKey, {className});
 
-        const result = await UserService.getUserInfo(publicKey);
-        if(!result){
-            logger.error('User not found', { className });
-            return res.status(404).json({ message: 'User not found' });
+        try {
+            const result = await UserService.getUserInfo(publicKey);
+            if (!result) {
+                logger.error('User not found', {className});
+                return res.status(404).json({message: 'User not found'});
+            }
+
+            logger.info('User information found', {className});
+            return res.status(200).send(result);
+        } catch (error) {
+            logger.error({message: 'Error getting user information', error, className});
+            return res.status(500).json({message: 'Error getting user information'});
         }
-
-        logger.info('User information found', { className });
-        return res.status(200).json(result);
     }
-
 }
 
 export default new UserController();

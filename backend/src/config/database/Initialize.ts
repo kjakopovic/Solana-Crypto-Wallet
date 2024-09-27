@@ -40,28 +40,49 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
         `);
 
         await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'challenges')
+            BEGIN
+                CREATE TABLE challenges (
+                    id INT PRIMARY KEY NOT NULL,
+                    name NVARCHAR(255) NOT NULL,
+                    description NVARCHAR(MAX) NOT NULL,
+                    points INT NOT NULL
+                )
+            END
+        `);
+
+        await pool.request().query(`
             IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'points')
             BEGIN
                 CREATE TABLE points (
                     id INT PRIMARY KEY IDENTITY(1,1),
                     userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
                     timestamp DATETIME DEFAULT GETDATE(),
-                    points INT NOT NULL,
-                    fromChallenge BIT NOT NULL,
-                    fromDailyQuiz BIT NOT NULL,
-                    questionId INT FOREIGN KEY REFERENCES quizzes(id),
+                    challengeId INT FOREIGN KEY REFERENCES challenges(id) DEFAULT NULL,
+                    quizDifficulty NVARCHAR(10) DEFAULT NULL,
+                    points INT NOT NULL
                 )
             END
         `);
 
-        const result = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
-        const count = result.recordset[0].count;
+        const resultQuiz = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
+        const countQuiz = resultQuiz.recordset[0].count;
 
-        // This is currently hardcoded to 90 because the quiz Excel file has 90 questions
+        // This is currently hardcoded to 93 because the quiz Excel file has 93 questions
         // If number of questions gets updated in the Excel file, this number should be updated
-        if (count < 90){
+        if (countQuiz < 93){
             await populateQuizzesTable(pool);
         }
+
+        const resultChallenge = await pool.request().query(`SELECT COUNT(*) AS count FROM challenges`);
+        const countChallenge = resultChallenge.recordset[0].count;
+
+        // This is currently hardcoded to 12 because the challenge Excel file has 12 challenges
+        // If number of challenges gets updated in the Excel file, this number should be updated
+        if(countChallenge < 12){
+            await populateChallengesTable(pool);
+        }
+
 
         logger.info('Database initialized successfully', { className });
     } catch (error) {
@@ -99,6 +120,36 @@ const populateQuizzesTable = async (pool: ConnectionPool) => {
         logger.info('Quizzes table populated successfully', {className});
     } catch (error) {
         logger.error({ message: 'Error populating quizzes table: ' + error, error, className });
+    }
+}
+
+const populateChallengesTable = async (pool: ConnectionPool) => {
+    logger.info('Populating challenges table', { className });
+
+    try{
+        const workbook = xlsx.readFile('../backend/src/data/excel/challenges.xlsx');
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        const challenges: any[][] = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+        challenges.shift(); // Remove the header row
+
+        for (const row of challenges) {
+            const [id, name, description, points] = row;
+            await pool.request()
+                .input('id', id)
+                .input('name', name)
+                .input('description', description)
+                .input('points', points)
+                .query(`
+                    INSERT INTO challenges (id,name, description, points)
+                    VALUES (@id, @name, @description, @points)
+                `);
+        }
+
+        logger.info('Challenges table populated successfully', {className});
+    } catch (error) {
+        logger.error({ message: 'Error populating challenges table: ' + error, error, className });
     }
 }
 

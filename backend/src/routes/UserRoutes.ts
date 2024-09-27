@@ -2,6 +2,7 @@
 
 import { Router } from 'express';
 import UserController from "../controllers/UserController";
+import authMiddleware from "../middleware/AuthMiddleware";
 
 const router = Router();
 
@@ -78,8 +79,7 @@ router.post('/register', UserController.createUser);
  *       500:
  *          description: Error updating user
  */
-
-router.put('/update', UserController.updateUser);
+router.put('/update', authMiddleware, UserController.updateUser);
 
 /**
  * @swagger
@@ -135,7 +135,7 @@ router.post('/login', UserController.loginUser);
  *       500:
  *          description: Error logging out user
  */
-router.post('/logout', UserController.logoutUser);
+router.post('/logout', authMiddleware, UserController.logoutUser);
 
 /**
  * @swagger
@@ -144,19 +144,19 @@ router.post('/logout', UserController.logoutUser);
  *     summary: Get user information
  *     description: Get user information by providing the public key in the path
  *     parameters:
- *          - in: path
- *          name: publicKey
- *          required: true
- *          schema:
- *          type: string
+ *       - in: path
+ *         name: publicKey
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *          description: User information retrieved successfully
+ *         description: User information retrieved successfully
  *       400:
- *          description: Public key is required
+ *         description: Public key is required
  *       500:
- *          description: Error getting user information
+ *         description: Error getting user information
  */
-router.get('/info', UserController.getUserInformation);
+router.get('/info', authMiddleware, UserController.getUserInformation);
 
 export default router;

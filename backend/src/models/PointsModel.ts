@@ -13,20 +13,18 @@ class PointsModel {
         this.db = pool;
     }
 
-    public async savePointsChallenge(userId: string, points: number): Promise<void> {
+    public async savePointsChallenge(userId: string, challengeId: number, points: number): Promise<void> {
         logger.info(`Saving ${points} points for user: ` + userId, { className });
         const sqlQuery = `
-            INSERT INTO points (userId, points, fromChallenge, fromDailyQuiz, questionId)
-            VALUES (@userId, @points, @fromChallenge, @fromDailyQuiz, @questionId);
+            INSERT INTO points (userId, challengeId, points)
+            VALUES (@userId, @challengeId, @points);
         `;
 
         try{
             await this.db.request()
                 .input('userId', userId)
+                .input('challengeId', challengeId)
                 .input('points', points)
-                .input('fromChallenge', 1)
-                .input('fromDailyQuiz', 0)
-                .input('questionId', null)
                 .query(sqlQuery);
 
             logger.info('Points saved successfully', { className });
@@ -38,20 +36,18 @@ class PointsModel {
         }
     }
 
-    public async savePointsQuiz(userId: string, points:number, questionId: number): Promise<void> {
+    public async savePointsQuiz(userId: string, quizDifficulty: string, points: number): Promise<void> {
         logger.info(`Saving ${points} points for user: ` + userId, { className });
         const sqlQuery = `
-            INSERT INTO points (userId, points, fromChallenge, fromDailyQuiz, questionId)
-            VALUES (@userId, @points, @fromChallenge, @fromDailyQuiz, @questionId);
+            INSERT INTO points (userId, quizDifficulty, points)
+            VALUES (@userId, @quizDifficulty, @points);
         `;
 
         try {
             await this.db.request()
                 .input('userId', userId)
+                .input('quizDifficulty', quizDifficulty)
                 .input('points', points)
-                .input('fromChallenge', 0)
-                .input('fromDailyQuiz', 1)
-                .input('questionId', questionId)
                 .query(sqlQuery);
 
             logger.info('Points saved successfully', {className});

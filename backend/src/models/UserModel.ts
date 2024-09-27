@@ -134,7 +134,7 @@ class UserModel {
         logger.info('Updating user points for user: ' + userId, { className });
         const sqlQuery = `
             UPDATE users
-            SET dailyQuizPoints = ISNULL(dailyQuizPoints, 0) + @points
+            SET points = ISNULL(points, 0) + @points
             WHERE id = @userId;
         `;
 

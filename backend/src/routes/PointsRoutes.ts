@@ -2,10 +2,13 @@
 
 import { Router } from 'express';
 import PointsController from '../controllers/PointsController';
+import authMiddleware from "../middleware/AuthMiddleware";
 
 const router = Router();
 
 // TODO: Change this endpoint so it works differently, do not send the points at all, use table and json msgs to assign points to a user
+// TODO: Change so poiunts arent required when it is daily quz
+// TODO: Make API for getALl challenges
 /**
  * @swagger
  * /points/save:
@@ -24,15 +27,12 @@ const router = Router();
  *               publicKey:
  *                 type: string
  *                 required: true
- *               points:
- *                 type: number
- *                 required: true
- *               fromChallenge:
- *                  type: boolean
- *               fromDailyQuiz:
- *                  type: boolean
- *               questionId:
- *                  type: integer
+ *               challengeId:
+ *                  type: string
+ *                  required: false
+ *               quizDifficulty:
+ *                  type: string
+ *                  required: false
  *     responses:
  *       200:
  *          description: Points saved successfully
@@ -43,6 +43,6 @@ const router = Router();
  *       500:
  *          description: Error saving points
  */
-router.post('/save', PointsController.savePoints);
+router.post('/save', authMiddleware, PointsController.savePoints);
 
 export default router;
