@@ -243,15 +243,13 @@ const Wallet = () => {
                         {selectedMenu === 0 && (
                             <View className='w-[90%] mx-4'>
                                 {walletInfo.tokens.map((token, index) => (
-                                    token.userAmount !== '0' && (
-                                        <CryptoAssetCardItem 
-                                            sourcePicutre={token.logoURIbase64}
-                                            assetName={token.name}
-                                            currentPrice={`$${token.marketValueInDollars}`}
-                                            userAmount={token.userAmount}
-                                            key={index}
-                                        />
-                                    )
+                                    <CryptoAssetCardItem 
+                                        sourcePicutre={token.logoURIbase64}
+                                        assetName={token.name}
+                                        currentPrice={`$${token.marketValueInDollars}`}
+                                        userAmount={token.userAmount}
+                                        key={index}
+                                    />
                                 ))}
                             </View>
                         )}
