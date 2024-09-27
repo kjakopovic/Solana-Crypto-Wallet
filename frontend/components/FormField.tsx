@@ -16,9 +16,11 @@ interface FormFieldProps {
     hasPressableIcon?: boolean;
     handleIconPress?: () => void;
     icon?: any;
+    removeIconColor?: boolean;
+    iconStyles?: string;
 }
 
-const FormField: React.FC<FormFieldProps> = ({ icon, handleIconPress, hasPressableIcon, value, placeholder, handleChangeText, otherStyles, isTextVisible, isReadOnly, textStyles, digitsOnly }) => {
+const FormField: React.FC<FormFieldProps> = ({ iconStyles, icon, handleIconPress, hasPressableIcon, value, placeholder, handleChangeText, otherStyles, isTextVisible, isReadOnly, textStyles, digitsOnly, removeIconColor }) => {
     return (
         <View 
             className={`flex w-5/6 h-[200px] px-4 bg-background border-2 border-secondary 
@@ -43,9 +45,9 @@ const FormField: React.FC<FormFieldProps> = ({ icon, handleIconPress, hasPressab
                     >
                         <Image 
                             source={icon} 
-                            className='h-5 w-5' 
+                            className={`h-5 w-5 ${iconStyles}`} 
                             resizeMode='contain'
-                            tintColor='#BBA880'
+                            tintColor={removeIconColor ? '' : '#BBA880'}
                         />
                     </TouchableOpacity>
                 </View>

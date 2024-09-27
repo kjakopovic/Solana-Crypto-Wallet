@@ -17,9 +17,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({ visible, title, description
             <Dialog.Container 
                 contentStyle={{ 
                     backgroundColor: "#02020d", 
-                    borderRadius: 15, 
-                    borderColor: '#444446', 
-                    borderWidth: 2
+                    borderRadius: 15
                 }}
                 visible={visible}
             >
@@ -34,7 +32,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({ visible, title, description
                 { showCancel && 
                     <Dialog.Button 
                         label="Cancel" 
-                        onPress={() => {onCancelPress}} 
+                        onPress={onCancelPress ?? (() => {})} 
                         style={{ color: '#BBA880' }}
                     />
                 }

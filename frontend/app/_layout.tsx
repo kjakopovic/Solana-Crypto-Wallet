@@ -58,6 +58,10 @@ const RootLayout = () => {
                     <Stack.Screen
                         name="receive_crypto" 
                         options={{ headerShown: false }} />
+
+                    <Stack.Screen
+                        name="stake_crypto" 
+                        options={{ headerShown: false }} />
                 </Stack>
 
                 <StatusBar backgroundColor="#02020D" style="light" />

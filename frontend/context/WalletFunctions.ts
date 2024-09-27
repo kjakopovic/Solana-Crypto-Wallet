@@ -11,7 +11,10 @@ import {
   Transaction,
   sendAndConfirmTransaction,
   Cluster,
-  VersionedTransaction
+  VersionedTransaction,
+  StakeProgram,
+  Authorized,
+  Lockup
 } from '@solana/web3.js';
 import {
   TOKEN_PROGRAM_ID,
@@ -49,6 +52,11 @@ interface TransactionHistoryData {
   coinName: string;
   fromPublicWallet: string;
   toPublicWallet: string;
+}
+
+interface StakingItemData {
+  stakePubkey: string;
+  stakeBalance: number;
 }
 
 const generateWalletFromMnemonic = (mnemonic: string) => {
@@ -139,7 +147,7 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
 
       const userAmount = (accountInfo.amount).toString();
 
-      if (userAmount === '0') {
+      if (userAmount !== '0') {
         // Extract the mint address and balance
         const mintAddress = new PublicKey(accountInfo.mint).toBase58();
     
@@ -358,7 +366,7 @@ export const getTransactionsHistory = async (currentPage: number): Promise<Trans
       return {
         transferBalanceInToken: transaction?.transferBalanceInToken ?? 0,
         coinLogoBase64: additionalInfo?.logoURI ?? '',
-        coinName: (additionalInfo?.symbol === 'wSOL' ? 'Solana' : additionalInfo?.name) ?? '',
+        coinName: additionalInfo?.name ?? '',
         fromPublicWallet: transaction?.fromPublicWallet ?? '',
         toPublicWallet: transaction?.toPublicWallet ?? '',
         transferTimestamp: transaction?.transferTimestamp ?? '',
@@ -392,6 +400,10 @@ export const getAllAvailableTokens = async (): Promise<TokenInfo[]> => {
 
 export const getSelectedCoinAmount = async (coinMint: string) => {
   try{
+    if (coinMint === 'SOL'){
+      coinMint = SOL_MINT;
+    }
+
     // Getting metadata about the wallet
     const connection = getWalletConnection();
     const publicKey = new PublicKey(getItem('publicKey') ?? '');
@@ -415,6 +427,164 @@ export const getSelectedCoinAmount = async (coinMint: string) => {
     throw error;
   }
 }
+
+export const getMinimumStakeAmount = async () => {
+  const connection = getWalletConnection();
+
+  const minimumRent = await connection.getMinimumBalanceForRentExemption(
+    StakeProgram.space
+  );
+
+  return minimumRent / LAMPORTS_PER_SOL;
+};
+
+export const stakeSolana = async (inputAmount: number) => {
+  const connection = getWalletConnection();
+
+  const { current, delinquent } = await connection.getVoteAccounts();
+
+  // Getting low comission validators
+  var filteredValidators = current.filter(validator => validator.commission <= 10);
+
+  for (var i: number = 1; i <= 10; i+=1) {
+    if (filteredValidators.length > 0) {
+      break;
+    }
+
+    filteredValidators = current.filter(validator => validator.commission <= 10 * i);
+  }
+
+  if (filteredValidators.length === 0) {
+    throw new Error('No validators found.');
+  }
+
+  filteredValidators = filteredValidators.sort((a, b) => b.activatedStake - a.activatedStake);
+
+  // Getting wallet and stake account
+  const wallet = Keypair.fromSecretKey(Buffer.from(getItem('privateKey') ?? '', 'hex'));
+  const stakeAccount = Keypair.generate();
+
+  // Calculating amount to stake
+  const amountToStake = inputAmount * LAMPORTS_PER_SOL;
+
+  // Creating stake account
+  const createStakeAccountTx = StakeProgram.createAccount({
+    authorized: new Authorized(wallet.publicKey, wallet.publicKey),
+    fromPubkey: wallet.publicKey,
+    lamports: amountToStake,
+    lockup: new Lockup(0, 0, wallet.publicKey),
+    stakePubkey: stakeAccount.publicKey,
+  });
+  
+  const createStakeAccountTxId = await sendAndConfirmTransaction(
+    connection,
+    createStakeAccountTx,
+    [
+      wallet,
+      stakeAccount,
+    ]
+  );
+  console.log(`Stake account created. Tx Id: ${createStakeAccountTxId}`);
+
+  // Getting selected validator pubkey
+  const selectedValidatorPubkey = new PublicKey(filteredValidators[0].votePubkey);
+
+  // Delegating stake to a validator
+  const delegateTx = StakeProgram.delegate({
+    stakePubkey: stakeAccount.publicKey,
+    authorizedPubkey: wallet.publicKey,
+    votePubkey: selectedValidatorPubkey,
+  });
+
+  const delegateTxId = await sendAndConfirmTransaction(connection, delegateTx, [
+    wallet,
+  ]);
+
+  console.log(
+    `Stake account delegated to ${selectedValidatorPubkey}. Tx Id: ${delegateTxId}`
+  );
+}
+
+export const getAllStakeAccounts = async () => {
+  const connection = getWalletConnection();
+  const publicKey = getItem('publicKey') ?? '';
+
+  const accounts = await connection.getParsedProgramAccounts(
+    StakeProgram.programId,
+    {
+      filters: [
+        {
+          memcmp: {
+            offset: 12,
+            bytes: publicKey
+          },
+        },
+      ],
+    }
+  );
+
+  const stakingItems: StakingItemData[] = accounts.map(acc => {
+    return {
+      stakePubkey: acc.pubkey.toBase58(),
+      stakeBalance: acc.account.lamports / LAMPORTS_PER_SOL
+    }
+  });
+
+  const tokens = await getAllTradeableTokens();
+
+  const solanaImageUri = tokens.find(token => token.address === SOL_MINT)?.logoURI ?? '';
+
+  return {
+    accounts: stakingItems,
+    imageUri: solanaImageUri
+  }
+}
+
+export const unstakeSolana = async (stakeKey: string, stakeBalance: number) => {
+  try {
+    console.log('Unstaking:', stakeKey, stakeBalance);
+
+    const connection = getWalletConnection();
+
+    const wallet = Keypair.fromSecretKey(Buffer.from(getItem('privateKey') ?? '', 'hex'));
+
+    const stakePublicKey = new PublicKey(stakeKey);
+    
+    // Deactivating stake account
+    const deactivateTx = StakeProgram.deactivate({
+      stakePubkey: stakePublicKey,
+      authorizedPubkey: wallet.publicKey,
+    });
+
+    const deactivateTxId = await sendAndConfirmTransaction(
+      connection,
+      deactivateTx,
+      [wallet]
+    );
+
+    console.log(`Stake account deactivated. Tx Id: ${deactivateTxId}`);
+
+    // Withdraw funds from stake account
+    const withdrawTx = StakeProgram.withdraw({
+      stakePubkey: stakePublicKey,
+      authorizedPubkey: wallet.publicKey,
+      toPubkey: wallet.publicKey,
+      lamports: stakeBalance * LAMPORTS_PER_SOL,
+    });
+    
+    const withdrawTxId = await sendAndConfirmTransaction(connection, withdrawTx, [
+      wallet,
+    ]);
+    console.log(`Stake account withdrawn. Tx Id: ${withdrawTxId}`);
+    
+    // Confirm that our stake account balance is now 0
+    stakeBalance = await connection.getBalance(stakePublicKey);
+    console.log(`Stake account balance: ${stakeBalance / LAMPORTS_PER_SOL} SOL`);
+  } catch (error) {
+    console.log('Error unstaking:', error);
+    throw error;
+  }
+};
 
 // ALERT: This function works only on mainnet
 export const swapTokens = async (fromTokenMint: string, toTokenMint: string, swapAmount: number) => {
@@ -474,5 +644,6 @@ export {
   TokenInfoPreview,
   WalletInfo,
   TransactionHistoryData,
-  TokenInfo
+  TokenInfo,
+  StakingItemData
 }

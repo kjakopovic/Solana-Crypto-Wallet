@@ -11,8 +11,17 @@ import SkeletonLoader from '@/components/SkeletonLoader'
 
 import { icons, images } from '@/constants'
 
-import { getWalletInfo, WalletInfo, TransactionHistoryData, getTransactionsHistory } from '@/context/WalletFunctions'
+import { 
+    getWalletInfo, 
+    WalletInfo, 
+    TransactionHistoryData, 
+    getTransactionsHistory,
+    getAllStakeAccounts,
+    StakingItemData,
+    unstakeSolana
+} from '@/context/WalletFunctions'
 import TransactionHistoryCardItem from '@/components/TransactionHistoryCardItem'
+import CustomDialog from '@/components/CustomDialog'
 
 const Wallet = () => {
     const [selectedMenu, setSelectedMenu] = useState(0)
@@ -29,20 +38,34 @@ const Wallet = () => {
         tokens: []
     } as WalletInfo)
     const [history, setHistory] = useState([] as TransactionHistoryData[])
+    const [stakingData, setStakingData] = useState([{
+        imageUri: '',
+        accounts: [] as StakingItemData[]
+    }] as any)
+
+    const [selectedStakingItemData, setSelectedStakingItemData] = useState(null as StakingItemData | null)
 
     const [modalData, setModalData] = useState({
         isModalVisible: false,
         selectedTransaction: null as TransactionHistoryData | null
     })
 
+    const [dialogProps, setDialogProps] = useState({
+        title: '',
+        description: '',
+        visible: false
+    });
+
     const fetchWalletInfo = async () => {
         const fetching = await Promise.all([
             await getWalletInfo(),
-            await getTransactionsHistory(1)
+            await getTransactionsHistory(1),
+            await getAllStakeAccounts()
         ])
 
         setWalletInfo(fetching[0])
         setHistory(fetching[1])
+        setStakingData(fetching[2])
         setCurrentTransactionsHistoryPage(2)
 
         setLoading(false)
@@ -71,11 +94,20 @@ const Wallet = () => {
         fetchWalletInfo()
     }, [])
 
+    useEffect(() => {
+        if (selectedStakingItemData !== null && selectedStakingItemData !== undefined) {
+            setDialogProps({
+                title: 'Do you want to withdraw?',
+                description: `You are about to cancel staking for ${selectedStakingItemData.stakePubkey}\nin amount: ${selectedStakingItemData.stakeBalance} SOL`,
+                visible: true
+            })
+        }
+    }, [selectedStakingItemData])
+
     if (loading) {
         return (
             <SafeAreaView className='bg-background h-full'>
                 <View className='min-h-[85vh] w-full mt-7 items-center mb-[100px]'>
-                    {/*TODO: onclick na tu sliku moze birati ostale avatare za profilne slike*/}
                     <View className='w-full items-center'>
                         <SkeletonLoader 
                             width={80}
@@ -148,6 +180,24 @@ const Wallet = () => {
 
     return (
         <SafeAreaView className='bg-background h-full'>
+            <CustomDialog 
+                title={dialogProps.title}
+                description={dialogProps.description}
+                visible={dialogProps.visible}
+                showCancel
+                onOkPress={async () => {
+                    setDialogProps({ title: '', description: '', visible: false })
+
+                    await unstakeSolana(selectedStakingItemData?.stakePubkey ?? '', selectedStakingItemData?.stakeBalance ?? 0);
+                    
+                    setSelectedStakingItemData(null);
+                }}
+                onCancelPress={() => {
+                    setDialogProps({ title: '', description: '', visible: false })
+                    setSelectedStakingItemData(null);
+                }}
+            />
+            
             <ScrollView
                 refreshControl={
                     <RefreshControl
@@ -200,7 +250,7 @@ const Wallet = () => {
                         <CircleButton 
                             title='Stake'
                             icon={icons.moneyBox}
-                            handleClick={() => {}}
+                            handleClick={() => {router.push('/stake_crypto' as Href)}}
                         />
 
                         <CircleButton 
@@ -241,7 +291,7 @@ const Wallet = () => {
                         </View>
 
                         {selectedMenu === 0 && (
-                            <View className='w-[90%] mx-4'>
+                            <View className='w-full justify-center items-center'>
                                 {walletInfo.tokens.map((token, index) => (
                                     <CryptoAssetCardItem 
                                         sourcePicutre={token.logoURIbase64}
@@ -256,9 +306,29 @@ const Wallet = () => {
 
                         {selectedMenu === 1 && (
                             <View className='w-full justify-center items-center'>
-                                <Text className='text-secondary text-sm font-pregular mt-2'>
-                                    There are no staking assets
-                                </Text>
+                                {stakingData.accounts.length === 0 ? (
+                                    <Text className='text-secondary text-sm font-pregular mt-2'>
+                                        There are no staking assets
+                                    </Text>
+                                ) : (
+                                    stakingData.accounts.map((account: StakingItemData, index: number) => (
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setSelectedStakingItemData(account);
+                                            }}
+                                            activeOpacity={0.5}
+                                            key={`button-${index}`}
+                                        >
+                                            <TransactionHistoryCardItem
+                                                transferBalanceInToken={account.stakeBalance}
+                                                coinLogoBase64={stakingData.imageUri}
+                                                coinName={'Wrapped SOL'}
+                                                key={`item-${index}`}
+                                                showPriceMovement={false}
+                                            />
+                                        </TouchableOpacity>
+                                    ))
+                                )}
                             </View>
                         )}
 
@@ -286,8 +356,6 @@ const Wallet = () => {
                                                     transferBalanceInToken={item.transferBalanceInToken}
                                                     coinLogoBase64={item.coinLogoBase64}
                                                     coinName={item.coinName}
-                                                    fromPublicWallet={item.fromPublicWallet}
-                                                    toPublicWallet={item.toPublicWallet}
                                                     transferTimestamp={item.transferTimestamp}
                                                 />
                                             </TouchableOpacity>

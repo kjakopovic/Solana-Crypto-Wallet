@@ -1,8 +1,6 @@
 import { View, Text, Image } from 'react-native'
 import React from 'react'
 
-import CryptoPriceMovement from './CryptoPriceMovement'
-
 import { images } from '../constants'
 
 interface CryptoAssetCardItemProps {
@@ -14,7 +12,7 @@ interface CryptoAssetCardItemProps {
 
 const CryptoAssetCardItem: React.FC<CryptoAssetCardItemProps> = ({ sourcePicutre, assetName, currentPrice, userAmount }) => {
     return (
-        <View className='w-full flex-row min-h-[10vh] justify-between items-center'>
+        <View className='w-[100%] px-3 flex-row min-h-[10vh] justify-between items-center'>
             <View className='flex-row space-x-3'>
                 <View className='w-11 h-11 items-center justify-center'>
                     <Image
@@ -37,9 +35,11 @@ const CryptoAssetCardItem: React.FC<CryptoAssetCardItemProps> = ({ sourcePicutre
                 </View>
             </View>
 
-            <Text className='font-pregular text-lg text-secondaryHighlight items-end text-end'>
-                {userAmount ?? 0}
-            </Text>
+            <View className='justify-center items-center'>
+                <Text className='font-psemibold text-[14px] text-right text-secondaryHighlight'>
+                    {userAmount ?? 0}
+                </Text>
+            </View>
         </View>
     )
 }

@@ -15,7 +15,7 @@ function getItem(key) {
 }
 
 function deleteItem(key) {
-    SecureStore.deleteItem(key);
+    SecureStore.deleteItemAsync(key);
 }
 
 export { saveItem, getItem, deleteItem };
