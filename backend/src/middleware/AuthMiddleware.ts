@@ -1,8 +1,8 @@
 // src/middleware/AuthMiddleware.ts
 
 import { Request, Response, NextFunction } from 'express';
-import JwtController from "../controllers/JwtController";
 import logger from "../config/Logger";
+import {verifyAccessToken} from "../services/JwtService";
 
 const className = 'AuthMiddleware';
 
@@ -16,10 +16,10 @@ const authMiddleware = async (req: Request, res: Response, next: NextFunction) =
     }
 
     try {
-        const response = await JwtController.verifyAccessTokenController({ body: { accessToken } } as Request, res);
-        if (response.statusCode !== 200) {
+        const response = verifyAccessToken(accessToken);
+        if(typeof response === 'string'){
             logger.error('Invalid token', { className });
-            return res.status(response.statusCode).json(response.json());
+            return res.status(401).json({ message: 'Invalid token' });
         }
         next();
     } catch (err) {

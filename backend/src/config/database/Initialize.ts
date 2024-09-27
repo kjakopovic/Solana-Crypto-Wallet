@@ -59,7 +59,7 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                     userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
                     timestamp DATETIME DEFAULT GETDATE(),
                     challengeId INT FOREIGN KEY REFERENCES challenges(id) DEFAULT NULL,
-                    quizDifficulty INT FOREIGN KEY REFERENCES quizzes(id) DEFAULT NULL,
+                    quizDifficulty NVARCHAR(10) DEFAULT NULL,
                     points INT NOT NULL
                 )
             END
