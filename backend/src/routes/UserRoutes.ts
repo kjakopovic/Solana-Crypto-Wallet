@@ -19,6 +19,9 @@ const router = Router();
  *           schema:
  *             type: object
  *             properties:
+ *               imageUrl:
+ *                  type: string
+ *                  required: true
  *               publicKey:
  *                 type: string
  *                 required: true

@@ -15,6 +15,7 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                 CREATE TABLE users (
                     id NVARCHAR(255) PRIMARY KEY,
                     username NVARCHAR(50) NOT NULL,
+                    imageUrl NVARCHAR(MAX) NOT NULL,
                     password NVARCHAR(255) NOT NULL,
                     publicKey NVARCHAR(255),
                     joinedAt DATETIME DEFAULT GETDATE(),

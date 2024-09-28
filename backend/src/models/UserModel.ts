@@ -9,6 +9,7 @@ const className = 'UserModel';
 export interface User{
     id: string;
     username: string;
+    imageUrl: string;
     password: string;
     publicKey: string;
     joinedAt: Date;
@@ -24,11 +25,11 @@ class UserModel {
     }
 
     // Insert a new user into the users table
-    public async createUser(id: string, username:string, hashedPassword: string,  publicKey: string, refreshToken: string): Promise<void> {
+    public async createUser(id: string, username:string, imageUrl:string, hashedPassword: string,  publicKey: string, refreshToken: string): Promise<void> {
         logger.info('Creating a new user', { className });
         const sqlQuery = `
-            INSERT INTO users (id, username, password, publicKey, refreshToken)
-            VALUES (@id, @username, @password, @publicKey, @refreshToken);
+            INSERT INTO users (id, username, imageUrl, password, publicKey, refreshToken)
+            VALUES (@id, @username, @imageUrl, @password, @publicKey, @refreshToken);
             `;
 
         try {
@@ -36,6 +37,7 @@ class UserModel {
             await this.db.request()
                 .input('id', id)
                 .input('username', username)
+                .input('imageUrl', imageUrl)
                 .input('password', hashedPassword)
                 .input('publicKey', publicKey)
                 .input('refreshToken', refreshToken)
@@ -92,6 +94,7 @@ class UserModel {
                 return {
                     id: user.id,
                     username: user.username,
+                    imageUrl: user.imageUrl,
                     password: user.password,
                     publicKey: user.publicKey,
                     joinedAt: user.joinedAt,

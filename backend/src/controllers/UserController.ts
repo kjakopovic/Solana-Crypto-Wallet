@@ -11,15 +11,15 @@ class UserController{
 
     async createUser(req: Request, res: Response): Promise<Response> {
         logger.info('Creating a new user', { className });
-        const { password, publicKey } = req.body;
+        const { imageUrl, password, publicKey } = req.body;
 
-        if (!password || !publicKey) {
-            logger.error('Invalid input, password or publicKey is missing', { className });
-            return res.status(400).json({ message: 'Invalid input, password or publicKey is missing' });
+        if (!imageUrl || !password || !publicKey) {
+            logger.error('Invalid input, imageUrl, password or publicKey is missing', { className });
+            return res.status(400).json({ message: 'Invalid input, imageUrl, password or publicKey is missing' });
         }
 
         try {
-            const user = await UserService.registerUser(password, publicKey);
+            const user = await UserService.registerUser(imageUrl, password, publicKey);
             logger.info('User created successfully', { className });
 
             return res.status(201).json({
