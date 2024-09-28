@@ -25,7 +25,7 @@ const FormField: React.FC<FormFieldProps> = ({ iconStyles, icon, handleIconPress
             rounded-2xl focus:border-secondary-100 ${otherStyles}`}
         >
             <TextInput
-                className={`text-secondaryHighlight font-psemibold mt-3 ${textStyles}`}
+                className={`text-secondaryHighlight font-psemibold mt-3 ${hasPressableIcon ? 'mr-10' : ''} ${textStyles}`}
                 value={(isTextVisible ?? true) ? value : ''}
                 placeholder={placeholder}
                 placeholderTextColor={'#6a6a6b'}

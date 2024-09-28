@@ -260,13 +260,10 @@ export const sendTokensTransaction = async (toPublicKey: string, amount: number,
   }
 };
 
-export const getTransactionsHistory = async (currentPage: number): Promise<TransactionHistoryData[]> => {
+export const getTransactionsHistory = async (): Promise<TransactionHistoryData[]> => {
   try {
     const connection = getWalletConnection();
     const publicKey = new PublicKey(getItem('publicKey') ?? '');
-
-    const pageLimit = 10;
-    const offset = (currentPage - 1) * pageLimit;
 
     // Pre-fetch token list once
     const tokenListProvider = await new TokenListProvider().resolve();
@@ -274,19 +271,16 @@ export const getTransactionsHistory = async (currentPage: number): Promise<Trans
       .filterByClusterSlug(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? '')
       .getList();
 
-    // Fetch signatures for the current page
-    const signatures = await connection.getSignaturesForAddress(publicKey, { limit: pageLimit, before: undefined });
-
-    const history = signatures.slice(offset, offset + pageLimit);
+    // Fetch signatures
+    const signatures = (await connection.getSignaturesForAddress(publicKey)).map((signature) => signature.signature);
+    const transactionsHistory = await connection.getParsedTransactions(signatures);
 
     // Fetch detailed transaction history in parallel
     const detailedHistory = await Promise.all(
-      history.map(async (tx) => {
-        const transactionDetails = await connection.getParsedTransaction(tx.signature);
-
+      transactionsHistory.map(async (tx) => {
         // Extract token transfer details if available
-        const tokenPreTransferAmount = transactionDetails?.meta?.preTokenBalances?.[1];
-        const tokenPostTransferAmount = transactionDetails?.meta?.postTokenBalances?.[1];
+        const tokenPreTransferAmount = tx?.meta?.preTokenBalances?.[1];
+        const tokenPostTransferAmount = tx?.meta?.postTokenBalances?.[1];
 
         // Check if transaction is token transfer or SOL transfer
         if (
@@ -302,7 +296,7 @@ export const getTransactionsHistory = async (currentPage: number): Promise<Trans
               ((tokenPostTransferAmount.uiTokenAmount.uiAmount ?? 0) - (tokenPreTransferAmount.uiTokenAmount.uiAmount ?? 0))
               / LAMPORTS_PER_COIN, //TODO: kada bude tih transfera treba pogledati jel ovo tocno
             coinMint: tokenPreTransferAmount.mint ?? '',
-            transferTimestamp: new Date((tx.blockTime ?? 0) * 1000).toLocaleString('en-GB', {
+            transferTimestamp: new Date((tx?.blockTime ?? 0) * 1000).toLocaleString('en-GB', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',
@@ -310,12 +304,12 @@ export const getTransactionsHistory = async (currentPage: number): Promise<Trans
               minute: '2-digit',
               hour12: false,
             }),
-            fromPublicWallet: transactionDetails?.transaction.message.accountKeys[0].pubkey.toBase58() ?? '',
-            toPublicWallet: transactionDetails?.transaction.message.accountKeys[1].pubkey.toBase58() ?? '',
+            fromPublicWallet: tx?.transaction.message.accountKeys[0].pubkey.toBase58() ?? '',
+            toPublicWallet: tx?.transaction.message.accountKeys[1].pubkey.toBase58() ?? '',
           };
         }
 
-        const accountKeys = transactionDetails?.transaction.message.accountKeys;
+        const accountKeys = tx?.transaction.message.accountKeys;
 
         if (accountKeys === undefined) {
           return;
@@ -329,10 +323,10 @@ export const getTransactionsHistory = async (currentPage: number): Promise<Trans
 
         return {
           transferBalanceInToken:
-            ((transactionDetails?.meta?.postBalances[userAccountIndex] ?? 0) - (transactionDetails?.meta?.preBalances[userAccountIndex] ?? 0)) /
+            ((tx?.meta?.postBalances[userAccountIndex] ?? 0) - (tx?.meta?.preBalances[userAccountIndex] ?? 0)) /
             LAMPORTS_PER_SOL,
           coinMint: SOL_MINT,
-          transferTimestamp: new Date((tx.blockTime ?? 0) * 1000).toLocaleString('en-GB', {
+          transferTimestamp: new Date((tx?.blockTime ?? 0) * 1000).toLocaleString('en-GB', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',

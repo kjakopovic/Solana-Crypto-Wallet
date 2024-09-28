@@ -6,7 +6,6 @@ import React, { useState, useEffect } from 'react'
 
 import CircleButton from '@/components/CircleButton'
 import CryptoAssetCardItem from '@/components/CryptoAssetCardItem'
-import Loader from '@/components/Loader'
 import SkeletonLoader from '@/components/SkeletonLoader'
 
 import { icons, images } from '@/constants'
@@ -28,10 +27,6 @@ const Wallet = () => {
 
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
-    const [loadingTransactionHistory, setLoadingTransactionHistory] = useState(false)
-
-    const [currentTransactionsHistoryPage, setCurrentTransactionsHistoryPage] = useState(1)
-    const [hasMoreTransactionHistory, setHasMoreTransactionHistory] = useState(true);
 
     const [walletInfo, setWalletInfo] = useState({
         balance: '0.00',
@@ -56,39 +51,20 @@ const Wallet = () => {
         visible: false
     });
 
+    //TODO: uncomment transaction history
     const fetchWalletInfo = async () => {
         const fetching = await Promise.all([
             await getWalletInfo(),
-            await getTransactionsHistory(1),
+            // await getTransactionsHistory(),
             await getAllStakeAccounts()
         ])
 
         setWalletInfo(fetching[0])
-        setHistory(fetching[1])
-        setStakingData(fetching[2])
-        setCurrentTransactionsHistoryPage(2)
+        // setHistory(fetching[1])
+        setStakingData(fetching[1])
 
         setLoading(false)
     }
-
-    const fetchMoreTransactionHistory = async () => {
-        try {
-            console.log('Fetching more transaction history...');
-            setLoadingTransactionHistory(true);
-            const newHistory = await getTransactionsHistory(currentTransactionsHistoryPage);
-            if (newHistory.length === 0) {
-                console.log('No more transaction history to fetch.');
-                setHasMoreTransactionHistory(false);
-            } else {
-                setHistory((prevHistory) => [...prevHistory, ...newHistory]);
-                setCurrentTransactionsHistoryPage((prevPage) => prevPage + 1);
-            }
-        } catch (error) {
-            console.error('Error fetching transaction history:', error);
-        } finally {
-            setLoadingTransactionHistory(false);
-        }
-    };
 
     useEffect(() => {
         fetchWalletInfo()
@@ -214,22 +190,24 @@ const Wallet = () => {
                 }
             >
                 <View className='min-h-[85vh] w-full mt-7 items-center mb-[100px]'>
-                    {/*TODO: onclick na tu sliku moze birati ostale avatare za profilne slike*/}
-                    <View className='w-full items-center'>
+                    <TouchableOpacity
+                        onPress={() => {router.push('/select_avatar' as Href)}}
+                        activeOpacity={0.5}
+                    >
                         <Image 
                             source={images.userProfileTemplate}
-                            className='w-20 h-20'
+                            className='w-20 h-20 rounded-full'
                             resizeMode="contain"
                         />
+                    </TouchableOpacity>
 
-                        <Text className='text-secondaryHighlight text-sm font-pbold mt-5 text-center'>
-                            RandomUsernameokefoiod
-                        </Text>
+                    <Text className='text-secondaryHighlight text-sm font-pbold mt-5 text-center'>
+                        RandomUsernameokefoiod
+                    </Text>
 
-                        <Text className='text-secondaryHighlight text-3xl font-pbold mt-2 text-center'>
-                            ${walletInfo.balance}
-                        </Text>
-                    </View>
+                    <Text className='text-secondaryHighlight text-3xl font-pbold mt-2 text-center'>
+                        ${walletInfo.balance}
+                    </Text>
 
                     <View className='w-[90%] justify-between flex-row mt-5'>
                         <CircleButton 
@@ -361,13 +339,6 @@ const Wallet = () => {
                                             </TouchableOpacity>
                                         )}
                                         keyExtractor={(item, index) => index.toString()}
-                                        onEndReached={fetchMoreTransactionHistory}
-                                        onEndReachedThreshold={0.2}
-                                        ListFooterComponent={
-                                            loadingTransactionHistory && hasMoreTransactionHistory ? (
-                                                <Loader isLoading={true} />
-                                            ) : null
-                                        }
                                     />
                                 )}
                             </View>
