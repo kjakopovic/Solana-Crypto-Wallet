@@ -4,15 +4,15 @@ import { ScrollView } from 'react-native-gesture-handler'
 import React from 'react'
 
 const Leaderboard = () => {
-  return (
-      <SafeAreaView className='bg-background h-full'>
-          <ScrollView>
-              <View className='h-full'>
-                  <Text className='text-white'>Leaderboard</Text>
-              </View>
-          </ScrollView>
-      </SafeAreaView>
-  )
+    return (
+        <SafeAreaView className='bg-background h-full'>
+            <ScrollView>
+                <View className='h-full'>
+                    <Text className='text-white'>Leaderboard</Text>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    )
 }
 
 export default Leaderboard

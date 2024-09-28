@@ -14,6 +14,7 @@ import arrowDown from '../assets/icons/arrow-down.png';
 import moneyBox from '../assets/icons/moneybox.png';
 import copy from '../assets/icons/copy.png';
 import qrCodeScan from '../assets/icons/qr-code-scan.png';
+import solana from '../assets/icons/solana.png';
 
 export default {
   clearText,
@@ -31,5 +32,6 @@ export default {
   arrowDown,
   moneyBox,
   copy,
-  qrCodeScan
+  qrCodeScan,
+  solana
 };

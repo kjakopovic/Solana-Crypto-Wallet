@@ -13,13 +13,11 @@ import CustomDropDown from '@/components/CustomDropDown';
 
 import { getItem } from '@/context/SecureStorage';
 import { 
-    getAllAvailableTokens, 
+    getAllTradeableTokens, 
     TokenInfo, 
     getSelectedCoinAmount, 
-    sendTokensTransaction, 
-    calculateTransactionFees 
+    sendTokensTransaction
 } from '@/context/WalletFunctions';
-import { Transaction } from '@solana/web3.js';
 
 import { icons } from '@/constants'
 
@@ -36,20 +34,42 @@ const SendCrypto = () => {
         amount: ''
     });
 
-    const [transaction, setTransaction] = useState(null as Transaction | null);
-    const [transactionFee, setTransactionFee] = useState('0.00');
     const [isFetching, setIsFetching] = useState(false);
 
     const [accountBalance, setAccountBalance] = useState('0.00');
+    
     const [dialogProps, setDialogProps] = useState({
         title: '',
         description: '',
         visible: false
     });
+    const [infoDialogProps, setInfoDialogProps] = useState({
+        title: '',
+        description: '',
+        visible: false
+    });
+
+    const sendTransaction = async () => {
+        try {
+            setIsFetching(true);
+            
+            if (sendData.amount !== '' && selectedCrypto !== null) {
+                await sendTokensTransaction(sendData.toAddress, parseFloat(sendData.amount), selectedCrypto.address);
+            }
+        } catch (error) {
+            setDialogProps({ 
+                title: 'Transaction failure', 
+                description: 'If this keeps happening and you checked that everything is correct please contact support.',
+                visible: true
+            });
+        } finally {
+            setIsFetching(false);
+        }
+    }
 
     useEffect(() => {
         const fetchAllTokensData = async () => {
-            const tokens = await getAllAvailableTokens();
+            const tokens = await getAllTradeableTokens();
             const data = tokens.map((token: TokenInfo, index: number) => ({
                 label: token.name,
                 logo: token.logoURI,
@@ -83,32 +103,6 @@ const SendCrypto = () => {
         fetchSelectedCoinData();
     }, [selectedCrypto]);
 
-    useEffect(() => {
-        const fetchFees = async () => {
-            try {
-                setIsFetching(true);
-                if (sendData.amount !== '' && selectedCrypto !== null) {
-                    const fees = await calculateTransactionFees(sendData.toAddress, parseFloat(sendData.amount), selectedCrypto.address);
-    
-                    if (fees){
-                        setTransaction(fees.transaction);
-                        setTransactionFee(fees.fee.toString());
-                    }
-                }
-            } catch (error) {
-                setDialogProps({ 
-                    title: 'Transaction failure', 
-                    description: 'That coin is not supported at the moment.',
-                    visible: true
-                });
-            } finally {
-                setIsFetching(false);
-            }
-        }
-
-        fetchFees();
-    }, [selectedCrypto, sendData.amount]);
-
     if (isCameraVisible) {
         return (
             <SafeAreaView className='h-full'>
@@ -135,6 +129,17 @@ const SendCrypto = () => {
                 visible={dialogProps.visible}
                 showCancel={false}
                 onOkPress={() => {setDialogProps({ title: '', description: '', visible: false })}}
+            />
+            <CustomDialog 
+                title={infoDialogProps.title}
+                description={infoDialogProps.description}
+                visible={infoDialogProps.visible}
+                showCancel
+                onOkPress={() => {
+                    setInfoDialogProps({ title: '', description: '', visible: false })
+                    sendTransaction();
+                }}
+                onCancelPress={() => {setInfoDialogProps({ title: '', description: '', visible: false })}}
             />
             <ScrollView>
                 <View className="flex-1 h-full justify-between px-5 w-full mt-10 pb-5 mb-3">
@@ -195,10 +200,6 @@ const SendCrypto = () => {
                         <Text className='text-secondaryHighlight font-pmedium ml-3 text-[12px] mt-3'>
                             {`Available: ${accountBalance} ${selectedCrypto?.symbol ?? ''}`}
                         </Text>
-
-                        <Text className='text-secondaryHighlight font-pmedium ml-3 text-[12px] mt-3'>
-                            {`Fee: ${transactionFee} ${selectedCrypto?.symbol ?? ''}`}
-                        </Text> 
                     </View>
 
                     <CustomButton
@@ -207,8 +208,6 @@ const SendCrypto = () => {
                         primary
                         handlePress={async () => {
                             try {
-                                setIsFetching(true);
-
                                 if (parseFloat(sendData.amount) > parseFloat(accountBalance)) {
                                     setDialogProps({ 
                                         title: 'Insufficient balance', 
@@ -217,15 +216,18 @@ const SendCrypto = () => {
                                     });
                                     return;
                                 }
-                                await sendTokensTransaction(transaction);
+
+                                setInfoDialogProps({ 
+                                    title: 'Fee paymet', 
+                                    description: 'Your payment will include fees of 0.0021 SOL', 
+                                    visible: true 
+                                });
                             } catch (error) {
                                 setDialogProps({ 
                                     title: 'Transaction failure', 
                                     description: 'We couldn\'t make that transaction, please contact support.', 
                                     visible: true 
                                 });
-                            } finally {
-                                setIsFetching(false);
                             }
                         }}
                         isLoading={isFetching}

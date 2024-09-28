@@ -6,76 +6,84 @@ import React, { useState, useEffect } from 'react'
 
 import CircleButton from '@/components/CircleButton'
 import CryptoAssetCardItem from '@/components/CryptoAssetCardItem'
-import Loader from '@/components/Loader'
 import SkeletonLoader from '@/components/SkeletonLoader'
 
 import { icons, images } from '@/constants'
 
-import { getWalletInfo, WalletInfo, TransactionHistoryData, getTransactionsHistory } from '@/context/WalletFunctions'
+import { 
+    getWalletInfo, 
+    WalletInfo, 
+    TransactionHistoryData, 
+    getTransactionsHistory,
+    getAllStakeAccounts,
+    StakingItemData,
+    unstakeSolana
+} from '@/context/WalletFunctions'
 import TransactionHistoryCardItem from '@/components/TransactionHistoryCardItem'
+import CustomDialog from '@/components/CustomDialog'
 
 const Wallet = () => {
     const [selectedMenu, setSelectedMenu] = useState(0)
 
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
-    const [loadingTransactionHistory, setLoadingTransactionHistory] = useState(false)
-
-    const [currentTransactionsHistoryPage, setCurrentTransactionsHistoryPage] = useState(1)
-    const [hasMoreTransactionHistory, setHasMoreTransactionHistory] = useState(true);
 
     const [walletInfo, setWalletInfo] = useState({
         balance: '0.00',
         tokens: []
     } as WalletInfo)
     const [history, setHistory] = useState([] as TransactionHistoryData[])
+    const [stakingData, setStakingData] = useState([{
+        imageUri: '',
+        accounts: [] as StakingItemData[]
+    }] as any)
+
+    const [selectedStakingItemData, setSelectedStakingItemData] = useState(null as StakingItemData | null)
 
     const [modalData, setModalData] = useState({
         isModalVisible: false,
         selectedTransaction: null as TransactionHistoryData | null
     })
 
+    const [dialogProps, setDialogProps] = useState({
+        title: '',
+        description: '',
+        visible: false
+    });
+
+    //TODO: uncomment transaction history
     const fetchWalletInfo = async () => {
         const fetching = await Promise.all([
-            // await getWalletInfo(),
-            await getTransactionsHistory(1)
+            await getWalletInfo(),
+            // await getTransactionsHistory(),
+            await getAllStakeAccounts()
         ])
 
-        // setWalletInfo(fetching[0])
-        setHistory(fetching[0])
-        setCurrentTransactionsHistoryPage(2)
+        setWalletInfo(fetching[0])
+        // setHistory(fetching[1])
+        setStakingData(fetching[1])
 
         setLoading(false)
     }
-
-    const fetchMoreTransactionHistory = async () => {
-        try {
-            console.log('Fetching more transaction history...');
-            setLoadingTransactionHistory(true);
-            const newHistory = await getTransactionsHistory(currentTransactionsHistoryPage);
-            if (newHistory.length === 0) {
-                console.log('No more transaction history to fetch.');
-                setHasMoreTransactionHistory(false);
-            } else {
-                setHistory((prevHistory) => [...prevHistory, ...newHistory]);
-                setCurrentTransactionsHistoryPage((prevPage) => prevPage + 1);
-            }
-        } catch (error) {
-            console.error('Error fetching transaction history:', error);
-        } finally {
-            setLoadingTransactionHistory(false);
-        }
-    };
 
     useEffect(() => {
         fetchWalletInfo()
     }, [])
 
+    useEffect(() => {
+        if (selectedStakingItemData !== null && selectedStakingItemData !== undefined) {
+            setDialogProps({
+                title: 'Do you want to withdraw?',
+                description: `You are about to cancel staking for ${selectedStakingItemData.stakePubkey}\nin amount: ${selectedStakingItemData.stakeBalance} SOL`,
+                visible: true
+            })
+        }
+    }, [selectedStakingItemData])
+
     if (loading) {
         return (
             <SafeAreaView className='bg-background h-full'>
                 <View className='min-h-[85vh] w-full mt-7 items-center mb-[100px]'>
-                    {/*TODO: onclick na tu sliku moze birati ostale avatare za profilne slike*/}
                     <View className='w-full items-center'>
                         <SkeletonLoader 
                             width={80}
@@ -148,6 +156,24 @@ const Wallet = () => {
 
     return (
         <SafeAreaView className='bg-background h-full'>
+            <CustomDialog 
+                title={dialogProps.title}
+                description={dialogProps.description}
+                visible={dialogProps.visible}
+                showCancel
+                onOkPress={() => {
+                    setDialogProps({ title: '', description: '', visible: false })
+
+                    unstakeSolana(selectedStakingItemData?.stakePubkey ?? '', selectedStakingItemData?.stakeBalance ?? 0);
+                    
+                    setSelectedStakingItemData(null);
+                }}
+                onCancelPress={() => {
+                    setDialogProps({ title: '', description: '', visible: false })
+                    setSelectedStakingItemData(null);
+                }}
+            />
+            
             <ScrollView
                 refreshControl={
                     <RefreshControl
@@ -164,22 +190,24 @@ const Wallet = () => {
                 }
             >
                 <View className='min-h-[85vh] w-full mt-7 items-center mb-[100px]'>
-                    {/*TODO: onclick na tu sliku moze birati ostale avatare za profilne slike*/}
-                    <View className='w-full items-center'>
+                    <TouchableOpacity
+                        onPress={() => {router.push('/select_avatar' as Href)}}
+                        activeOpacity={0.5}
+                    >
                         <Image 
                             source={images.userProfileTemplate}
-                            className='w-20 h-20'
+                            className='w-20 h-20 rounded-full'
                             resizeMode="contain"
                         />
+                    </TouchableOpacity>
 
-                        <Text className='text-secondaryHighlight text-sm font-pbold mt-5 text-center'>
-                            RandomUsernameokefoiod
-                        </Text>
+                    <Text className='text-secondaryHighlight text-sm font-pbold mt-5 text-center'>
+                        RandomUsernameokefoiod
+                    </Text>
 
-                        <Text className='text-secondaryHighlight text-3xl font-pbold mt-2 text-center'>
-                            ${walletInfo.balance}
-                        </Text>
-                    </View>
+                    <Text className='text-secondaryHighlight text-3xl font-pbold mt-2 text-center'>
+                        ${walletInfo.balance}
+                    </Text>
 
                     <View className='w-[90%] justify-between flex-row mt-5'>
                         <CircleButton 
@@ -200,7 +228,7 @@ const Wallet = () => {
                         <CircleButton 
                             title='Stake'
                             icon={icons.moneyBox}
-                            handleClick={() => {}}
+                            handleClick={() => {router.push('/stake_crypto' as Href)}}
                         />
 
                         <CircleButton 
@@ -241,27 +269,44 @@ const Wallet = () => {
                         </View>
 
                         {selectedMenu === 0 && (
-                            <View className='w-[90%] mx-4'>
+                            <View className='w-full justify-center items-center'>
                                 {walletInfo.tokens.map((token, index) => (
-                                    token.userAmount !== '0' ? (
-                                        <CryptoAssetCardItem 
-                                            sourcePicutre={token.logoURIbase64}
-                                            assetName={token.name}
-                                            currentPrice={`$${token.marketValueInDollars}`}
-                                            oneDayMovement={token.oneDayMovement}
-                                            userAmount={token.userAmount}
-                                            key={index}
-                                        />
-                                    ) : (<></>)
+                                    <CryptoAssetCardItem 
+                                        sourcePicutre={token.logoURIbase64}
+                                        assetName={token.name}
+                                        currentPrice={`$${token.marketValueInDollars}`}
+                                        userAmount={token.userAmount}
+                                        key={index}
+                                    />
                                 ))}
                             </View>
                         )}
 
                         {selectedMenu === 1 && (
                             <View className='w-full justify-center items-center'>
-                                <Text className='text-secondary text-sm font-pregular mt-2'>
-                                    There are no staking assets
-                                </Text>
+                                {stakingData.accounts.length === 0 ? (
+                                    <Text className='text-secondary text-sm font-pregular mt-2'>
+                                        There are no staking assets
+                                    </Text>
+                                ) : (
+                                    stakingData.accounts.map((account: StakingItemData, index: number) => (
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setSelectedStakingItemData(account);
+                                            }}
+                                            activeOpacity={0.5}
+                                            key={`button-${index}`}
+                                        >
+                                            <TransactionHistoryCardItem
+                                                transferBalanceInToken={account.stakeBalance}
+                                                coinLogoBase64={stakingData.imageUri}
+                                                coinName={'Wrapped SOL'}
+                                                key={`item-${index}`}
+                                                showPriceMovement={false}
+                                            />
+                                        </TouchableOpacity>
+                                    ))
+                                )}
                             </View>
                         )}
 
@@ -289,20 +334,11 @@ const Wallet = () => {
                                                     transferBalanceInToken={item.transferBalanceInToken}
                                                     coinLogoBase64={item.coinLogoBase64}
                                                     coinName={item.coinName}
-                                                    fromPublicWallet={item.fromPublicWallet}
-                                                    toPublicWallet={item.toPublicWallet}
                                                     transferTimestamp={item.transferTimestamp}
                                                 />
                                             </TouchableOpacity>
                                         )}
                                         keyExtractor={(item, index) => index.toString()}
-                                        onEndReached={fetchMoreTransactionHistory}
-                                        onEndReachedThreshold={0.2}
-                                        ListFooterComponent={
-                                            loadingTransactionHistory && hasMoreTransactionHistory ? (
-                                                <Loader isLoading={true} />
-                                            ) : null
-                                        }
                                     />
                                 )}
                             </View>
