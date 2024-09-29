@@ -67,7 +67,7 @@ class UserService{
         }
     }
 
-    async registerUser(password: string, publicKey: string){
+    async registerUser(imageUrl: string, password: string, publicKey: string){
         logger.info('Registering user for publicKey: ' + publicKey, { className, publicKey });
 
         const id = this.generateRandomString();
@@ -76,7 +76,7 @@ class UserService{
 
         const refreshToken = generateRefreshToken({ id, username, publicKey });
 
-        await UserModel.createUser(id, username, hashedPassword, publicKey, refreshToken);
+        await UserModel.createUser(id, username, imageUrl,hashedPassword, publicKey, refreshToken);
 
         try {
             await verifyRefreshToken(refreshToken);
@@ -87,7 +87,7 @@ class UserService{
 
         const accessToken = generateAccessToken({ id, username, publicKey });
 
-        return { id, username, publicKey, refreshToken, accessToken };
+        return { id, username, imageUrl, publicKey, refreshToken, accessToken };
     }
 
     async updateUser(publicKey: string, updates: Partial<any>){
@@ -131,6 +131,7 @@ class UserService{
         if(user){
             return {
                 username: user.username,
+                imageUrl: user.imageUrl,
                 publicKey: user.publicKey,
                 joinedAt: user.joinedAt,
                 points: user.points,
