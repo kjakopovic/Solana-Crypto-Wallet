@@ -11,11 +11,11 @@ interface TopLeftExitButtonProps {
 
 const TopLeftExitButton: React.FC<TopLeftExitButtonProps> = ({ containerStyles }) => {
     return (
-        <View className={`items-start ml-5 ${containerStyles}`}>
+        <View className={`items-start ml-1 absolute left-1 bg-secondaryUtils p-2 rounded-full ${containerStyles}`}>
             <TouchableOpacity onPress={() => router.back()}>
                 <Image 
                     source={icons.exit} 
-                    className='w-7 h-7'
+                    className='w-8 h-8 mb-0.5'
                     resizeMode='contain'
                 />
             </TouchableOpacity>

@@ -1,15 +1,18 @@
-import { View, Text } from 'react-native'
+import { View, Text, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
+import { LinearGradient } from 'expo-linear-gradient';
+
 import React, { useEffect, useState } from 'react'
 
 import { icons } from '@/constants'
 
 import { getSelectedCoinAmount, stakeSolana, getMinimumStakeAmount } from '@/context/WalletFunctions'
 
-import FormField from '@/components/FormField'
-import CustomButton from '@/components/CustomButton'
-import CustomDialog from '@/components/CustomDialog'
+import CustomButton from '@/components/custom_button'
+import CustomDialog from '@/components/custom_dialog'
+import CustomInput from '@/components/custom_input';
+import PageHeader from '@/components/page_header';
 
 const StakeCrypto = () => {
     const [solBalance, setSolBalance] = useState('');
@@ -65,25 +68,47 @@ const StakeCrypto = () => {
             />
             <ScrollView>
                 <View className='h-[90vh] w-full justify-between items-center mt-10 pb-5'>
-                    <View className='w-full items-center'>
-                        <Text className='text-secondary font-pmedium ml-3 text-[12px] text-left w-[80%]'>
-                            {`Max: ${solBalance} SOL`}
-                        </Text>
-                        <FormField
+                    <PageHeader 
+                        title='Stake'
+                        containerStyles='mt-1'
+                    />
+
+                    <View className='w-[90%]'>
+                        <LinearGradient
+                            colors={['#1484ff', '#0066d6']}
+                            start={{ x: 0.2, y: 0.2 }}
+                            end={{ x: 0.7, y: 0.7 }}
+                            className={`h-[100px] w-[100%] items-center rounded-[30px] mb-5`}
+                        >
+                            <View className='flex-row items-center justify-between px-5 w-[100%] h-[100%]'>
+                                <View className='h-[100%] justify-center items-start'>
+                                    <Text className='text-white font-lufgaMedium text-[17px]'>
+                                        Balance
+                                    </Text>
+                                    <Text className='mt-1 text-white font-lufgaSemiBold text-[30px]'>
+                                        {solBalance}
+                                    </Text>
+                                </View>
+                                <View className='justify-center items-center w-[70px] h-[70px] rounded-full bg-white/20'>
+                                    <Image
+                                        source={icons.solana}
+                                        className='w-[50px] h-[50px] rounded-full'
+                                        resizeMode='contain'
+                                    />
+                                </View>
+                            </View>
+                        </LinearGradient>
+
+                        <CustomInput
                             value={amount}
+                            placeholder='Amount'
+                            onChangeText={(text) => setAmount(text)}
                             digitsOnly
-                            handleChangeText={(input) => {setAmount(input)}}
-                            hasPressableIcon
-                            icon={icons.solana}
-                            removeIconColor
-                            iconStyles='w-10 h-10'
-                            otherStyles='h-[70px]'
-                            textStyles='mt-5'
                         />
                     </View>
 
                     <View className='w-[90%]'>
-                        <Text className='text-secondaryHighlight font-pmedium mb-5 text-[15px] text-center'>
+                        <Text className='text-secondaryHighlight font-lufgaMedium mb-5 text-[15px] text-center'>
                             {`Minimum stake amount: ${minStakeAmount} SOL`}
                         </Text>
 
@@ -98,7 +123,7 @@ const StakeCrypto = () => {
 
                                     setDialogProps({
                                         title: 'Success',
-                                        description: 'Staking successful',
+                                        description: 'Staking started successfully',
                                         visible: true
                                     })
                                 } catch (error) {

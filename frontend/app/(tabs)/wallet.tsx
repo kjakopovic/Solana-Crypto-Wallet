@@ -1,14 +1,9 @@
-import { View, Text, Image, TouchableOpacity, FlatList, Modal } from 'react-native'
+import { View, Text, TouchableOpacity, Modal } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView, RefreshControl } from 'react-native-gesture-handler'
-import { router, Href } from 'expo-router'
 import React, { useState, useEffect } from 'react'
 
-import CircleButton from '@/components/CircleButton'
-import CryptoAssetCardItem from '@/components/CryptoAssetCardItem'
-import SkeletonLoader from '@/components/SkeletonLoader'
-
-import { icons, images } from '@/constants'
+import SkeletonLoader from '@/components/skeleton_loader'
 
 import { 
     getWalletInfo, 
@@ -19,12 +14,11 @@ import {
     StakingItemData,
     unstakeSolana
 } from '@/context/WalletFunctions'
-import TransactionHistoryCardItem from '@/components/TransactionHistoryCardItem'
-import CustomDialog from '@/components/CustomDialog'
+import CustomDialog from '@/components/custom_dialog'
+import WalletHeader from '@/components/wallet_header'
+import WalletBody from '@/components/wallet_body'
 
 const Wallet = () => {
-    const [selectedMenu, setSelectedMenu] = useState(0)
-
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
 
@@ -55,13 +49,24 @@ const Wallet = () => {
     const fetchWalletInfo = async () => {
         const fetching = await Promise.all([
             await getWalletInfo(),
-            // await getTransactionsHistory(),
+            await getTransactionsHistory(),
             await getAllStakeAccounts()
         ])
 
         setWalletInfo(fetching[0])
-        // setHistory(fetching[1])
-        setStakingData(fetching[1])
+        //TODO: delete before final commit
+        // setHistory([
+        //     {
+        //         fromPublicWallet: 'fromPublicWallet',
+        //         toPublicWallet: 'toPublicWallet',
+        //         transferBalanceInToken: 0.23122,
+        //         transferTimestamp: '2022-08-28T21:51:00.000Z',
+        //         coinLogoBase64: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
+        //         coinName: 'Wrapped SOL'
+        //     }
+        // ])
+        setHistory(fetching[1])
+        setStakingData(fetching[2])
 
         setLoading(false)
     }
@@ -84,53 +89,63 @@ const Wallet = () => {
         return (
             <SafeAreaView className='bg-background h-full'>
                 <View className='min-h-[85vh] w-full mt-7 items-center mb-[100px]'>
-                    <View className='w-full items-center'>
-                        <SkeletonLoader 
-                            width={80}
-                            height={80}
-                            customStyles={{ borderRadius: 9999 }}
-                        />
+                    <View className='w-[90%] items-center'>
+                        <View className='w-[90%] justify-between items-center flex-row'>
+                            <View>
+                                <SkeletonLoader 
+                                    width={100}
+                                    height={15}
+                                    customStyles={{ borderRadius: 20, marginTop: 8 }}
+                                />
 
-                        <SkeletonLoader 
-                            width={200}
-                            height={20}
-                            customStyles={{ borderRadius: 20, marginTop: 20 }}
-                        />
+                                <SkeletonLoader 
+                                    width={100}
+                                    height={30}
+                                    customStyles={{ borderRadius: 20, marginTop: 8 }}
+                                />
+                            </View>
 
-                        <SkeletonLoader 
-                            width={80}
-                            height={30}
-                            customStyles={{ borderRadius: 20, marginTop: 8 }}
-                        />
-                    </View>
+                            <SkeletonLoader 
+                                width={80}
+                                height={80}
+                                customStyles={{ borderRadius: 9999, marginTop: 20 }}
+                            />
+                        </View>
 
-                    <View className='w-[90%] justify-between flex-row mt-5'>
-                        <SkeletonLoader 
-                            width={55}
-                            height={55}
-                            customStyles={{ borderRadius: 9999 }}
-                        />
+                        <View className='w-[90%] justify-between flex-row mt-5'>
+                            <SkeletonLoader 
+                                width={55}
+                                height={55}
+                                customStyles={{ borderRadius: 9999 }}
+                            />
 
-                        <SkeletonLoader 
-                            width={55}
-                            height={55}
-                            customStyles={{ borderRadius: 9999 }}
-                        />
+                            <SkeletonLoader 
+                                width={55}
+                                height={55}
+                                customStyles={{ borderRadius: 9999 }}
+                            />
 
-                        <SkeletonLoader 
-                            width={55}
-                            height={55}
-                            customStyles={{ borderRadius: 9999 }}
-                        />
+                            <SkeletonLoader 
+                                width={55}
+                                height={55}
+                                customStyles={{ borderRadius: 9999 }}
+                            />
 
-                        <SkeletonLoader 
-                            width={55}
-                            height={55}
-                            customStyles={{ borderRadius: 9999 }}
-                        />
+                            <SkeletonLoader 
+                                width={55}
+                                height={55}
+                                customStyles={{ borderRadius: 9999 }}
+                            />
+                        </View>
                     </View>
 
                     <View className='min-h-[18vh] w-[90%] rounded-3xl mt-5'>
+                        <SkeletonLoader 
+                            width='100%'
+                            height={40}
+                            customStyles={{ borderRadius: 24, marginTop: 10, marginBottom: 30 }}
+                        />
+
                         <SkeletonLoader 
                             width='100%'
                             height={90}
@@ -184,166 +199,33 @@ const Wallet = () => {
                             await fetchWalletInfo()
                             setRefreshing(false)
                         }}
-                        colors={['#BBA880']}
-                        progressBackgroundColor={'#02020D'}
+                        colors={['#007AFF']}
+                        progressBackgroundColor={'#171717'}
                     />
                 }
             >
                 <View className='min-h-[85vh] w-full mt-7 items-center mb-[100px]'>
-                    <TouchableOpacity
-                        onPress={() => {router.push('/select_avatar' as Href)}}
-                        activeOpacity={0.5}
-                    >
-                        <Image 
-                            source={images.userProfileTemplate}
-                            className='w-20 h-20 rounded-full'
-                            resizeMode="contain"
-                        />
-                    </TouchableOpacity>
+                    <WalletHeader
+                        balance={walletInfo.balance}
+                        username='John-Doe'
+                        profileUri='https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png'
+                        isCustomProfilePicture={false}
+                    />
 
-                    <Text className='text-secondaryHighlight text-sm font-pbold mt-5 text-center'>
-                        RandomUsernameokefoiod
-                    </Text>
-
-                    <Text className='text-secondaryHighlight text-3xl font-pbold mt-2 text-center'>
-                        ${walletInfo.balance}
-                    </Text>
-
-                    <View className='w-[90%] justify-between flex-row mt-5'>
-                        <CircleButton 
-                            title='Send'
-                            icon={icons.arrowDown}
-                            handleClick={() => {
-                                router.push('/send_crypto' as Href)
-                            }}
-                            additionalStyles='rotate-180'
-                        />
-
-                        <CircleButton 
-                            title='Swap'
-                            icon={icons.trade}
-                            handleClick={() => {router.push('/(tabs)/swap' as Href)}}
-                        />
-
-                        <CircleButton 
-                            title='Stake'
-                            icon={icons.moneyBox}
-                            handleClick={() => {router.push('/stake_crypto' as Href)}}
-                        />
-
-                        <CircleButton 
-                            title='Receive'
-                            icon={icons.arrowDown}
-                            handleClick={() => {router.push('/receive_crypto' as Href)}}
-                        />
-                    </View>
-
-                    <View className='min-h-[18vh] w-[90%] bg-secondaryUtils rounded-3xl mt-5'>
-                        <View className='flex-row justify-between mt-3 pb-2'>
-                            <TouchableOpacity
-                                onPress={() => {setSelectedMenu(0)}}
-                                activeOpacity={1}
-                            >
-                                <Text className={`${selectedMenu === 0 ? 'text-secondaryHighlight' : 'text-secondary'} ml-7 text-[16px] font-pmedium`}>
-                                    Assets
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => {setSelectedMenu(1)}}
-                                activeOpacity={1}
-                            >
-                                <Text className={`${selectedMenu === 1 ? 'text-secondaryHighlight' : 'text-secondary'} text-[16px] font-pmedium`}>
-                                    Staking
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => {setSelectedMenu(2)}}
-                                activeOpacity={1}
-                            >
-                                <Text className={`${selectedMenu === 2 ? 'text-secondaryHighlight' : 'text-secondary'} mr-7 text-[16px] font-pmedium`}>
-                                    Activity
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {selectedMenu === 0 && (
-                            <View className='w-full justify-center items-center'>
-                                {walletInfo.tokens.map((token, index) => (
-                                    <CryptoAssetCardItem 
-                                        sourcePicutre={token.logoURIbase64}
-                                        assetName={token.name}
-                                        currentPrice={`$${token.marketValueInDollars}`}
-                                        userAmount={token.userAmount}
-                                        key={index}
-                                    />
-                                ))}
-                            </View>
-                        )}
-
-                        {selectedMenu === 1 && (
-                            <View className='w-full justify-center items-center'>
-                                {stakingData.accounts.length === 0 ? (
-                                    <Text className='text-secondary text-sm font-pregular mt-2'>
-                                        There are no staking assets
-                                    </Text>
-                                ) : (
-                                    stakingData.accounts.map((account: StakingItemData, index: number) => (
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                setSelectedStakingItemData(account);
-                                            }}
-                                            activeOpacity={0.5}
-                                            key={`button-${index}`}
-                                        >
-                                            <TransactionHistoryCardItem
-                                                transferBalanceInToken={account.stakeBalance}
-                                                coinLogoBase64={stakingData.imageUri}
-                                                coinName={'Wrapped SOL'}
-                                                key={`item-${index}`}
-                                                showPriceMovement={false}
-                                            />
-                                        </TouchableOpacity>
-                                    ))
-                                )}
-                            </View>
-                        )}
-
-                        {selectedMenu === 2 && (
-                            <View className='w-full justify-center items-center'>
-                                {history.length === 0 ? (
-                                    <Text className='text-secondary text-sm font-pregular mt-2'>
-                                        No history
-                                    </Text>
-                                ) : (
-                                    <FlatList
-                                        scrollEnabled={false}
-                                        data={history}
-                                        renderItem={({ item }: any) => (
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    setModalData({
-                                                        isModalVisible: true,
-                                                        selectedTransaction: item
-                                                    })
-                                                }}
-                                                activeOpacity={0.5}
-                                            >
-                                                <TransactionHistoryCardItem
-                                                    transferBalanceInToken={item.transferBalanceInToken}
-                                                    coinLogoBase64={item.coinLogoBase64}
-                                                    coinName={item.coinName}
-                                                    transferTimestamp={item.transferTimestamp}
-                                                />
-                                            </TouchableOpacity>
-                                        )}
-                                        keyExtractor={(item, index) => index.toString()}
-                                    />
-                                )}
-                            </View>
-                        )}
-                    </View>
+                    <WalletBody
+                        assetsData={walletInfo.tokens}
+                        stakingData={stakingData}
+                        historyData={history}
+                        onHistoryItemPress={(item: TransactionHistoryData) => {
+                            setModalData({
+                                isModalVisible: true,
+                                selectedTransaction: item
+                            })
+                        }}
+                        onStakingItemPress={(item: StakingItemData) => {
+                            setSelectedStakingItemData(item);
+                        }}
+                    />
 
                     <Modal
                         animationType="fade"
@@ -351,14 +233,14 @@ const Wallet = () => {
                         visible={modalData.isModalVisible}
                     >
                         <View className='flex-1 justify-center items-center bg-black/50'>
-                            <View className='bg-secondaryUtils w-[90%] p-5 rounded-lg'>
+                            <View className='bg-secondaryUtils w-[90%] p-5 rounded-3xl'>
                                 {modalData.selectedTransaction && (
                                     <>
-                                        <Text className='text-lg font-bold mb-3 text-primary text-center'>Transaction Details</Text>
-                                        <Text className='text-white'>From:</Text>
-                                        <Text className='text-white mb-2'>{modalData.selectedTransaction.fromPublicWallet}</Text>
-                                        <Text className='text-white'>To:</Text>
-                                        <Text className='text-white'>{modalData.selectedTransaction.toPublicWallet}</Text>
+                                        <Text className='text-lg font-bold mb-3 text-secondaryHighlight text-center'>Transaction Details</Text>
+                                        <Text className='text-white font-lufgaSemiBold text-[15px]'>From:</Text>
+                                        <Text className='text-secondaryHighlight font-lufgaMedium text-[11px] mb-2 mt-0.5'>{modalData.selectedTransaction.fromPublicWallet}</Text>
+                                        <Text className='text-white font-lufgaSemiBold text-[15px]'>To:</Text>
+                                        <Text className='text-secondaryHighlight font-lufgaMedium text-[11px] mt-0.5'>{modalData.selectedTransaction.toPublicWallet}</Text>
                                         
                                         <TouchableOpacity
                                             onPress={() => {
@@ -369,7 +251,7 @@ const Wallet = () => {
                                             }}
                                             className='mt-5 bg-secondaryUtils p-2 rounded-lg'
                                         >
-                                            <Text className='text-center text-white'>Close</Text>
+                                            <Text className='text-center font-lufgaBold text-primary'>Close</Text>
                                         </TouchableOpacity>
                                     </>
                                 )}

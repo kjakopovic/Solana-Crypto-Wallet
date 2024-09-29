@@ -13,19 +13,19 @@ interface CustomDialogProps {
 
 const CustomDialog: React.FC<CustomDialogProps> = ({ visible, title, description, onOkPress, onCancelPress, showCancel }) => {
     return (
-        <View className='justify-center items-center bg-background border-secondaryUtils rounded-3xl'>
+        <View className='justify-center items-center'>
             <Dialog.Container 
                 contentStyle={{ 
-                    backgroundColor: "#02020d", 
-                    borderRadius: 15
+                    backgroundColor: "#232324", 
+                    borderRadius: 24
                 }}
                 visible={visible}
             >
-                <Dialog.Title style={{ color: '#D6D6D6' }}>
+                <Dialog.Title style={{ color: '#ffffff', fontFamily: 'LufgaMedium' }}>
                     {title}
                 </Dialog.Title>
 
-                <Dialog.Description  style={{ color: '#D6D6D6' }}>
+                <Dialog.Description  style={{ color: '#6F6F70', fontFamily: 'LufgaRegular' }}>
                     {description}
                 </Dialog.Description>
 
@@ -33,14 +33,14 @@ const CustomDialog: React.FC<CustomDialogProps> = ({ visible, title, description
                     <Dialog.Button 
                         label="Cancel" 
                         onPress={onCancelPress ?? (() => {})} 
-                        style={{ color: '#BBA880' }}
+                        style={{ color: '#007AFF', fontFamily: 'LufgaBold' }}
                     />
                 }
 
                 <Dialog.Button 
                     label="OK" 
                     onPress={onOkPress} 
-                    style={{ color: '#BBA880' }}
+                    style={{ color: '#007AFF', fontFamily: 'LufgaBold' }}
                 />
             </Dialog.Container>
         </View>

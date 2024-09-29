@@ -7,18 +7,18 @@ import {
   getAllTradeableTokens, 
   TokenInfo,
   getSelectedCoinAmount,
-  swapTokens,
-  airdropMoney
+  swapTokens
 } from '@/context/WalletFunctions';
 
-import CustomDialog from '@/components/CustomDialog';
-import CustomDropDown from '@/components/CustomDropDown';
-import DividerWithIcon from '@/components/DividerWithIcon';
-import CustomButton from '@/components/CustomButton';
-import FormField from '@/components/FormField';
+import CustomDialog from '@/components/custom_dialog';
+import CustomDropDown from '@/components/custom_dropdown';
+import CustomButton from '@/components/custom_button';
+import { icons } from '@/constants';
+import CustomInput from '@/components/custom_input';
+import PageHeader from '@/components/page_header';
 
 const Swap = () => {
-  const [accountBalance, setAccountBalance] = useState('0.00');
+  const [accountBalance, setAccountBalance] = useState('0');
   const [inputAmount, setInputAmount] = useState(0);
 
   const [cryptoData, setCryptoData] = useState([] as any[]);
@@ -63,6 +63,7 @@ const Swap = () => {
                 description: 'That coin is not supported at the moment.',
                 visible: true
             });
+            setAccountBalance('0');
         }
     }
 
@@ -101,17 +102,26 @@ const Swap = () => {
         />
         <View className='h-[75vh] mt-10 items-center justify-between'>
           <View className='items-center w-[90%]'>
+            <PageHeader 
+                title='Swap'
+                showExitButton={false}
+                containerStyles='mb-10 mt-1 mr-2'
+            />
+
             <CustomDropDown 
               data={cryptoData}
               emptyTextPlaceholder='Select a coin to convert from'
               selectedItem={selectedCrypto.convertFromCrypto}
               setSelectedItem={(selected) => {setSelectedCrypto({ ...selectedCrypto, convertFromCrypto: selected })}}
             />
-            <Text className='text-white text-left w-[90%]'>
-              {`Available: ${accountBalance} ${selectedCrypto.convertFromCrypto?.symbol ?? ''}`}
-            </Text>
 
-            <DividerWithIcon />
+            <View className='z-10 -mb-5 -mt-5 w-10 h-10 bg-background justify-center items-center rounded-full'>
+              <Image
+                source={icons.swap}
+                className='rounded-full w-5 h-5 transform rotate-90'
+                resizeMode='contain'
+              />
+            </View>
 
             <CustomDropDown 
               data={cryptoData}
@@ -119,21 +129,23 @@ const Swap = () => {
               selectedItem={selectedCrypto.convertToCrypto}
               setSelectedItem={(selected) => {setSelectedCrypto({ ...selectedCrypto, convertToCrypto: selected })}}
             />
-          </View>
 
-          <View className='w-[90%]'>
-            <FormField
+            <CustomInput
               value={inputAmount}
-              placeholder='Enter amount of coins to swap'
-              handleChangeText={(input) => {setInputAmount(parseFloat(input))}}
-              otherStyles='w-[100%] h-[50px]'
+              placeholder={`Enter amount of ${selectedCrypto.convertFromCrypto?.symbol === undefined ? '' : selectedCrypto.convertFromCrypto?.symbol + ' '}coins to swap`}
+              onChangeText={(text) => {setInputAmount(text)}}
               digitsOnly
+              containerStyles='mt-5'
+              textStyles='text-[14px]'
             />
+            <Text className='text-white font-lufgaMedium text-center mt-1'>
+              {`Available: ${accountBalance} ${selectedCrypto.convertFromCrypto?.symbol ?? ''}`}
+            </Text>
           </View>
 
           <View className='w-[90%]'>
             <CustomButton
-              title='Swap'
+              title='Exchange'
               primary
               handlePress={handleCoinsSwap}
             />

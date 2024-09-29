@@ -4,16 +4,17 @@ import { router, Href, Link } from "expo-router";
 
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
-import PasscodeOutput from '@/components/PasscodeOutput'
-import PasscodeInput from '@/components/PasscodeInput'
-import CustomDialog from '@/components/CustomDialog';
+import PasscodeOutput from '@/components/passcode_output'
+import PasscodeInput from '@/components/passcode_input'
+import CustomDialog from '@/components/custom_dialog';
+import PageHeader from '@/components/page_header';
 
 const LoginWithPasscode = () => {
     const [showDialog, setShowDialog] = useState(false)
     const [passcode, setPasscode] = useState('')
     
     useEffect(() => {
-        if (passcode.length === 6) {
+        if (passcode.trimEnd().split(' ').length === 6) {
             const callBackend = true //TODO: pozvati backend da vidimo jel tocan passcode
             if (callBackend) {
                 if (router.canDismiss()) {
@@ -40,29 +41,32 @@ const LoginWithPasscode = () => {
 
             <ScrollView>
                 <View className='justify-between items-center w-full min-h-[95vh] pb-5 pt-5'>
-                    <Text className='text-secondaryHighlight text-lg font-pbold mt-10'>
-                        Enter Your Passcode
-                    </Text>
+                    <PageHeader
+                        title='Enter Passcode'
+                        showExitButton={false}
+                    />
 
                     <PasscodeOutput 
                         numberOfDots={6}
-                        passcode={passcode}
+                        passcode={passcode.split(' ')}
                     />
 
-                    <PasscodeInput
-                        handleInput={(x) => {
-                            setPasscode(passcode + x)
-                        }}
+                    <View className='w-full justify-center items-center'>
+                        <PasscodeInput
+                            handleInput={(x) => {
+                                setPasscode(passcode + `${x} `)
+                            }}
 
-                        handleDelete={() => {
-                            setPasscode(passcode.slice(0, -1))
-                        }}
-                    />
+                            handleDelete={() => {
+                                setPasscode(passcode.slice(0, -2))
+                            }}
+                        />
 
-                    <Text className='text-secondary text-sm font-pregular'>
-                        Forgot your passcode?{' '}
-                        <Link href={'/(auth)/recover_wallet'} className='text-primary'>Recover wallet</Link>
-                    </Text>
+                        <Text className='text-secondary text-sm font-lufgaRegular mt-3 -mb-3 text-white'>
+                            Forgot your passcode?{' '}
+                            <Link href={'/(auth)/recover_wallet'} className='text-primary'>Recover wallet</Link>
+                        </Text>
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>

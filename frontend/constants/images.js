@@ -4,7 +4,6 @@ import logoSmall from "../assets/images/logo-small.png";
 import welcome1 from "../assets/images/welcome1.png";
 import welcome2 from "../assets/images/welcome2.png";
 import writeDown from "../assets/images/write-down.png";
-import userProfileTemplate from "../assets/images/user.png";
 
 export default { 
     lock, 
@@ -13,5 +12,4 @@ export default {
     welcome1, 
     welcome2, 
     writeDown,
-    userProfileTemplate
 };

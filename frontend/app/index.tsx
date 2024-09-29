@@ -4,12 +4,12 @@ import React, { useState, useRef, useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, Href, Redirect } from "expo-router";
 
-import SegmentBar from '@/components/SegmentBar'
+import SegmentBar from '@/components/segment_bar'
 import { ScrollView } from 'react-native-gesture-handler'
 import Swiper from "react-native-swiper";
 import { images, icons } from '@/constants'
-import CustomButton from '@/components/CustomButton'
-import Loader from '@/components/Loader'
+import CustomButton from '@/components/custom_button'
+import Loader from '@/components/loader'
 import { useGlobalContext } from "../context/GlobalProvider";
 
 const Index = () => {
@@ -64,7 +64,7 @@ const Index = () => {
                     >
                         {/* Slide 1 */}
                         <View className='w-full min-h-[85vh] mt-10 items-center justify-between'>
-                            <Text className='justify-center w-max font-pbold text-white text-xl'>
+                            <Text className='justify-center w-max font-lufgaBold text-white text-xl'>
                                 Welcome to{' '}
                                 <Text className='text-primary'>
                                     SOLASAFE
@@ -77,7 +77,7 @@ const Index = () => {
                                 resizeMode='contain'
                             />
 
-                            <Text className='text-secondaryHighlight w-3/5 text-center'>
+                            <Text className='text-white font-lufgaMedium w-4/5 text-center'>
                                 Your secure Solana wallet to easily manage and grow your crypto.
                             </Text>
 
@@ -89,6 +89,7 @@ const Index = () => {
                                 <Image
                                     source={icons.swipeLeft}
                                     className="w-[200px] h-[75px]"
+                                    tintColor={'#007AFF'}
                                     resizeMode="contain"
                                 />
                             </Animated.View>
@@ -96,7 +97,7 @@ const Index = () => {
 
                         {/* Slide 2 */}
                         <View className='w-full min-h-[85vh] mt-10 items-center justify-between pb-10'>
-                            <Text className='justify-center text-center w-4/5 font-pbold text-white text-xl'>
+                            <Text className='justify-center text-center w-4/5 font-lufgaBold text-white text-xl'>
                                 Complete fun{' '}
                                 <Text className='text-primary'>
                                     challenges
@@ -113,7 +114,7 @@ const Index = () => {
                                 resizeMode='contain'
                             />
 
-                            <Text className='text-secondaryHighlight w-3/5 text-center'>
+                            <Text className='text-white font-lufgaMedium w-4/5 text-center'>
                                 Dive into the world of Solana with a wallet that{"'"}s more than just a storage.
                             </Text>
                         </View>

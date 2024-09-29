@@ -16,14 +16,15 @@ const ExplanationPage: React.FC<ExplanationPageProps> = ({ title, explanation, i
             <Image 
                 source={image} 
                 className='w-[152px] h-[152px]'
+                tintColor={'#007AFF'}
                 resizeMode='contain'
             />
 
-            <Text className={`${titleStyles} font-pbold text-white text-xl text-center`}>
+            <Text className={`${titleStyles} font-lufgaBold text-white text-xl text-center`}>
                 {title}
             </Text>
 
-            <Text className={`${explanationStyles} font-pmedium text-secondaryHighlight text-xs text-center`}>
+            <Text className={`${explanationStyles} font-lufgaMedium text-white text-[15px] text-center`}>
                 {explanation}
             </Text>
         </View>

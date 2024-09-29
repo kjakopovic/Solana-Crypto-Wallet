@@ -6,10 +6,9 @@ import { CameraView, useCameraPermissions } from 'expo-camera'
 
 import React, { useState, useEffect } from 'react'
 
-import FormField from '@/components/FormField';
-import CustomButton from '@/components/CustomButton';
-import CustomDialog from '@/components/CustomDialog';
-import CustomDropDown from '@/components/CustomDropDown';
+import CustomButton from '@/components/custom_button';
+import CustomDialog from '@/components/custom_dialog';
+import CustomDropDown from '@/components/custom_dropdown';
 
 import { getItem } from '@/context/SecureStorage';
 import { 
@@ -20,6 +19,9 @@ import {
 } from '@/context/WalletFunctions';
 
 import { icons } from '@/constants'
+import CustomInput from '@/components/custom_input'
+import CircleButton from '@/components/circle_button'
+import PageHeader from '@/components/page_header'
 
 const SendCrypto = () => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -142,68 +144,58 @@ const SendCrypto = () => {
                 onCancelPress={() => {setInfoDialogProps({ title: '', description: '', visible: false })}}
             />
             <ScrollView>
-                <View className="flex-1 h-full justify-between px-5 w-full mt-10 pb-5 mb-3">
-                    <CustomDropDown 
-                        data={cryptoData}
-                        emptyTextPlaceholder='Please select a coin'
-                        selectedItem={selectedCrypto}
-                        setSelectedItem={setSelectedCrypto}
-                    />
-
-                    <View className='w-full mt-10'>
-                        <Text className='text-secondary font-pmedium ml-3 text-[12px]'>
-                            From Address
-                        </Text>
-                        <FormField
-                            value={sendData.fromAddress}
-                            handleChangeText={() => {}}
-                            otherStyles='w-full h-[65px] border-[1px]'
-                            textStyles='text-[13px]'
-                            isReadOnly
-                        />
-                    </View>
-
-                    <View className='w-full mt-10'>
-                        <Text className='text-secondary ml-3 font-pmedium text-[12px]'>
-                            To Address
-                        </Text>
-                        <FormField
-                            value={sendData.toAddress}
-                            handleChangeText={(text: string) => setSendData({ ...sendData, toAddress: text })}
-                            otherStyles='w-full h-[65px] border-[1px]'
-                            textStyles='text-[13px]'
-                            hasPressableIcon
-                            handleIconPress={() => {
-                                if (!permission?.granted) {
-                                    requestPermission();
-                                } else{
-                                    setIsCameraVisible(true);
-                                }
-                            }}
-                            icon={icons.qrCodeScan}
-                        />
-                    </View>
-
-                    <View className='w-full mt-10'>
-                        <Text className='text-secondary font-pmedium ml-3 text-[12px]'>
-                            Amount
-                        </Text>
-
-                        <FormField
-                            value={sendData.amount}
-                            handleChangeText={(text: string) => setSendData({ ...sendData, amount: text })}
-                            otherStyles='w-full h-[50px] border-[1px]'
-                            textStyles='text-[13px]'
-                            digitsOnly
+                <View className="h-[90vh] justify-between px-5 w-full mt-10 pb-5 mb-3">
+                    <View className='w-full space-y-2 items-center'>
+                        <PageHeader 
+                            title='Send'
+                            containerStyles='mb-10 mt-1'
                         />
 
-                        <Text className='text-secondaryHighlight font-pmedium ml-3 text-[12px] mt-3'>
-                            {`Available: ${accountBalance} ${selectedCrypto?.symbol ?? ''}`}
-                        </Text>
+                        <CustomDropDown 
+                            data={cryptoData}
+                            emptyTextPlaceholder='Please select a coin'
+                            selectedItem={selectedCrypto}
+                            setSelectedItem={setSelectedCrypto}
+                        />
+
+                        <View className='w-full mb-5'>
+                            <CustomInput
+                                value={sendData.amount}
+                                onChangeText={(text) => {setSendData({ ...sendData, amount: text })}}
+                                digitsOnly
+                                placeholder='Amount'
+                            />
+
+                            <Text className='text-white font-lufgaMedium text-center mt-2 mb-5'>
+                                {`Available: ${accountBalance} ${selectedCrypto?.symbol ?? ''}`}
+                            </Text>
+                        </View>
+
+                        <View className='w-[100%] flex-row justify-between items-center'>
+                            <CustomInput
+                                placeholder='Send to wallet address'
+                                value={sendData.toAddress}
+                                onChangeText={(text) => {setSendData({ ...sendData, toAddress: text })}}
+                                containerStyles='w-[80%]'
+                            />
+
+                            <CircleButton
+                                icon={icons.qrCodeScan}
+                                handleClick={() => {
+                                    if (!permission?.granted) {
+                                        requestPermission();
+                                    } else{
+                                        setIsCameraVisible(true);
+                                    }
+                                }}
+                                additionalStyles='h-[70px] w-[60px] bg-secondaryUtils'
+                                additionalImageStyles='h-[30px] w-[30px]'
+                            />
+                        </View>
                     </View>
 
                     <CustomButton
-                        title={isFetching ? 'Processing...' : 'Send'}
+                        title={isFetching ? 'Processing...' : 'Confirm'}
                         containerStyles={'w-full mt-10'}
                         primary
                         handlePress={async () => {

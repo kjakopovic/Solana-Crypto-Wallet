@@ -6,7 +6,8 @@ import React, { useEffect, useState } from 'react'
 
 import { getDefaultAvatars } from '@/utils/avatars'
 
-import CustomDialog from '@/components/CustomDialog'
+import CustomDialog from '@/components/custom_dialog'
+import PageHeader from '@/components/page_header'
 
 const SelectAvatar = () => {
     const [avatars, setAvatars] = useState([] as string[])
@@ -38,12 +39,13 @@ const SelectAvatar = () => {
                 onCancelPress={() => {setDialogProps({ title: '', description: '', visible: false })}}
             />
             <ScrollView>
-                <View className='h-[70vh] items-center justify-between mt-[100px]'>
-                    <Text className='text-white font-psemibold text-[20px]'>
-                        Select new profile picture
-                    </Text>
+                <View className='h-[70vh] items-center justify-center mt-[50px]'>
+                    <PageHeader 
+                        title='Select new avatar'
+                        containerStyles='mt-1'
+                    />
 
-                    <View className='flex-wrap flex-row items-center justify-between mt-5 mx-3 space-y-5'>
+                    <View className='flex-wrap flex-row items-center mt-[100px] justify-between mx-3 space-y-5'>
                         {avatars.map((avatar, index) => (
                             <TouchableOpacity
                                 key={`touchable-${index}`}
@@ -71,6 +73,7 @@ const SelectAvatar = () => {
                             </TouchableOpacity>
                         ))}
                     </View>
+                    {/* TODO: dodati button da odabere NFT */}
                 </View>
             </ScrollView>
         </SafeAreaView>
