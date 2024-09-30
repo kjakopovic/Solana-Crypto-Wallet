@@ -7,14 +7,15 @@ import { ScrollView } from 'react-native-gesture-handler'
 import Swiper from "react-native-swiper";
 
 import { images, icons } from '@/constants'
-import CustomButton from '@/components/CustomButton'
-import ExplanationPage from '@/components/ExplanationPage';
-import SegmentBar from '@/components/SegmentBar'
-import TopLeftExitButton from '@/components/TopLeftExitButton';
-import Loader from '@/components/Loader';
+import CustomButton from '@/components/custom_button'
+import ExplanationPage from '@/components/explanation_page';
+import SegmentBar from '@/components/segment_bar'
+import Loader from '@/components/loader';
 
 import { generateWallet } from '@/context/WalletFunctions'
 import { saveItem } from '@/context/SecureStorage';
+import PageHeader from '@/components/page_header';
+import RecoveryPhrase12Word from '@/components/recovery_phrase_12_word';
 
 const RecoveryPhraseGeneration = () => {
     const swiperRef = useRef<Swiper>(null);
@@ -22,13 +23,20 @@ const RecoveryPhraseGeneration = () => {
     const numberOfSegments = 3
 
     const [isRecoveryPhraseVisible, setIsRecoveryPhraseVisible] = useState(false)
-    const [recoveryPhrase, setRecoveryPhrase] = useState('')
+
+    const [newRecoveryPhrase, setNewRecoveryPhrase] = useState([] as string[])
+    const [emptyRecoveryPhrase, setEmptyRecoveryPhrase] = useState([
+        '', '', '', '', '', '', '', '', '', '', '', ''
+    ] as string[])
+
     const [isRecoveryPhraseLoading, setIsRecoveryPhraseLoading] = useState(true)
 
     useEffect(() => {
         const mnemonic = generateWallet()
-        setRecoveryPhrase(mnemonic)
+        setNewRecoveryPhrase(mnemonic.split(' '))
+
         saveItem('isUserFound', 'true');
+
         setIsRecoveryPhraseLoading(false)
     }, []);
 
@@ -81,47 +89,28 @@ const RecoveryPhraseGeneration = () => {
                         </View>
 
                         {/* Slide 3 */}
-                        <View className='w-full min-h-[85vh] mt-10 items-center justify-between'>
-                            <View className='w-full flex-row items-center justify-between'>
-                                <TopLeftExitButton 
-                                    containerStyles='mr-7'
+                        <View className='w-full min-h-[85vh] items-center justify-between'>
+                            <PageHeader 
+                                title='Recovery phrase'
+                            />
+
+                            <View className='w-full pb-10 justify-center items-center'>
+                                <RecoveryPhrase12Word
+                                    readonly
+                                    recoveryPhrase={isRecoveryPhraseVisible ? newRecoveryPhrase: emptyRecoveryPhrase}
+                                    setRecoveryPhrase={setNewRecoveryPhrase}
                                 />
-
-                                <Text className='flex-1 font-psemibold text-white text-lg text-start ml-2'>
-                                    Your Recovery Phrase
-                                </Text>
-                            </View>
-
-                            <View className='w-full justify-center items-center'>
-                                <View 
-                                    className='w-[90%] space-y-2 flex-row flex-wrap h-[220px] 
-                                            border-2 border-secondary rounded-2xl items-center'
-                                >
-                                    {isRecoveryPhraseVisible ? recoveryPhrase.split(' ').map((word, index) => (
-                                        <View 
-                                            key={index}
-                                            className='w-1/3 text-center justify-center items-center mt-2'
-                                        >
-                                            <Text className='text-secondaryHighlight font-psemibold text-[14px]'>
-                                                <Text className='text-primary'>
-                                                    {`${index + 1}. `}
-                                                </Text>
-                                                {word}
-                                            </Text>
-                                        </View>
-                                    )) : <></>}
-                                </View>
 
                                 <TouchableOpacity 
                                     onPress={() => setIsRecoveryPhraseVisible(!isRecoveryPhraseVisible)} 
-                                    className="flex-row absolute bottom-3 justify-center items-center"
+                                    className="flex-row absolute bottom-0 justify-center items-center"
                                 >
                                     <Image
                                         source={isRecoveryPhraseVisible ? icons.eye : icons.eyeHide}
                                         className="w-6 h-6 mr-2"
                                         resizeMode="contain"
                                     />
-                                    <Text className="text-secondaryHighlight font-psemibold mt-0.5">
+                                    <Text className="text-secondaryHighlight font-lufgaSemiBold mt-0.5">
                                         {isRecoveryPhraseVisible ? 'Hide' : 'Show'}
                                     </Text>
                                 </TouchableOpacity>
@@ -132,7 +121,7 @@ const RecoveryPhraseGeneration = () => {
                                 handlePress={() => router.replace('/(auth)/enter_passcode' as Href)}
                                 containerStyles='w-[90%] mx-auto'
                                 primary={true}
-                                isLoading={!isRecoveryPhraseVisible || recoveryPhrase.length === 0}
+                                isLoading={!isRecoveryPhraseVisible}
                             />
                         </View>
                     </Swiper>

@@ -2,7 +2,7 @@ import { Image, View } from 'react-native'
 import { Tabs } from 'expo-router'
 import React from 'react'
 
-import { icons, images } from '@/constants'
+import { icons } from '@/constants'
 
 interface TabIconProps {
     icon: any
@@ -17,7 +17,7 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, color, customStyles }) => {
                 source={icon}
                 resizeMode="contain"
                 tintColor={color}
-                className={`w-7 h-7 ${customStyles}`}
+                className={`w-8 h-8 ${customStyles}`}
             />
         </View>
     );
@@ -28,11 +28,11 @@ const TabsLayout = () => {
         <>
             <Tabs
                 screenOptions={{
-                    tabBarActiveTintColor: "#BBA880",
-                    tabBarInactiveTintColor: "#6a6a6b",
+                    tabBarActiveTintColor: "#007AFF",
+                    tabBarInactiveTintColor: "#cfcfcf",
                     tabBarShowLabel: false,
                     tabBarStyle: {
-                        backgroundColor: "#101016",
+                        backgroundColor: "rgba(35, 35, 36, 0.9)",
                         borderTopColor: "transparent",
                         height: 70,
                         borderRadius: 30,
@@ -50,8 +50,9 @@ const TabsLayout = () => {
                         headerShown: false,
                         tabBarIcon: ({ color }) => (
                             <TabIcon
-                                icon={icons.digitalWallet}
+                                icon={icons.wallet}
                                 color={color}
+                                customStyles='h-7 w-7'
                             />
                         ),
                     }}
@@ -64,7 +65,7 @@ const TabsLayout = () => {
                         headerShown: false,
                         tabBarIcon: ({ color }) => (
                             <TabIcon
-                                icon={icons.collectibles}
+                                icon={icons.nft}
                                 color={color}
                             />
                         ),
@@ -78,9 +79,8 @@ const TabsLayout = () => {
                         headerShown: false,
                         tabBarIcon: ({ color }) => (
                             <TabIcon
-                                icon={images.logo}
+                                icon={icons.leaderboard}
                                 color={color}
-                                customStyles="w-20 h-20"
                             />
                         ),
                     }}
@@ -93,8 +93,9 @@ const TabsLayout = () => {
                         headerShown: false,
                         tabBarIcon: ({ color }) => (
                             <TabIcon
-                                icon={icons.trade}
+                                icon={icons.swap}
                                 color={color}
+                                customStyles='h-6 w-6'
                             />
                         ),
                     }}

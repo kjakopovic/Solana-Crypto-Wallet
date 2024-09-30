@@ -4,9 +4,10 @@ import { router, Href } from "expo-router";
 
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
-import PasscodeOutput from '@/components/PasscodeOutput'
-import PasscodeInput from '@/components/PasscodeInput'
-import CustomDialog from '@/components/CustomDialog';
+import PasscodeOutput from '@/components/passcode_output'
+import PasscodeInput from '@/components/passcode_input'
+import CustomDialog from '@/components/custom_dialog';
+import PageHeader from '@/components/page_header';
 
 const EnterPasscode = () => {
     const [isConfirming, setIsConfirming] = useState(false)
@@ -18,7 +19,7 @@ const EnterPasscode = () => {
     })
     
     useEffect(() => {
-        if (passcodes.confirmPasscode.length === 6) {
+        if (passcodes.confirmPasscode.trimEnd().split(' ').length === 6) {
             if (passcodes.newPasscode === passcodes.confirmPasscode) {
                 //TODO: zovi backend za spremanje, odnosno tu je user registered i 
                 //saljem mu public key i passcode
@@ -34,7 +35,7 @@ const EnterPasscode = () => {
     }, [passcodes.confirmPasscode]);
 
     useEffect(() => {
-        if (passcodes.newPasscode.length === 6) {
+        if (passcodes.newPasscode.trimEnd().split(' ').length === 6) {
             setIsConfirming(true);
         }
     }, [passcodes.newPasscode]);
@@ -50,27 +51,27 @@ const EnterPasscode = () => {
             />
 
             <ScrollView>
-                <View className='justify-between items-center w-full min-h-[85vh]'>
-                    <Text className='text-secondaryHighlight text-lg font-pbold mt-10'>
-                        {isConfirming ? 'Confirm Passcode' : 'Enter New Passcode'}
-                    </Text>
+                <View className='justify-between items-center w-full min-h-[95vh]'>
+                    <PageHeader
+                        title={isConfirming ? 'Confirm Passcode' : 'Enter New Passcode'}
+                    />
 
                     <PasscodeOutput 
                         numberOfDots={6}
-                        passcode={isConfirming ? passcodes.confirmPasscode : passcodes.newPasscode}
+                        passcode={isConfirming ? passcodes.confirmPasscode.trimEnd().split(' ') : passcodes.newPasscode.trimEnd().split(' ')}
                     />
 
                     <PasscodeInput
                         handleInput={(x) => {
                             isConfirming
-                                ? setPasscodes({ ...passcodes, confirmPasscode: passcodes.confirmPasscode + x })
-                                : setPasscodes({ ...passcodes, newPasscode: passcodes.newPasscode + x })
+                                ? setPasscodes({ ...passcodes, confirmPasscode: passcodes.confirmPasscode + `${x} ` })
+                                : setPasscodes({ ...passcodes, newPasscode: passcodes.newPasscode + `${x} ` })
                         }}
 
                         handleDelete={() => {
                             isConfirming
-                                ? setPasscodes({ ...passcodes, confirmPasscode: passcodes.confirmPasscode.slice(0, -1) })
-                                : setPasscodes({ ...passcodes, newPasscode: passcodes.newPasscode.slice(0, -1) })
+                                ? setPasscodes({ ...passcodes, confirmPasscode: passcodes.confirmPasscode.slice(0, -2) })
+                                : setPasscodes({ ...passcodes, newPasscode: passcodes.newPasscode.slice(0, -2) })
                         }}
                     />
                 </View>

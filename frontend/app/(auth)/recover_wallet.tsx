@@ -5,17 +5,18 @@ import { router, Href } from 'expo-router'
 
 import React, { useState, useEffect } from 'react'
 
-import FormField from '@/components/FormField'
-import CustomButton from '@/components/CustomButton'
-import TopLeftExitButton from '@/components/TopLeftExitButton'
-import CustomDialog from '@/components/CustomDialog'
+import CustomButton from '@/components/custom_button'
+import CustomDialog from '@/components/custom_dialog'
 
 import { restoreWallet } from '../../context/WalletFunctions'
+import PageHeader from '@/components/page_header'
+import RecoveryPhrase12Word from '@/components/recovery_phrase_12_word'
 
 const RecoverWallet = () => {
-    const [recoveryPhrase, setRecoveryPhrase] = useState('')
+    const [recoveryPhrase, setRecoveryPhrase] = useState([] as string[])
     const [isCheckingRecoveryPhrase, setIsCheckingRecoveryPhrase] = useState(false)
     const [isWalletRestored, setIsWalletRestored] = useState(false)
+    const [isValidInput, setIsValidInput] = useState(false)
 
     const [dialogProps, setDialogProps] = useState({
         message: '',
@@ -27,9 +28,13 @@ const RecoverWallet = () => {
     }
 
     useEffect(() => {
+        setIsValidInput(recoveryPhrase.filter(x => x === undefined).length === 0 && recoveryPhrase.length === 12)
+    }, [recoveryPhrase])
+
+    useEffect(() => {
         if (isCheckingRecoveryPhrase){
             try {
-                restoreWallet(recoveryPhrase)
+                restoreWallet(recoveryPhrase.join(' '))
 
                 setIsWalletRestored(true)
             } catch (error) {
@@ -60,36 +65,23 @@ const RecoverWallet = () => {
 
                 <ScrollView>
                     <View className='h-full w-full pb-8'>
-                        <View className='w-full flex-row items-center justify-between mt-10'>
-                            <TopLeftExitButton 
-                                containerStyles='mr-5'
-                            />
-
-                            <Text className='flex-1 font-pbold text-white text-lg'>
-                                Enter your{' '}
-                                <Text className='text-primary'>
-                                    recovery phrase
-                                </Text>
-                            </Text>
-                        </View>
+                        <PageHeader title='Recovery phrase' />
 
                         <View className='w-full min-h-[75vh] justify-between items-center mt-20'>
-                            <Text className='text-secondaryHighlight w-4/5 text-left'>
-                                Your recovery phrase is made out of words. Please enter the words in the correct order, divided with spaces.
+                            <Text className='text-white w-[90%] font-lufgaMedium text-center'>
+                                Your recovery phrase is made out of words. Please enter the words in the correct order.
                             </Text>
 
-                            <FormField 
-                                value={recoveryPhrase}
-                                handleChangeText={(x) => setRecoveryPhrase(x)}
-                                placeholder='Enter your recovery phrase here.'
-                                otherStyles='mt-10'
+                            <RecoveryPhrase12Word
+                                recoveryPhrase={recoveryPhrase}
+                                setRecoveryPhrase={setRecoveryPhrase}
                             />
 
                             <CustomButton 
                                 title={isCheckingRecoveryPhrase ? 'Checking...' : 'Confirm'}
                                 containerStyles='w-[90%] mx-auto mt-10'
                                 primary={true}
-                                isLoading={recoveryPhrase === '' || isCheckingRecoveryPhrase}
+                                isLoading={!isValidInput || isCheckingRecoveryPhrase}
                                 handlePress={validateRecoveryPhrase}
                             />
                         </View>

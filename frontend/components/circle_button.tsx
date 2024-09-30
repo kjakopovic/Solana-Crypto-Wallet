@@ -15,18 +15,18 @@ const CircleButton: React.FC<CircleButtonProps> = ({ handleClick, icon, title, a
             <TouchableOpacity 
                 onPress={handleClick}
                 activeOpacity={0.3}
-                className={`w-[50px] h-[50px] bg-secondaryUtils rounded-full justify-center items-center ${additionalStyles}`}
+                className={`w-[50px] h-[50px] rounded-full justify-center items-center bg-[#dedede]/30 ${additionalStyles}`}
             >
                 <Image 
                     source={icon}
-                    className={`w-7 h-7 ${additionalImageStyles}`}
-                    tintColor='#BBA880'
+                    className={`w-5 h-5 ${additionalImageStyles}`}
+                    tintColor='#ffffff'
                     resizeMode="contain"
                 />
             </TouchableOpacity>
             
             {title && 
-                <Text className='text-secondaryHighlight items-center text-center font-pregular mt-1'>
+                <Text className='text-white items-center text-center font-lufgaRegular mt-1 text-[12px]'>
                     {title}
                 </Text>
             }

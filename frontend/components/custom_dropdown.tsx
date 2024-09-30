@@ -18,7 +18,7 @@ interface CustomDropDownProps {
 
 const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlaceholder, selectedItem, setSelectedItem }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [searchText, setSearchText] = useState(''); // Add searchText state
+    const [searchText, setSearchText] = useState('');
 
     // Handle dropdown open/close
     const toggleDropdown = () => {
@@ -29,7 +29,7 @@ const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlacehol
     const selectItem = (item: Data) => {
         setSelectedItem(item);
         setIsDropdownOpen(false);
-        setSearchText(''); // Clear search text after selection
+        setSearchText('');
     };
 
     // Filter the options based on the search input
@@ -63,15 +63,17 @@ const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlacehol
             <View style={styles.selectedItem}>
               <Image
                 source={selectedItem.logo !== null && selectedItem.logo !== '' ? { uri: selectedItem.logo } : images.logoSmall}
-                style={styles.cryptoLogo}
+                style={styles.cryptoLogoSelected}
                 className='rounded-full'
               />
-              <Text style={styles.dropdownText}>
-                {selectedItem.label}
-              </Text>
+              <View className='w-[70%]'>
+                <Text style={styles.dropdownText}>
+                  {selectedItem.label}
+                </Text>
+              </View>
             </View>
           ) : (
-            <Text style={styles.dropdownText}>
+            <Text style={styles.emptyDropdownText}>
               {emptyTextPlaceholder ?? 'Select...'}
             </Text>
           )}
@@ -111,8 +113,8 @@ const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlacehol
   
   const styles = StyleSheet.create({
     container: {
-      padding: 10,
       width: '100%',
+      paddingVertical: 7
     },
     label: {
       fontSize: 18,
@@ -122,58 +124,73 @@ const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlacehol
     dropdownButton: {
       paddingVertical: 12,
       paddingHorizontal: 16,
-      borderWidth: 1,
-      borderColor: '#6a6a6b',
-      borderRadius: 8,
+      backgroundColor: '#232324',
+      borderRadius: 25,
+      minHeight: 70,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     selectedItem: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
     },
     dropdownText: {
       fontSize: 16,
-      color: '#fff',
+      color: 'white',
+      fontFamily: "LufgaMedium"
+    },
+    emptyDropdownText: {
+      fontSize: 16,
+      color: 'white',
+      fontFamily: "LufgaMedium"
     },
     cryptoLogo: {
-      width: 24,
-      height: 24,
+      width: 30,
+      height: 30,
+      marginRight: 10,
+    },
+    cryptoLogoSelected: {
+      width: 48,
+      height: 48,
       marginRight: 10,
     },
     modalOverlay: {
       flex: 1,
       justifyContent: 'center',
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      marginTop: 40,
-      marginBottom: 40,
     },
     dropdown: {
-      backgroundColor: '#191A21',
-      marginHorizontal: 30,
-      borderRadius: 8,
+      backgroundColor: '#232324',
+      marginHorizontal: 20,
+      borderRadius: 30,
       padding: 10,
     },
     searchInput: {
-      backgroundColor: '#191A21',
+      backgroundColor: '#232324',
       padding: 10,
       borderRadius: 5,
       marginBottom: 10,
       color: '#fff',
+      fontFamily: "LufgaRegular"
     },
     option: {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: '#6a6a6b',
     },
     optionText: {
       fontSize: 16,
       color: '#fff',
+      fontFamily: "LufgaRegular"
     },
     emptyText: {
       textAlign: 'center',
       color: '#fff',
       marginTop: 20,
+      fontFamily: "LufgaRegular",
+      marginBottom: 20,
     },
   });
 

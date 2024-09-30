@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#02020D"
+      "backgroundColor": "#171717"
     },
     "ios": {
       "supportsTablet": true
@@ -18,7 +18,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#02020D"
+        "backgroundColor": "#171717"
       },
       "softwareKeyboardLayoutMode": "pan",
       "windowSoftInputMode": "adjustPan",
