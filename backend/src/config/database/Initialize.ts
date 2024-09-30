@@ -66,6 +66,21 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
             END
         `);
 
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'supportQuestions')
+            BEGIN
+                CREATE TABLE supportQuestions (
+                    id INT PRIMARY KEY IDENTITY(1,1),
+                    timestamp DATETIME DEFAULT GETDATE(),
+                    userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id) NOT NULL,
+                    userPubKey NVARCHAR(255) FOREIGN KEY REFERENCES users(publicKey) NOT NULL,
+                    question NVARCHAR(MAX) NOT NULL,
+                    answered BIT DEFAULT 0,
+                    answer NVARCHAR(MAX) DEFAULT NULL
+                )
+            END
+        `);
+
         const resultQuiz = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
         const countQuiz = resultQuiz.recordset[0].count;
 
