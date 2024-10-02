@@ -8,7 +8,9 @@ const className = 'Database';
 if(process.env.NODE_ENV === 'test') {
     pool.connect()
         .then(async () => {
+            console.log("USING TEST DATABASE");
             console.log('Connected to SQL Server');
+            logger.info('USING TEST DATABASE', { className });
             logger.info('Connected to SQL Server', { className });
         })
         .catch(err => {
