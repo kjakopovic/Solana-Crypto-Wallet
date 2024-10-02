@@ -162,4 +162,74 @@ router.post('/logout', authMiddleware, UserController.logoutUser);
  */
 router.get('/info', authMiddleware, UserController.getUserInformation);
 
+/**
+ * @swagger
+ * /user/all-leaderboard:
+ *  get:
+ *  summary: Get all user points leaderboard
+ *  description: Get all user points leaderboard
+ *  responses:
+ *  200:
+ *    description: User points leaderboard found
+ *    content:
+ *    application/json:
+ *    schema:
+ *    type: object
+ *    properties:
+ *    placement:
+ *    type: number
+ *    username:
+ *    type: string
+ *    imageUrl:
+ *    type: string
+ *    publicKey:
+ *    type: string
+ *    points:
+ *    type: number
+ *  500:
+ *  description: Error getting user points leaderboard
+ *
+ */
+router.get('/all-leaderboard', authMiddleware, UserController.getAllUserPointsLeaderboard);
+
+/**
+ * @swagger
+ * /user/leaderboard:
+ *  get:
+ *  summary: Get certain amount of ranked user points leaderboard
+ *  description: Get user points leaderboard by providing the amount of ranks that needs to be fetched in the body
+ *  requestBody:
+ *  required: true
+ *  content:
+ *  application/json:
+ *  schema:
+ *  type: object
+ *  properties:
+ *  rank:
+ *  type: number
+ *  responses:
+ *  200:
+ *  description: User points leaderboard found
+ *  content:
+ *  application/json:
+ *  schema:
+ *  type: object
+ *  properties:
+ *  placement:
+ *  type: number
+ *  username:
+ *  type: string
+ *  imageUrl:
+ *  type: string
+ *  publicKey:
+ *  type: string
+ *  points:
+ *  type: number
+ *  400:
+ *  description: Rank is required
+ *  500:
+ *  description: Error getting user points leaderboard
+ */
+router.get('/leaderboard', authMiddleware, UserController.getAmountOnLeaderboard);
+
 export default router;

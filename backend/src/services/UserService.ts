@@ -166,6 +166,30 @@ class UserService{
         }
         return null;
     }
+
+    async getAllPointsLeaderboard(){
+        logger.info('Getting user points leaderboard', { className });
+        const leaderboard = await UserModel.getAllPointsLeaderboard();
+
+        if(!leaderboard){
+            logger.error('Error getting leaderboard', { className });
+            throw new Error('Error getting leaderboard');
+        }
+
+        return leaderboard;
+    }
+
+    async getAmountOnLeaderboard(rank: number){
+        logger.info('Getting user points leaderboard', { className });
+        const leaderboard = await UserModel.getAmountOnLeaderboard(rank);
+
+        if(!leaderboard){
+            logger.error('Error getting leaderboard', { className });
+            throw new Error('Error getting leaderboard');
+        }
+
+        return leaderboard;
+    }
 }
 
 export default new UserService();

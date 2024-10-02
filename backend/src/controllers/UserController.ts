@@ -153,6 +153,37 @@ class UserController{
             return res.status(500).json({message: 'Error getting user information'});
         }
     }
+
+    async getAllUserPointsLeaderboard(req: Request, res: Response) {
+        logger.info('Getting user points leaderboard', { className });
+        try {
+            const result = await UserService.getAllPointsLeaderboard();
+            logger.info('User points leaderboard found', { className });
+            return res.status(200).send(result);
+        } catch (error) {
+            logger.error({ message: 'Error getting user points leaderboard', error, className });
+            return res.status(500).json({ message: 'Error getting user points leaderboard' });
+        }
+    }
+
+    async getAmountOnLeaderboard(req: Request, res: Response) {
+        const rank = req.body.rank as number;
+
+        if (!rank) {
+            logger.error('Rank is required', {className});
+            return res.status(400).json({message: 'Rank is required'});
+        }
+
+        logger.info('Getting user points leaderboard', {className});
+        try {
+            const result = await UserService.getAmountOnLeaderboard(rank);
+            logger.info('User points leaderboard found', {className});
+            return res.status(200).send(result);
+        } catch (error) {
+            logger.error({message: 'Error getting user points leaderboard', error, className});
+            return res.status(500).json({message: 'Error getting user points leaderboard'});
+        }
+    }
 }
 
 export default new UserController();

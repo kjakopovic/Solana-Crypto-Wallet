@@ -17,6 +17,14 @@ export interface User{
     points?: number;
 }
 
+interface UserPointsLeaderboard{
+    placement: number;
+    username: string;
+    imageUrl: string;
+    publicKey: string;
+    points: number;
+}
+
 class UserModel {
     private db: ConnectionPool;
 
@@ -165,6 +173,57 @@ class UserModel {
             return null;
         }
     }
+
+    async getAllPointsLeaderboard(): Promise<UserPointsLeaderboard[] | null> {
+        logger.info('Getting points leaderboard', { className });
+        const sqlQuery = `
+            SELECT RANK() OVER (ORDER BY points DESC, username ASC) AS placement,
+                username, publicKey, imageUrl, points
+            FROM users
+            WHERE points IS NOT NULL;
+        `;
+
+        try{
+            const result = await this.db.request().query(sqlQuery);
+            const leaderboard: UserPointsLeaderboard[] = result.recordset;
+            logger.info('Points leaderboard fetched successfully', { className });
+
+            return leaderboard;
+        }catch (err){
+            logger.error('Error fetching points leaderboard: ' + err, { error: err, className });
+            throw err;
+        }
+    }
+
+    async getAmountOnLeaderboard(rank: number): Promise<UserPointsLeaderboard[] | null> {
+        logger.info(`Getting ${rank} amount of users on leaderboard`, { className });
+
+        const sqlQuery = `
+            WITH RankedUsers AS (
+                SELECT RANK() OVER (ORDER BY points DESC, username ASC) AS placement,
+                    username, publicKey, imageUrl, points
+                FROM users
+                WHERE points IS NOT NULL
+            )
+            SELECT *
+            FROM RankedUsers
+            WHERE placement <= @rank;
+        `;
+
+        try{
+            const result = await this.db.request()
+                .input('rank', rank)
+                .query(sqlQuery);
+            const leaderboard: UserPointsLeaderboard[] = result.recordset;
+            logger.info('Fetched users from leaderboard successfully', { className });
+
+            return leaderboard;
+        }catch(err){
+            logger.error('Error fetching users from leaderboard: ' + err, { error: err, className });
+            throw err;
+        }
+    }
+
 }
 
 export default new UserModel();
