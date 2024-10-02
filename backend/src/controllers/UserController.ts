@@ -1,7 +1,7 @@
 // src/controllers/UserController.ts
 
 import { Request, Response } from 'express';
-import { generateAccessToken, generateRefreshToken } from '../services/JwtService';
+import JwtService from "../services/JwtService";
 import logger from '../config/Logger';
 import UserService from "../services/UserService";
 
@@ -103,7 +103,7 @@ class UserController{
 
             try {
                 logger.info('Generating refresh token', { className });
-                const refreshToken = generateRefreshToken(user);
+                const refreshToken = JwtService.generateRefreshToken(user);
                 logger.info('Refresh token generated successfully: ' + refreshToken, { className });
 
                 logger.info('Updating refresh token', { className, userId: user.id });
@@ -111,7 +111,7 @@ class UserController{
                 logger.info('Refresh token updated successfully', { className, userId: user.id });
 
                 logger.info('Generating access token', { className });
-                const accessToken = generateAccessToken({ id: user.id, username: user.username, publicKey: user.publicKey });
+                const accessToken = JwtService.generateAccessToken({ id: user.id, username: user.username, publicKey: user.publicKey });
                 logger.info('User logged in successfully', { className });
 
                 return res.status(200).json({

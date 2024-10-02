@@ -24,6 +24,7 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                 )
             END
         `);
+        logger.info('Users table created successfully', { className });
 
         await pool.request().query(`
             IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'quizzes')
@@ -39,6 +40,7 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                 )
             END
         `);
+        logger.info('Quizzes table created successfully', { className });
 
         await pool.request().query(`
             IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'challenges')
@@ -51,6 +53,7 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                 )
             END
         `);
+        logger.info('Challenges table created successfully', { className });
 
         await pool.request().query(`
             IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'points')
@@ -65,6 +68,22 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
                 )
             END
         `);
+        logger.info('Points table created successfully', { className });
+
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'supportQuestions')
+            BEGIN
+                CREATE TABLE supportQuestions (
+                    id INT PRIMARY KEY IDENTITY(1,1),
+                    timestamp DATETIME DEFAULT GETDATE(),
+                    userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
+                    question NVARCHAR(MAX) NOT NULL,
+                    answered BIT DEFAULT 0,
+                    answer NVARCHAR(MAX) DEFAULT NULL
+                )
+            END
+        `);
+        logger.info('SupportQuestions table created successfully', { className });
 
         const resultQuiz = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
         const countQuiz = resultQuiz.recordset[0].count;

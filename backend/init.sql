@@ -69,11 +69,12 @@ BEGIN
     CREATE TABLE users (
         id NVARCHAR(255) PRIMARY KEY,
         username NVARCHAR(50) NOT NULL,
+        imageUrl NVARCHAR(MAX) NOT NULL,
         password NVARCHAR(255) NOT NULL,
         publicKey NVARCHAR(255),
         joinedAt DATETIME DEFAULT GETDATE(),
         refreshToken NVARCHAR(MAX),
-        points BIGINT
+        points BIGINT,
     );
 END;
 GO
@@ -93,17 +94,42 @@ BEGIN
 END;
 GO
 
+-- Create challenges table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'challenges')
+BEGIN
+    CREATE TABLE challenges (
+        id INT PRIMARY KEY NOT NULL,
+        name NVARCHAR(255) NOT NULL,
+        description NVARCHAR(MAX) NOT NULL,
+        points INT NOT NULL
+    );
+END;
+GO
+
 -- Create points table if it doesn't exist
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'points')
 BEGIN
-    CREATE TABLE points (
+    CREATE TABLE points(
         id INT PRIMARY KEY IDENTITY(1,1),
         userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
         timestamp DATETIME DEFAULT GETDATE(),
-        points INT NOT NULL,
-        fromChallenge BIT NOT NULL,
-        fromDailyQuiz BIT NOT NULL,
-        questionId INT FOREIGN KEY REFERENCES quizzes(id)
+        challengeId INT FOREIGN KEY REFERENCES challenges(id) DEFAULT NULL,
+        quizDifficulty NVARCHAR(50) DEFAULT NULL,
+        points INT NOT NULL
+    );
+END;
+GO
+
+-- Create supportQuestions table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'supportQuestions')
+BEGIN
+    CREATE TABLE supportQuestions (
+        id INT PRIMARY KEY IDENTITY(1,1),
+        timestamp DATETIME DEFAULT GETDATE(),
+        userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
+        question NVARCHAR(MAX) NOT NULL,
+        answered BIT DEFAULT 0,
+        answer NVARCHAR(MAX) DEFAULT NULL
     );
 END;
 GO

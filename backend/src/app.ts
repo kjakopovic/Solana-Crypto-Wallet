@@ -7,6 +7,7 @@ import JwtRoutes from './routes/JwtRoutes';
 import QuizRoutes from './routes/QuizRoutes';
 import PointsRoutes from './routes/PointsRoutes';
 import ChallengeRoutes from './routes/ChallengeRoutes';
+import SupportQuestionRoutes from './routes/SupportQuestionRoutes';
 import dotenv from 'dotenv';
 import './config/database/Database';
 import swaggerDocs from './config/Swagger';
@@ -24,6 +25,7 @@ app.use('/jwt', JwtRoutes);
 app.use('/quiz', QuizRoutes);
 app.use('/points', PointsRoutes);
 app.use('/challenges', ChallengeRoutes);
+app.use('/support-question', SupportQuestionRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);
@@ -34,3 +36,11 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });
+
+/*
+const server = app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+});*/
+
+export default app;

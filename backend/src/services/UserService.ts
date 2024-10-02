@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import {promisify} from "node:util";
-import {generateAccessToken, generateRefreshToken, verifyRefreshToken} from './JwtService';
+import JwtService from "./JwtService";
 
 const className = 'UserService';
 const readFile = promisify(fs.readFile);
@@ -70,22 +70,27 @@ class UserService{
     async registerUser(imageUrl: string, password: string, publicKey: string){
         logger.info('Registering user for publicKey: ' + publicKey, { className, publicKey });
 
+        if(!imageUrl || !password || !publicKey){
+            logger.error('Missing required fields', { className });
+            throw new Error('Missing required fields');
+        }
+
         const id = this.generateRandomString();
         const username = await this.generateRandomUsername();
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const refreshToken = generateRefreshToken({ id, username, publicKey });
+        const refreshToken = JwtService.generateRefreshToken({ id, username, publicKey });
 
         await UserModel.createUser(id, username, imageUrl,hashedPassword, publicKey, refreshToken);
 
         try {
-            await verifyRefreshToken(refreshToken);
+            await JwtService.verifyRefreshToken(refreshToken);
         }catch (error){
             logger.error('Error verifying refresh token', { error, className });
             throw new Error('Invalid refresh token');
         }
 
-        const accessToken = generateAccessToken({ id, username, publicKey });
+        const accessToken = JwtService.generateAccessToken({ id, username, publicKey });
 
         return { id, username, imageUrl, publicKey, refreshToken, accessToken };
     }
@@ -93,7 +98,24 @@ class UserService{
     async updateUser(publicKey: string, updates: Partial<any>){
         logger.info('Updating user information for publicKey: ' + publicKey, { className, publicKey });
 
+        const user = await UserModel.findUserByField('publicKey', publicKey);
+        if(!user){
+            logger.error('User not found', { className });
+            throw new Error('User not found');
+        }
+
         await UserModel.updateUser(publicKey, updates);
+
+        const userAfterUpdate = await UserModel.findUserByField('publicKey', publicKey);
+
+        if(!userAfterUpdate){
+            logger.error('User not found after update', { className });
+            throw new Error('User not found after update');
+        }
+        if(user == userAfterUpdate){
+            logger.error('User not updated', { className });
+            throw new Error('User not updated');
+        }
     }
 
     async deleteRefreshToken(publicKey: string){
@@ -120,6 +142,11 @@ class UserService{
 
     async updateUserPoints(userId: string, points: number){
         logger.info('Updating user points for userId: ' + userId, { className, userId });
+
+        if(await UserModel.findUserByField('id', userId) == null){
+            logger.error('User not found', { className });
+            throw new Error('User not found');
+        }
 
         return UserModel.updateUserPoints(userId, points);
     }

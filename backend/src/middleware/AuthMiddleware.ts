@@ -2,7 +2,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import logger from "../config/Logger";
-import {verifyAccessToken} from "../services/JwtService";
+import JwtService from '../services/JwtService';
 
 const className = 'AuthMiddleware';
 
@@ -16,7 +16,7 @@ const authMiddleware = async (req: Request, res: Response, next: NextFunction) =
     }
 
     try {
-        const response = verifyAccessToken(accessToken);
+        const response = JwtService.verifyAccessToken(accessToken);
         if(typeof response === 'string'){
             logger.error('Invalid token', { className });
             return res.status(401).json({ message: 'Invalid token' });
