@@ -17,7 +17,7 @@ interface UserPayload {
 
 class JwtService{
 
-    public generateAccessToken = (user: UserPayload): string => {
+    public generateAccessToken (user: UserPayload){
         try {
             logger.info('Generating access token for userId: ' + user.id, { className });
             const token = jwt.sign({ id: user.id, username: user.username }, accessTokenSecret, { expiresIn: '5m' });

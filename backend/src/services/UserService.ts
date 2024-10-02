@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import {promisify} from "node:util";
-import {generateAccessToken, generateRefreshToken, verifyRefreshToken} from './JwtService';
+import JwtService from "./JwtService";
 
 const className = 'UserService';
 const readFile = promisify(fs.readFile);
@@ -79,18 +79,18 @@ class UserService{
         const username = await this.generateRandomUsername();
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const refreshToken = generateRefreshToken({ id, username, publicKey });
+        const refreshToken = JwtService.generateRefreshToken({ id, username, publicKey });
 
         await UserModel.createUser(id, username, imageUrl,hashedPassword, publicKey, refreshToken);
 
         try {
-            await verifyRefreshToken(refreshToken);
+            await JwtService.verifyRefreshToken(refreshToken);
         }catch (error){
             logger.error('Error verifying refresh token', { error, className });
             throw new Error('Invalid refresh token');
         }
 
-        const accessToken = generateAccessToken({ id, username, publicKey });
+        const accessToken = JwtService.generateAccessToken({ id, username, publicKey });
 
         return { id, username, imageUrl, publicKey, refreshToken, accessToken };
     }
