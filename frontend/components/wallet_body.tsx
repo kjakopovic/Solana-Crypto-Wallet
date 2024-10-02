@@ -45,7 +45,7 @@ const WalletBody: React.FC<WalletBodyProps> = ({ assetsData, stakingData, histor
                 )}
 
                 {selectedOption === 1 && (
-                    stakingData === null || stakingData === undefined ? (
+                    stakingData === null || stakingData === undefined || stakingData.accounts.length === 0 ? (
                         <Text className='text-white mt-5'>Start staking to see data here</Text>
                     ) : (
                         stakingData.accounts.map((data: StakingItemData, index: number) => (

@@ -47,6 +47,10 @@ const RootLayout = () => {
                         options={{ headerShown: false }} />
 
                     <Stack.Screen
+                        name="support" 
+                        options={{ headerShown: false }} />
+
+                    <Stack.Screen
                         name="send_crypto" 
                         options={{ headerShown: false }} />
                     
@@ -60,6 +64,10 @@ const RootLayout = () => {
 
                     <Stack.Screen
                         name="select_avatar" 
+                        options={{ headerShown: false }} /> 
+
+                    <Stack.Screen
+                        name="leaderboard" 
                         options={{ headerShown: false }} /> 
                 </Stack>
 
