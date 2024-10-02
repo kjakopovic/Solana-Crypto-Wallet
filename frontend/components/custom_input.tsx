@@ -9,9 +9,10 @@ interface CustomInputProps {
     containerStyles?: string;
     textStyles?: string;
     readonly?: boolean;
+    multiline?: boolean;
 }
 
-const CustomInput: React.FC<CustomInputProps> = ({ value, placeholder, onChangeText, containerStyles, digitsOnly=false, textStyles, readonly=false }) => {
+const CustomInput: React.FC<CustomInputProps> = ({ value, placeholder, onChangeText, containerStyles, digitsOnly=false, textStyles, readonly=false, multiline=false }) => {
     return (
         <View className={`w-[100%] h-[70px] bg-secondaryUtils rounded-[30px] justify-center items-center ${containerStyles}`}>
             <TextInput
@@ -22,6 +23,7 @@ const CustomInput: React.FC<CustomInputProps> = ({ value, placeholder, onChangeT
                 onChangeText={onChangeText}
                 keyboardType={digitsOnly ? 'numeric' : 'default'}
                 readOnly={readonly}
+                multiline={multiline}
             />
         </View>
     )

@@ -7,12 +7,16 @@ interface PageHeaderProps {
     title: string
     showExitButton?: boolean
     containerStyles?: string
+    onExitClick?: () => void
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, showExitButton=true, containerStyles }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, showExitButton=true, containerStyles, onExitClick }) => {
     return (
         <View className={`w-full items-center justify-center mt-10 ${containerStyles}`}>
-            {showExitButton && <TopLeftExitButton />}
+            {showExitButton && 
+                <TopLeftExitButton
+                    onExitClick={onExitClick}
+                />}
 
             <Text className='font-lufgaBold ml-2 text-white text-[20px]'>
                 {title}

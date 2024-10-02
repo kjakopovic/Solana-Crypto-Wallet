@@ -7,11 +7,12 @@ interface CircleButtonProps {
     title?: string
     additionalStyles?: string
     additionalImageStyles?: string
+    containerStyles?: string
 }
 
-const CircleButton: React.FC<CircleButtonProps> = ({ handleClick, icon, title, additionalStyles, additionalImageStyles }) => {
+const CircleButton: React.FC<CircleButtonProps> = ({ handleClick, icon, title, additionalStyles, additionalImageStyles, containerStyles }) => {
     return (
-        <View className='w-[55px] items-center justify-center'>
+        <View className={`w-[55px] items-center justify-center ${containerStyles}`}>
             <TouchableOpacity 
                 onPress={handleClick}
                 activeOpacity={0.3}

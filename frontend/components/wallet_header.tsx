@@ -14,9 +14,10 @@ interface WalletHeaderProps {
     profileUri: string
     username: string
     balance: string
+    solaSafePoints: string
 }
 
-const WalletHeader: React.FC<WalletHeaderProps> = ({ gradientBoxStyles, containerStyles, profileUri, username, balance, isCustomProfilePicture=false }) => {
+const WalletHeader: React.FC<WalletHeaderProps> = ({ gradientBoxStyles, containerStyles, profileUri, username, balance, solaSafePoints, isCustomProfilePicture=false }) => {
     return (
         <>
             <View className={`items-center justify-center mt-5 ${containerStyles}`}>
@@ -31,8 +32,13 @@ const WalletHeader: React.FC<WalletHeaderProps> = ({ gradientBoxStyles, containe
                             <Text className='text-white font-lufgaMedium text-[17px]'>
                                 {username}
                             </Text>
+
                             <Text className='mt-1 text-white font-lufgaSemiBold text-[30px]'>
                                 {`$${balance}`}
+                            </Text>
+
+                            <Text className='mt-1 text-white font-lufgaMedium text-[17px]'>
+                                {`${solaSafePoints}`} SolaSafe Points
                             </Text>
                         </View>
                         <View className='justify-center items-center w-[70px] h-[70px] rounded-full bg-[#1457a3]'>

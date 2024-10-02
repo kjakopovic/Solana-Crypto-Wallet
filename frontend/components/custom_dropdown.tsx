@@ -102,7 +102,7 @@ const CustomDropDown: React.FC<CustomDropDownProps> = ({ data, emptyTextPlacehol
                 data={filteredData} // Use filteredData instead of original data
                 keyExtractor={(item) => item.id}
                 renderItem={renderOption}
-                ListEmptyComponent={<Text style={styles.emptyText}>No results found</Text>}
+                ListEmptyComponent={<Text style={styles.emptyText}>Loading...</Text>}
               />
             </View>
           </TouchableOpacity>

@@ -13,6 +13,13 @@ import nft from '../assets/icons/nft-file.png';
 import settings from '../assets/icons/setting-gear.png';
 import copy from '../assets/icons/copy-link.png';
 import share from '../assets/icons/share-option.png';
+import profile from '../assets/icons/profile.png';
+import trashBin from '../assets/icons/trash-bin.png';
+import messageBox from '../assets/icons/message-box.png';
+import clearText from '../assets/icons/clear-text.png';
+import passwords from '../assets/icons/passwords.png';
+import idCard from '../assets/icons/id-card.png';
+import brain from '../assets/icons/brain.png';
 
 export default {
   exit,
@@ -30,4 +37,11 @@ export default {
   settings,
   copy,
   share,
+  profile,
+  trashBin,
+  messageBox,
+  clearText,
+  passwords,
+  idCard,
+  brain
 };

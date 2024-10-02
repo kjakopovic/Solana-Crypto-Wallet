@@ -45,7 +45,6 @@ const Wallet = () => {
         visible: false
     });
 
-    //TODO: uncomment transaction history
     const fetchWalletInfo = async () => {
         const fetching = await Promise.all([
             await getWalletInfo(),
@@ -210,6 +209,7 @@ const Wallet = () => {
                         username='John-Doe'
                         profileUri='https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png'
                         isCustomProfilePicture={false}
+                        solaSafePoints='100000'
                     />
 
                     <WalletBody
