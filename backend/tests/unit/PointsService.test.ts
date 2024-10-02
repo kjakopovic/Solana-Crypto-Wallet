@@ -1,6 +1,7 @@
 // tests/unit/PointsService.test.ts
 
 import PointsService from "../../src/services/PointsService";
+
 jest.mock('../../src/services/PointsService', () =>{
     return {
         savePointsChallenge: jest.fn(),
