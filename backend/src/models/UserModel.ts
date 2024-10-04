@@ -186,16 +186,8 @@ class UserModel {
     async getAllPointsLeaderboard(): Promise<UserPointsLeaderboard[] | null> {
         logger.info('Getting points leaderboard', { className });
 
-        // Query to fetch all users on the leaderboard from the users table
-        const sqlQuery = `
-        SELECT CAST(DENSE_RANK() OVER (ORDER BY points DESC, username ASC) AS INT) AS placement,
-            username, imageUrl, publicKey, CAST(points AS INT) AS points
-        FROM users
-        WHERE points IS NOT NULL;
-        `;
-
         try{
-            const result = await this.db.request().query(sqlQuery);
+            const result = await this.db.request().execute('GetPointsLeaderboard');
             const leaderboard: UserPointsLeaderboard[] = result.recordset;
             logger.info('Points leaderboard fetched successfully', { className });
 
@@ -210,22 +202,11 @@ class UserModel {
         logger.info(`Getting ${rank} amount of users on leaderboard`, { className });
 
         // Query to fetch a specific amount of users on the leaderboard from the users table
-        const sqlQuery = `
-        WITH RankedUsers AS (
-            SELECT CAST(DENSE_RANK() OVER (ORDER BY points DESC, username ASC) AS INT) AS placement,
-                username, imageUrl, publicKey, CAST(points AS INT) AS points
-            FROM users
-            WHERE points IS NOT NULL
-        )
-        SELECT *
-        FROM RankedUsers
-        WHERE placement <= @rank;
-    `;
 
         try{
             const result = await this.db.request()
                 .input('rank', rank)
-                .query(sqlQuery);
+                .execute('GetTopRankedUsers');
             const leaderboard: UserPointsLeaderboard[] = result.recordset;
             logger.info('Fetched users from leaderboard successfully', { className });
 
