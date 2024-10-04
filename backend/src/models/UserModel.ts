@@ -187,7 +187,7 @@ class UserModel {
         logger.info('Getting points leaderboard', { className });
 
         try{
-            const result = await this.db.request().execute('GetPointsLeaderboard');
+            const result = await this.db.request().execute('getPointsLeaderboard');
             const leaderboard: UserPointsLeaderboard[] = result.recordset;
             logger.info('Points leaderboard fetched successfully', { className });
 
@@ -206,7 +206,7 @@ class UserModel {
         try{
             const result = await this.db.request()
                 .input('rank', rank)
-                .execute('GetTopRankedUsers');
+                .execute('getTopRankedUsers');
             const leaderboard: UserPointsLeaderboard[] = result.recordset;
             logger.info('Fetched users from leaderboard successfully', { className });
 

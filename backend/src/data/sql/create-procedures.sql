@@ -43,3 +43,22 @@ BEGIN
 		END;
 	')
 END;
+
+IF OBJECT_ID(N'dbo.fetchRandomQuizByDifficulty', N'P') IS NULL
+BEGIN
+    EXECUTE('
+        CREATE PROCEDURE fetchRandomQuizByDifficulty
+            @difficulty NVARCHAR(25),
+            @number INT
+        AS
+        BEGIN
+            SELECT id, question, difficulty, correctAnswer, option2, option3, option4
+            FROM (
+                    SELECT ROW_NUMBER() OVER(PARTITION BY difficulty ORDER BY difficulty ASC) AS Number, *
+                    FROM quizzes
+                    WHERE difficulty = @difficulty
+                    ) AS subquery
+            WHERE Number = @number;
+        END;
+    ')
+END;
