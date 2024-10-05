@@ -28,9 +28,11 @@ class NFTService {
                     return null;
                 }
 
+                logger.info('Welcome NFT retrieved successfully, after 2nd try', { className });
                 return retryNFT.imageBuffer;
             }
 
+            logger.info('Welcome NFT retrieved successfully, after 1st try', { className });
             return nftRecord.imageBuffer;
         }catch(err){
             logger.error('Error getting welcome NFT', { error: err, className });

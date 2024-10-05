@@ -12,6 +12,12 @@ class NFTController {
         logger.info('Getting welcome NFT', { className });
         try {
             const nft = await NFTService.getWelcomeNFT();
+
+            if (nft == null) {
+                logger.error('No welcome NFT found', { className });
+                return res.status(404).json({ message: 'No welcome NFT found' });
+            }
+
             return res.status(200).json(nft);
         } catch (err) {
             logger.error('Error getting welcome NFT: ' + err, { error: err, className });

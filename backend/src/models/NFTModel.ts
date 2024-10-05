@@ -30,13 +30,13 @@ class NFTModel{
 
         try {
             const result = await this.db.request().query(sqlQuery);
-            logger.info('Welcome NFT retrieved successfully', { className });
 
             if (result.recordset.length === 0) {
                 logger.error('No welcome NFT found', { className });
                 return null;
             }
 
+            logger.info('Welcome NFT retrieved successfully', { className });
             return {
                 id: result.recordset[0].id,
                 imageBuffer: result.recordset[0].imageBuffer,
