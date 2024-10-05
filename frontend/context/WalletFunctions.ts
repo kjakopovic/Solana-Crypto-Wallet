@@ -29,7 +29,6 @@ import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
 import { createNft, fetchAllDigitalAssetWithTokenByOwner, mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata'
 
 import { saveItem, getItem } from './SecureStorage';
-import { get } from 'http';
 
 bip39.setDefaultWordlist('english');
 
@@ -301,7 +300,7 @@ export const getTransactionsHistory = async (): Promise<TransactionHistoryData[]
           return {
             transferBalanceInToken:
               ((tokenPostTransferAmount.uiTokenAmount.uiAmount ?? 0) - (tokenPreTransferAmount.uiTokenAmount.uiAmount ?? 0))
-              / LAMPORTS_PER_COIN, //TODO: kada bude tih transfera treba pogledati jel ovo tocno
+              / LAMPORTS_PER_COIN,
             coinMint: tokenPreTransferAmount.mint ?? '',
             transferTimestamp: new Date((tx?.blockTime ?? 0) * 1000).toLocaleString('en-GB', {
               year: 'numeric',

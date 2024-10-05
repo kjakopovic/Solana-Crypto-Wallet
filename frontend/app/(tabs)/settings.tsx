@@ -2,7 +2,7 @@ import { View, Text, Modal, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 
 import PageHeader from '@/components/page_header'
 import Option from '@/components/option'
@@ -21,24 +21,73 @@ const Settings = () => {
   const [newUsername, setNewUsername] = useState('')
 
   const logout = async () => {
-    //TODO: provjeri jel to i dalje tako nakon integracije s backendom
-    //TODO: pozvati backend endpoint za logout prvo, ako je uspjesan provedi ovo ostalo
-    await deleteItem('privateKey')
-    await deleteItem('publicKey')
-    await deleteItem('refreshToken')
-    await deleteItem('isUserFound')
+    const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/logout`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getItem('accessToken')}`,
+          'x-refresh-token': getItem('refreshToken') ?? ''
+      },
+      body: JSON.stringify({
+          publicKey: getItem('publicKey') ?? '',
+      })
+    })
 
-    if (router.canDismiss()) {
-      router.dismissAll()
+    if (response.status.toString().startsWith('2')) {
+      await deleteItem('privateKey')
+      await deleteItem('publicKey')
+      await deleteItem('refreshToken')
+      await deleteItem('accessToken')
+      await deleteItem('isUserFound')
+
+      if (router.canDismiss()) {
+        router.dismissAll()
+      }
+      
+      router.replace('/' as Href)
     }
-    
-    router.replace('/' as Href)
   }
 
-  const validateUsername = () => {
-    //TODO: Zovi backend za provjeru jel username vec postoji
-    const isBackendValid = true
-    return newUsername !== '' && newUsername !== null && newUsername !== undefined && isBackendValid;
+  const changeUsername = async () => {
+    try {
+      const publicKey = getItem('publicKey') ?? ''
+
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/update/${publicKey}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getItem('accessToken')}`,
+            'x-refresh-token': getItem('refreshToken') ?? ''
+        },
+        body: JSON.stringify({
+            username: newUsername
+        })
+      })
+
+      if (!response.status.toString().startsWith('2')) {
+        setModalErrorMessage('There was an error while setting the username. Please try again.')
+        console.log(response)
+      } else {
+        setIsModalVisible(false)
+      }
+    } catch (error) {
+      console.log(error)
+      
+    }
+  }
+
+  const validateUsername = async () => {
+    const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/exist/username?username=${newUsername}`, {
+      method: 'GET',
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getItem('accessToken')}`,
+          'x-refresh-token': getItem('refreshToken') ?? ''
+      }
+    })
+
+    const isBackendResponseValid = response.status.toString().startsWith('2')
+    return newUsername !== '' && newUsername !== null && newUsername !== undefined && isBackendResponseValid;
   }
   
   return (
@@ -110,7 +159,7 @@ const Settings = () => {
                     />
 
                     {modalErrorMessage !== '' && (
-                      <Text className='text-center text-[12px] text-red-500'>{modalErrorMessage}</Text>
+                      <Text className='text-center text-[11px] text-red-500'>{modalErrorMessage}</Text>
                     )}
                     
                     <View className='flex-row w-[100%] justify-between'>
@@ -124,15 +173,18 @@ const Settings = () => {
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                          onPress={() => {
-                            const isValid = validateUsername()
+                          onPress={async () => {
+                            setModalErrorMessage('')
+
+                            console.log('validating username')
+                            const isValid = await validateUsername()
 
                             if (isValid) {
-                              //TODO: zovi backend za update usernamea
-                              setIsModalVisible(false)
+                              console.log('username is valid')
+                              await changeUsername()
+                            } else {
+                              setModalErrorMessage('Username is already in use or empty, please try again.')
                             }
-
-                            setModalErrorMessage('Username is already in use or empty, please try again.')
                           }}
                           className='mt-5 bg-secondaryUtils p-2 rounded-lg'
                       >

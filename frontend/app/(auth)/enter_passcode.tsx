@@ -11,6 +11,8 @@ import CustomDialog from '@/components/custom_dialog';
 import PageHeader from '@/components/page_header';
 import { createWelcomeNft } from '@/context/WalletFunctions';
 import Loader from '@/components/loader';
+import { getRandomAvatar } from '@/utils/avatars';
+import { getItem, saveItem } from '@/context/SecureStorage';
 
 const EnterPasscode = () => {
     const [isConfirming, setIsConfirming] = useState(false)
@@ -25,22 +27,50 @@ const EnterPasscode = () => {
     const registerUser = async () => {
         setIsLoading(true)
 
-        await createWelcomeNft()
+        try {
+            const imageUrl = getRandomAvatar()
 
-        setIsLoading(false)
+            const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    imageUrl,
+                    password: passcodes.newPasscode,
+                    publicKey: getItem('publicKey') ?? '',
+                })
+            })
 
-        if (router.canDismiss()) {
-            router.dismissAll()
+            if (response.status.toString().startsWith('2')) {
+
+                const data = await response.json()
+
+                saveItem('accessToken', data.accessToken)
+                saveItem('refreshToken', data.refreshToken)
+                saveItem('username', data.username)
+                saveItem('points', '0')
+
+                // await createWelcomeNft() TODO: uncomment when app is ready
+
+                setIsLoading(false)
+
+                if (router.canDismiss()) {
+                    router.dismissAll()
+                }
+                
+                router.replace('/(tabs)/wallet' as Href)
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsLoading(false)
         }
-        
-        router.replace('/(tabs)/wallet' as Href)
     }
     
     useEffect(() => {
         if (passcodes.confirmPasscode.trimEnd().split(' ').length === 6) {
             if (passcodes.newPasscode === passcodes.confirmPasscode) {
-                //TODO: zovi backend za spremanje, odnosno tu je user registered i 
-                //saljem mu public key i passcode
                 registerUser()
             }
             else {

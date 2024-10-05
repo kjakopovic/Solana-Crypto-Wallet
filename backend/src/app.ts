@@ -1,6 +1,6 @@
 // src/app.ts
 
-import express, { Router } from 'express';
+import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import UserRoutes from './routes/UserRoutes';
 import JwtRoutes from './routes/JwtRoutes';
@@ -37,11 +37,5 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });
-
-/*
-const server = app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
-});*/
 
 export default app;

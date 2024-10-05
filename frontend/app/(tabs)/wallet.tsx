@@ -3,8 +3,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView, RefreshControl } from 'react-native-gesture-handler'
 import React, { useState, useEffect } from 'react'
 
-import SkeletonLoader from '@/components/skeleton_loader'
-
 import { 
     getWalletInfo, 
     WalletInfo, 
@@ -12,14 +10,14 @@ import {
     getTransactionsHistory,
     getAllStakeAccounts,
     StakingItemData,
-    unstakeSolana,
-    airdropMoney
+    unstakeSolana
 } from '@/context/WalletFunctions'
+
 import CustomDialog from '@/components/custom_dialog'
 import WalletHeader from '@/components/wallet_header'
 import WalletBody from '@/components/wallet_body'
-import CustomButton from '@/components/custom_button'
 import { getItem } from '@/context/SecureStorage'
+import SkeletonLoader from '@/components/skeleton_loader'
 
 const Wallet = () => {
     const [loading, setLoading] = useState(true)
@@ -221,10 +219,10 @@ const Wallet = () => {
                 <View className='min-h-[85vh] w-full mt-7 items-center mb-[100px]'>
                     <WalletHeader
                         balance={walletInfo.balance}
-                        username='John-Doe'
+                        username={`${getItem('username') ?? '0'}`}
                         profileUri='https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png'
                         isCustomProfilePicture={getItem('isNFTProfile') === 'yes'}
-                        solaSafePoints='100000'
+                        solaSafePoints={`${getItem('points') ?? '0'}`}
                     />
 
                     <WalletBody

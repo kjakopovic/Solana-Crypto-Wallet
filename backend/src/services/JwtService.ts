@@ -41,13 +41,19 @@ class JwtService{
         }
     };
 
-    public verifyAccessToken = (token: string): JwtPayload | string => {
+    public verifyAccessToken = async (token: string): Promise<JwtPayload | string> => {
         try {
             logger.info('Verifying access token: ' + token, { className });
+
             return jwt.verify(token, accessTokenSecret);
-        } catch (error) {
+        } catch (error: any) {
             logger.error('Error verifying access token: ' + error, { className });
-            throw error;
+
+            if (error.name === 'TokenExpiredError') {
+                return 'expired';
+            } else {
+                throw error;
+            }
         }
     };
 

@@ -25,7 +25,8 @@ class UserController{
             return res.status(201).json({
                 message: 'User created successfully',
                 refreshToken: user.refreshToken,
-                accessToken: user.accessToken
+                accessToken: user.accessToken,
+                username: user.username,
             });
         } catch (error) {
             logger.error({ message: 'Error creating user', error, className });
@@ -116,6 +117,7 @@ class UserController{
 
                 return res.status(200).json({
                     username: user.username,
+                    points: user.points ?? 0,
                     refreshToken,
                     accessToken
                 });
@@ -186,6 +188,31 @@ class UserController{
         }
     }
 
+    async checkExistanceOfUserByUsername(req: Request, res: Response) {
+        const username = req.query.username as string;
+
+        if (!username) {
+            logger.error('Username is required', { className });
+            return res.status(400).json({ message: 'Username is required' });
+        }
+
+        logger.info('Getting user information for username: ' + username, { className });
+
+        try {
+            const result = await UserService.findUserByField('username', username);
+
+            if (!result) {
+                logger.error('User not found', { className });
+                return res.status(200).json({ message: 'User not found, username is free to use.' });
+            }
+
+            logger.info('User information found', { className });
+            return res.status(400).json({ message: 'User found, username is already taken.' });
+        } catch (error) {
+            logger.error({ message: 'Error getting user information', error, className });
+            return res.status(500).json({ message: 'Error getting user information' });
+        }
+    }
 }
 
 export default new UserController();

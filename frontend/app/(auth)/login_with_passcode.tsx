@@ -1,33 +1,68 @@
 import { View, Text } from 'react-native'
-import React, { useState, useEffect } from 'react'
-import { router, Href, Link } from "expo-router";
-
+import { router, Href, Link } from "expo-router"
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
+
+import React, { useState, useEffect } from 'react'
+
 import PasscodeOutput from '@/components/passcode_output'
 import PasscodeInput from '@/components/passcode_input'
-import CustomDialog from '@/components/custom_dialog';
-import PageHeader from '@/components/page_header';
+import CustomDialog from '@/components/custom_dialog'
+import PageHeader from '@/components/page_header'
+import { getItem, saveItem } from '@/context/SecureStorage'
+import Loader from '@/components/loader'
 
 const LoginWithPasscode = () => {
     const [showDialog, setShowDialog] = useState(false)
     const [passcode, setPasscode] = useState('')
+    const [isConfirming, setIsConfirming] = useState(false)
     
     useEffect(() => {
-        if (passcode.trimEnd().split(' ').length === 6) {
-            const callBackend = true //TODO: pozvati backend da vidimo jel tocan passcode
-            if (callBackend) {
+        const loginUser = async () => {
+            setIsConfirming(true)
+            
+            const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    password: passcode,
+                    publicKey: getItem('publicKey') ?? '',
+                })
+            })
+
+            if (response.status.toString().startsWith('2')) {
+                const data = await response.json();
+
+                saveItem('accessToken', data.accessToken);
+                saveItem('refreshToken', data.refreshToken);
+                saveItem('username', data.username);
+                saveItem('points', data.points.toString());
+
+                setIsConfirming(false)
+
                 if (router.canDismiss()) {
                     router.dismissAll()
                 }
+
                 router.replace('/(tabs)/wallet' as Href)
-            }
-            else {
+            } else {
+                setIsConfirming(false)
+
                 setPasscode('')
                 setShowDialog(true)
             }
         }
+
+        if (passcode.trimEnd().split(' ').length === 6) {
+            loginUser();
+        }
     }, [passcode]);
+
+    if (isConfirming) {
+        return <Loader isLoading/>
+    }
     
     return (
         <SafeAreaView className='bg-background h-full pb-9'>

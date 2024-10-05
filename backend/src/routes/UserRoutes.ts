@@ -82,7 +82,7 @@ router.post('/register', UserController.createUser);
  *       500:
  *          description: Error updating user
  */
-router.put('/update', authMiddleware, UserController.updateUser);
+router.put('/update/:publicKey', authMiddleware, UserController.updateUser);
 
 /**
  * @swagger
@@ -203,5 +203,7 @@ router.get('/info', authMiddleware, UserController.getUserInformation);
  *
  */
 router.get('/leaderboard', authMiddleware, UserController.getLeaderboard);
+
+router.get('/exist/username', authMiddleware, UserController.checkExistanceOfUserByUsername);
 
 export default router;

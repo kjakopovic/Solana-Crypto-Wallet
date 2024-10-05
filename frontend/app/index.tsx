@@ -1,22 +1,24 @@
 import { View, Text, Image, Animated, Dimensions } from 'react-native'
 import React, { useState, useRef, useEffect } from 'react'
-
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, Href, Redirect } from "expo-router";
-
-import SegmentBar from '@/components/segment_bar'
 import { ScrollView } from 'react-native-gesture-handler'
 import Swiper from "react-native-swiper";
-import { images, icons } from '@/constants'
+
+import SegmentBar from '@/components/segment_bar'
 import CustomButton from '@/components/custom_button'
 import Loader from '@/components/loader'
+import { getItem } from '@/context/SecureStorage';
+
 import { useGlobalContext } from "../context/GlobalProvider";
+import { images, icons } from '@/constants'
 
 const Index = () => {
-    const { loading, isLogged, isFirstTime } = useGlobalContext();
+    const [isIndexLoading, setIsIndexLoading] = useState(true)
+    const [isFirstTime, setIsFirstTime] = useState(false)
+    const [isLogged, setIsLogged] = useState(false)
 
-    if (!loading && isLogged) return <Redirect href="/(tabs)/wallet"/>;
-    if (!loading && !isFirstTime && !isLogged) return <Redirect href="/(auth)/login_with_passcode"/>;
+    const { loading } = useGlobalContext();
 
     const swiperRef = useRef<Swiper>(null);
     const [currentSegment, setCurrentSegment] = useState(0);
@@ -42,7 +44,20 @@ const Index = () => {
                 }),
             ])
         ).start();
+
+        //BACKEND TODO: na backendu napravi endpoint za checka jel refresh token validan, ako nije, izbrisi ga iz secure storagea
+
+        const isUserFound = getItem('isUserFound')
+        const isUserLoggedIn = getItem('refreshToken')
+        
+        setIsFirstTime(isUserFound === undefined || isUserFound === null);
+        setIsLogged(isUserLoggedIn !== undefined && isUserLoggedIn !== null);
+
+        setIsIndexLoading(false);
     }, []);
+
+    if (!loading && !isIndexLoading && isLogged) return <Redirect href="/(tabs)/wallet"/>;
+    if (!loading && !isIndexLoading && !isFirstTime) return <Redirect href="/(auth)/login_with_passcode"/>;
 
     return (
         <SafeAreaView className='bg-background h-full'>

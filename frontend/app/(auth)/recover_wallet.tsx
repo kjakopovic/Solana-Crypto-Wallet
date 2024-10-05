@@ -50,9 +50,8 @@ const RecoverWallet = () => {
     useEffect(() => {
         if (isWalletRestored){
             saveItem('isUserFound', 'true')
-            
-            router.dismissAll()
-            router.replace('/(tabs)/wallet' as Href)
+
+            router.push('/(auth)/login_with_passcode' as Href)
         }
     }, [isWalletRestored])
 
