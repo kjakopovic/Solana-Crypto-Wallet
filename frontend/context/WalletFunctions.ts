@@ -21,9 +21,15 @@ import {
   getOrCreateAssociatedTokenAccount,
   createTransferInstruction,
   getMint,
-  AccountLayout
+  AccountLayout,
+  transfer
 } from "@solana/spl-token";
 import { TokenListProvider, TokenInfo } from '@solana/spl-token-registry';
+import { createGenericFile, generateSigner, keypairIdentity, PublicKey as pb, percentAmount } from '@metaplex-foundation/umi'
+import { create, mplCore } from '@metaplex-foundation/mpl-core'
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
+import { createNft, mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata'
+import * as FileSystem from 'expo-file-system';
 
 import { saveItem, getItem } from './SecureStorage';
 
@@ -57,6 +63,7 @@ interface TransactionHistoryData {
 interface StakingItemData {
   stakePubkey: string;
   stakeBalance: number;
+  stakeBalanceInDollars: string;
 }
 
 const generateWalletFromMnemonic = (mnemonic: string) => {
@@ -73,7 +80,7 @@ const generateWalletFromMnemonic = (mnemonic: string) => {
 
 export const getWalletConnection = () => {
   const connection = new Connection(
-    clusterApiUrl(process.env.EXPO_PUBLIC_ACTIVE_CLUSTER as Cluster),
+    clusterApiUrl((process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? 'devnet') as Cluster),
     'confirmed'
   );
 
@@ -132,7 +139,7 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
 
     const solInfo: TokenInfoPreview = {
       name: 'Wrapped SOL',
-      symbol: 'SOL',
+      symbol: 'wSOL',
       address: additionalSolInfo?.address ?? '',
       marketValueInDollars: '',
       userAmount: solBalance.toString(),
@@ -504,10 +511,14 @@ export const getAllStakeAccounts = async () => {
     }
   );
 
+  const priceData = await (await fetch('https://api.jup.ag/price/v2?ids=' + SOL_MINT)).json();
+  const solanaMarketPrice = parseFloat(priceData.data[SOL_MINT]?.price ?? '0.00');
+
   const stakingItems: StakingItemData[] = accounts.map(acc => {
     return {
       stakePubkey: acc.pubkey.toBase58(),
-      stakeBalance: acc.account.lamports / LAMPORTS_PER_SOL
+      stakeBalance: acc.account.lamports / LAMPORTS_PER_SOL,
+      stakeBalanceInDollars: (solanaMarketPrice * (acc.account.lamports / LAMPORTS_PER_SOL)).toFixed(3)
     }
   });
 
@@ -564,6 +575,54 @@ export const unstakeSolana = async (stakeKey: string, stakeBalance: number) => {
   } catch (error) {
     console.log('Error unstaking:', error);
     throw error;
+  }
+};
+
+export const createWelcomeNft = async () => {
+  try {
+    // Setting up UMI for creating an NFT
+    const connection = getWalletConnection();
+
+    const umi = createUmi(clusterApiUrl((process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? 'devnet') as Cluster));
+
+    const nftWallet = Keypair.generate();
+    const umiNftWallet = umi.eddsa.createKeypairFromSecretKey(nftWallet.secretKey);
+
+    const ownerPublicKey = new PublicKey(getItem('publicKey') ?? '') as unknown as pb;
+  
+    umi.use(keypairIdentity(umiNftWallet)).use(mplTokenMetadata());
+
+    // Uploading NFT image
+
+    const buffer = await FileSystem.readAsStringAsync('./nft.jpg', {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    let file = createGenericFile(buffer, './nft.jpg', {
+      contentType: "image/jpeg",
+    });
+
+    const [imageUri] = await umi.uploader.upload([file]);
+
+    // Uploading NFT metadata
+    const metadataUri = await umi.uploader.uploadJson({
+      name: 'Welcome to SolaSafe',
+      description: 'This is your first NFT from SolaSafe',
+      image: imageUri,
+    });
+
+    const { signature, result } = await createNft(umi, {
+      mint: umi.identity,
+      name: "Welcome to SolaSafe",
+      uri: metadataUri,
+      updateAuthority: umi.identity.publicKey,
+      sellerFeeBasisPoints: percentAmount(0),
+    }).sendAndConfirm(umi, { send: { commitment: "finalized" } });
+
+    console.log('NFT created:', signature);
+    console.log('Result: ', result)
+  } catch (error) {
+    console.log(error)
   }
 };
 

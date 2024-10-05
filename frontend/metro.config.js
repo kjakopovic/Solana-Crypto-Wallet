@@ -6,5 +6,6 @@ const config = getDefaultConfig(__dirname);
 
 // Add polyfill resolvers
 config.resolver.extraNodeModules.crypto = require.resolve('expo-crypto');
+config.resolver.unstable_enablePackageExports = true;
 
 module.exports = config;

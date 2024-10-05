@@ -8,6 +8,7 @@ import { getDefaultAvatars } from '@/utils/avatars'
 
 import CustomDialog from '@/components/custom_dialog'
 import PageHeader from '@/components/page_header'
+import { deleteItem } from '@/context/SecureStorage'
 
 const SelectAvatar = () => {
     const [avatars, setAvatars] = useState([] as string[])
@@ -34,6 +35,7 @@ const SelectAvatar = () => {
                 onOkPress={() => {
                     setDialogProps({ title: '', description: '', visible: false })
                     console.log(selectedAvatar)
+                    deleteItem('isNFTProfile')
                     //TODO: Update user's profile picture on backend
                 }}
                 onCancelPress={() => {setDialogProps({ title: '', description: '', visible: false })}}
@@ -73,7 +75,7 @@ const SelectAvatar = () => {
                             </TouchableOpacity>
                         ))}
                     </View>
-                    {/* TODO: dodati button da odabere NFT */}
+                    {/* TODO: dodati button da odabere NFT, ako odabere NFT onda setItem('isNFTProfile', 'yes') */}
                 </View>
             </ScrollView>
         </SafeAreaView>

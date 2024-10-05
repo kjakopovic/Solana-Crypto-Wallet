@@ -62,7 +62,8 @@ const WalletBody: React.FC<WalletBodyProps> = ({ assetsData, stakingData, histor
                                     iconUri={stakingData.imageUri}
                                     topLeftText={'wSOL'}
                                     bottomLeftText='Wrapped SOL'
-                                    topRightText={`${data.stakeBalance}`}
+                                    topRightText={`$ ${data.stakeBalanceInDollars}`}
+                                    bottomRightText={`${data.stakeBalance}`}
                                 />
                             </TouchableOpacity>
                         ))

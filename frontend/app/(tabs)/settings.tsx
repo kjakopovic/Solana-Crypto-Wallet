@@ -9,7 +9,7 @@ import Option from '@/components/option'
 
 import { icons } from '@/constants'
 import { Href, router } from 'expo-router'
-import { deleteItem } from '@/context/SecureStorage'
+import { deleteItem, getItem } from '@/context/SecureStorage'
 import CustomInput from '@/components/custom_input'
 
 const Settings = () => {
@@ -29,6 +29,11 @@ const Settings = () => {
       deleteItem('refreshToken'),
       deleteItem('isUserFound')
     ])
+
+    getItem('privateKey')
+    getItem('publicKey')
+    getItem('refreshToken')
+    getItem('isUserFound')
 
     router.replace('/' as Href)
   }

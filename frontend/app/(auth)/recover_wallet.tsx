@@ -7,10 +7,12 @@ import React, { useState, useEffect } from 'react'
 
 import CustomButton from '@/components/custom_button'
 import CustomDialog from '@/components/custom_dialog'
-
-import { restoreWallet } from '../../context/WalletFunctions'
 import PageHeader from '@/components/page_header'
 import RecoveryPhrase12Word from '@/components/recovery_phrase_12_word'
+
+import { restoreWallet } from '../../context/WalletFunctions'
+
+import { saveItem } from '@/context/SecureStorage'
 
 const RecoverWallet = () => {
     const [recoveryPhrase, setRecoveryPhrase] = useState([] as string[])
@@ -47,6 +49,8 @@ const RecoverWallet = () => {
 
     useEffect(() => {
         if (isWalletRestored){
+            saveItem('isUserFound', 'true')
+            
             router.dismissAll()
             router.replace('/(tabs)/wallet' as Href)
         }

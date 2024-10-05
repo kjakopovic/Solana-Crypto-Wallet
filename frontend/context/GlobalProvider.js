@@ -11,7 +11,7 @@ const GlobalProvider = ({ children }) => {
 
     useEffect(() => {
         const isUserFound = getItem('isUserFound')
-        const isUserLoggedIn = getItem('refreshToken');
+        const isUserLoggedIn = getItem('refreshToken')
 
         //TODO: ako pronadje refreshToken treba pozvati rutu na backendu za refreshanje access tokena
         // i spremiti taj access token u storage

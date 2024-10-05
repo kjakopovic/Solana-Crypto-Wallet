@@ -12,11 +12,14 @@ import {
     getTransactionsHistory,
     getAllStakeAccounts,
     StakingItemData,
-    unstakeSolana
+    unstakeSolana,
+    airdropMoney
 } from '@/context/WalletFunctions'
 import CustomDialog from '@/components/custom_dialog'
 import WalletHeader from '@/components/wallet_header'
 import WalletBody from '@/components/wallet_body'
+import CustomButton from '@/components/custom_button'
+import { getItem } from '@/context/SecureStorage'
 
 const Wallet = () => {
     const [loading, setLoading] = useState(true)
@@ -46,26 +49,38 @@ const Wallet = () => {
     });
 
     const fetchWalletInfo = async () => {
-        const fetching = await Promise.all([
-            await getWalletInfo(),
-            await getTransactionsHistory(),
-            await getAllStakeAccounts()
-        ])
+        var walletInfoResult: any = null;
+        try {
+            walletInfoResult = await getWalletInfo()
+        } catch (error) {
+            console.log(error)
+        }
 
-        setWalletInfo(fetching[0])
-        //TODO: delete before final commit
-        // setHistory([
-        //     {
-        //         fromPublicWallet: 'fromPublicWallet',
-        //         toPublicWallet: 'toPublicWallet',
-        //         transferBalanceInToken: 0.23122,
-        //         transferTimestamp: '2022-08-28T21:51:00.000Z',
-        //         coinLogoBase64: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-        //         coinName: 'Wrapped SOL'
-        //     }
-        // ])
-        setHistory(fetching[1])
-        setStakingData(fetching[2])
+        var transactionHistoryResult: any = null;
+        try {
+            transactionHistoryResult = await getTransactionsHistory()
+        } catch (error) {
+            console.log(error)
+        }
+
+        var stakeAccountsResult: any = null;
+        try {
+            stakeAccountsResult = await getAllStakeAccounts()
+        } catch (error) {
+            console.log(error)
+        }
+
+        if (walletInfoResult !== null && walletInfoResult !== undefined) {
+            setWalletInfo(walletInfoResult)
+        }
+
+        if (transactionHistoryResult !== null && transactionHistoryResult !== undefined) {
+            setHistory(transactionHistoryResult)
+        }
+
+        if (stakeAccountsResult !== null && stakeAccountsResult !== undefined) {
+            setStakingData(stakeAccountsResult)
+        }
 
         setLoading(false)
     }
@@ -208,7 +223,7 @@ const Wallet = () => {
                         balance={walletInfo.balance}
                         username='John-Doe'
                         profileUri='https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png'
-                        isCustomProfilePicture={false}
+                        isCustomProfilePicture={getItem('isNFTProfile') === 'yes'}
                         solaSafePoints='100000'
                     />
 

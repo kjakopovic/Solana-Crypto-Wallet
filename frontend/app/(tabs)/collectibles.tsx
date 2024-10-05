@@ -1,9 +1,13 @@
 import { View, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
+
 import React, { useState, useEffect } from 'react'
+
 import PageHeader from '@/components/page_header'
 import CollectibleItem from '@/components/collectible_item'
+
+import { createWelcomeNft } from '@/context/WalletFunctions'
 
 const Collectibles = () => {
     const [collectibles, setCollectibles] = useState([] as any[])
@@ -36,6 +40,8 @@ const Collectibles = () => {
                 value: 1500
             }
         ])
+
+        createWelcomeNft()
     }, [])
 
     return (
