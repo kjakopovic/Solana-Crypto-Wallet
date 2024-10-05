@@ -1,5 +1,4 @@
 services:
-  # Backend service
   wallet-backend:
     build:
       context: .
@@ -18,16 +17,12 @@ services:
       DB_NAME: walletDB
       DB_USER: dbAdmin
       DB_PASSWORD: Password123!
-    # Wait for SQL Server to start and complete the init script
-    # before starting the backend
-    # sleep can be changed accordingly and as needed
     command: >
       bash -c "
       sleep 45s &&
-      npm run start
+      npm run dev
       "
 
-  # SQL Server service
   wallet-sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: wallet-sqlserver
@@ -54,7 +49,6 @@ services:
       wait
       "
 
-# Networks
 networks:
   wallet-network:
     driver: bridge

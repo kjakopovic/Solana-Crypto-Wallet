@@ -598,7 +598,7 @@ export const createWelcomeNft = async () => {
       encoding: FileSystem.EncodingType.Base64,
     });
 
-    let file = createGenericFile(buffer, './nft.jpg', {
+    let file = createGenericFile(buffer, 'nft.jpg', {
       contentType: "image/jpeg",
     });
 
