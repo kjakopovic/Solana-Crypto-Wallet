@@ -12,12 +12,14 @@ import NFTRoutes from './routes/NFTRoutes';
 import dotenv from 'dotenv';
 import './config/database/Database';
 import swaggerDocs from './config/Swagger';
+import buildCors from './config/Cors';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+buildCors(app);
 swaggerDocs(app);
 
 app.use(express.json());
