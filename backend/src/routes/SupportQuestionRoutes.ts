@@ -8,7 +8,7 @@ const router = Router();
 
 /**
  * @swagger
- * /support-question/create:
+ * api/v1/support-question/create:
  *   post:
  *     summary: Create a new support question
  *     description: Create a new support question. It must contain publicKey and question.
@@ -37,7 +37,7 @@ router.post('/create', authMiddleware, SupportQuestionController.createSupportQu
 
 /**
  * @swagger
- * /support-question/answer:
+ * api/v1/support-question/answer:
  *   post:
  *     summary: Answer a support question
  *     description: Answer a support question. It must contain questionId and answer.
@@ -66,7 +66,7 @@ router.post('/answer', authMiddleware, SupportQuestionController.answerSupportQu
 
 /**
  * @swagger
- * /support-question/fetch-sq-by-field:
+ * api/v1/support-question/fetch-sq-by-field:
  *   get:
  *     summary: Fetch a support question by field
  *     description: Fetch a support question by field. It must contain field and value.
@@ -95,7 +95,7 @@ router.get('/fetch-sq-by-field', authMiddleware, SupportQuestionController.fetch
 
 /**
  * @swagger
- * /support-question/fetch-all-sq:
+ * api/v1/support-question/fetch-all-sq:
  *   get:
  *     summary: Fetch all support questions
  *     description: Fetch all support questions
