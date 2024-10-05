@@ -76,6 +76,8 @@ BEGIN
         refreshToken NVARCHAR(MAX),
         points BIGINT,
     );
+
+    PRINT 'Users table created';
 END;
 GO
 
@@ -91,6 +93,8 @@ BEGIN
         option3 NVARCHAR(MAX) NOT NULL,
         option4 NVARCHAR(MAX) NOT NULL
     );
+
+    PRINT 'Quizzes table created';
 END;
 GO
 
@@ -103,6 +107,8 @@ BEGIN
         description NVARCHAR(MAX) NOT NULL,
         points INT NOT NULL
     );
+
+    PRINT 'Challenges table created';
 END;
 GO
 
@@ -117,6 +123,8 @@ BEGIN
         quizDifficulty NVARCHAR(50) DEFAULT NULL,
         points INT NOT NULL
     );
+
+    PRINT 'Points table created';
 END;
 GO
 
@@ -131,6 +139,8 @@ BEGIN
         answered BIT DEFAULT 0,
         answer NVARCHAR(MAX) DEFAULT NULL
     );
+
+    PRINT 'SupportQuestions table created';
 END;
 GO
 
@@ -143,7 +153,9 @@ BEGIN
         timestamp DATETIME DEFAULT GETDATE(),
         imageType NVARCHAR(255) NOT NULL,
         name NVARCHAR(255) DEFAULT NULL
-    )
+    );
+
+    PRINT 'Images table created';
 END;
 
 PRINT 'Initialization complete';
