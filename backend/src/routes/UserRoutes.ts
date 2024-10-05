@@ -8,7 +8,7 @@ const router = Router();
 
 /**
  * @swagger
- * api/v1/user/register:
+ * /api/v1/user/register:
  *   post:
  *     summary: Register a new user
  *     description: Register a new user by providing the public key and password
@@ -51,7 +51,7 @@ router.post('/register', UserController.createUser);
 
 /**
  * @swagger
- * api/v1/user/update:
+ * /api/v1/user/update:
  *   put:
  *     summary: Update user information
  *     description: Update user's information by providing the public key and the new information
@@ -86,7 +86,7 @@ router.put('/update', authMiddleware, UserController.updateUser);
 
 /**
  * @swagger
- * api/v1/user/login:
+ * /api/v1/user/login:
  *   post:
  *     summary: Login a user
  *     description: Login a user by providing the public key and password
@@ -117,7 +117,7 @@ router.post('/login', UserController.loginUser);
 
 /**
  * @swagger
- * api/v1/user/logout:
+ * /api/v1/user/logout:
  *   post:
  *     summary: Logout a user
  *     description: Logout a user by providing the public key
@@ -142,7 +142,7 @@ router.post('/logout', authMiddleware, UserController.logoutUser);
 
 /**
  * @swagger
- * api/v1/user/info:
+ * /api/v1/user/info:
  *   get:
  *     summary: Get user information
  *     description: Get user information by providing the public key in the path
@@ -164,7 +164,7 @@ router.get('/info', authMiddleware, UserController.getUserInformation);
 
 /**
  * @swagger
- * api/v1/user/leaderboard:
+ * /api/v1/user/leaderboard:
  *  get:
  *      summary: Get the leaderboard
  *      description: Get all users on the leaderboard or a specific amount of users by providing the rank in the body

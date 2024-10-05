@@ -9,7 +9,7 @@ const router = Router();
 // TODO: If set as GET, Swagger UI will not work
 /**
  * @swagger
- * api/v1/quiz/get:
+ * /api/v1/quiz/get:
  *   post:
  *     summary: Get a random quiz question
  *     description: Get a random quiz question based on the difficulty level provided.

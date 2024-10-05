@@ -9,7 +9,7 @@ const router = Router();
 // TODO: Implement CORS allowed origin on all routes
 /**
  * @swagger
- * api/v1/jwt/refresh-access:
+ * /api/v1/jwt/refresh-access:
  *   post:
  *     summary: Refresh access token
  *     description: Generate access token by providing the refresh token

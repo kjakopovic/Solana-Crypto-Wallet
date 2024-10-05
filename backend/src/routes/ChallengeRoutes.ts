@@ -8,7 +8,7 @@ const router = Router();
 
 /**
  * @swagger
- * api/v1/challenges/get-all:
+ * /api/v1/challenges/get-all:
  *   get:
  *     summary: Get all challenges
  *     description: Get all challenges available
