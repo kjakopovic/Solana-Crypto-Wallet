@@ -17,6 +17,14 @@ export interface User{
     points?: number;
 }
 
+interface UserPointsLeaderboard{
+    placement: number;
+    username: string;
+    imageUrl: string;
+    publicKey: string;
+    points: number;
+}
+
 class UserModel {
     private db: ConnectionPool;
 
@@ -27,6 +35,8 @@ class UserModel {
     // Insert a new user into the users table
     public async createUser(id: string, username:string, imageUrl:string, hashedPassword: string,  publicKey: string, refreshToken: string): Promise<void> {
         logger.info('Creating a new user', { className });
+
+        // Query to insert a new user into the users table
         const sqlQuery = `
             INSERT INTO users (id, username, imageUrl, password, publicKey, refreshToken)
             VALUES (@id, @username, @imageUrl, @password, @publicKey, @refreshToken);
@@ -63,6 +73,7 @@ class UserModel {
             request.input(key, value);
         });
 
+        // Query to update user information for a specific field in the users table of a given user
         const sqlQuery = `
             UPDATE users
             SET ${updateFields}
@@ -81,6 +92,8 @@ class UserModel {
     // Fetch a user by a specific field
     async findUserByField(field: string, value: string): Promise<User | null> {
         logger.info(`Fetching user by ${field}`, { className });
+
+        // Query to fetch a user by a specific field in the users table
         const sqlQuery = `SELECT * FROM users WHERE ${field} = @${field}`;
 
         try {
@@ -114,6 +127,8 @@ class UserModel {
     // Delete users refresh token
     async deleteRefreshToken(publicKey: string): Promise<void>{
         logger.info('Deleting refresh token for publicKey: ' + publicKey, { className, publicKey });
+
+        // Query that sets the refresh token to null for a specific user in the users table
         const sqlQuery = `
             UPDATE users
             SET refreshToken = null
@@ -135,6 +150,8 @@ class UserModel {
     // Update users points
     async updateUserPoints(userId: string, points: number): Promise<void> {
         logger.info('Updating user points for user: ' + userId, { className });
+
+        // Query to update the points for a specific user in the users table
         const sqlQuery = `
             UPDATE users
             SET points = ISNULL(points, 0) + @points
@@ -165,6 +182,41 @@ class UserModel {
             return null;
         }
     }
+
+    async getAllPointsLeaderboard(): Promise<UserPointsLeaderboard[] | null> {
+        logger.info('Getting points leaderboard', { className });
+
+        try{
+            const result = await this.db.request().execute('getPointsLeaderboard');
+            const leaderboard: UserPointsLeaderboard[] = result.recordset;
+            logger.info('Points leaderboard fetched successfully', { className });
+
+            return leaderboard;
+        }catch (err){
+            logger.error('Error fetching points leaderboard: ' + err, { error: err, className });
+            throw err;
+        }
+    }
+
+    async getAmountOnLeaderboard(rank: number): Promise<UserPointsLeaderboard[] | null> {
+        logger.info(`Getting ${rank} amount of users on leaderboard`, { className });
+
+        // Query to fetch a specific amount of users on the leaderboard from the users table
+
+        try{
+            const result = await this.db.request()
+                .input('rank', rank)
+                .execute('getTopRankedUsers');
+            const leaderboard: UserPointsLeaderboard[] = result.recordset;
+            logger.info('Fetched users from leaderboard successfully', { className });
+
+            return leaderboard;
+        }catch(err){
+            logger.error('Error fetching users from leaderboard: ' + err, { error: err, className });
+            throw err;
+        }
+    }
+
 }
 
 export default new UserModel();

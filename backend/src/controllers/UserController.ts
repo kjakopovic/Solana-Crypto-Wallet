@@ -153,6 +153,39 @@ class UserController{
             return res.status(500).json({message: 'Error getting user information'});
         }
     }
+
+    async getLeaderboard(req: Request, res: Response) {
+        logger.info('Getting user points leaderboard', { className });
+        const rank = req.body.rank as number;
+
+        if (!rank) {
+            logger.info("Rank not provided, fetching all users on leaderboard", { className });
+
+            try{
+                const result = await UserService.getAllPointsLeaderboard();
+                logger.info('User points leaderboard found', { className });
+                return res.status(200).send(result);
+            }catch(error){
+                logger.error({ message: 'Error getting user points leaderboard', error, className });
+                return res.status(500).json({ message: 'Error getting user points leaderboard' });
+            }
+        }else if (rank >= 1){
+            logger.info(`Getting ${rank} amount of users on leaderboard`, { className });
+
+            try{
+                const result = await UserService.getAmountOnLeaderboard(rank);
+                logger.info('User points leaderboard found', { className });
+                return res.status(200).send(result);
+            }catch(error){
+                logger.error({ message: 'Error getting user points leaderboard', error, className });
+                return res.status(500).json({ message: 'Error getting user points leaderboard' });
+            }
+        }else{
+            logger.error('Invalid input, rank must be a positive number', { className });
+            return res.status(400).json({ message: 'Invalid input, rank must be a positive number' });
+        }
+    }
+
 }
 
 export default new UserController();

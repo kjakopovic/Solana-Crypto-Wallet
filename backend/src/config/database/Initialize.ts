@@ -3,94 +3,28 @@
 import { ConnectionPool } from 'mssql';
 import logger from '../Logger';
 import xlsx from 'xlsx';
+import fs from 'fs';
+import path from  'path';
 
 const className = 'Initialize';
 
 export const initializeDatabase = async (pool: ConnectionPool) => {
     logger.info('Initializing database', { className });
-    try {
-        await pool.request().query(`
-            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'users')
-            BEGIN
-                CREATE TABLE users (
-                    id NVARCHAR(255) PRIMARY KEY,
-                    username NVARCHAR(50) NOT NULL,
-                    imageUrl NVARCHAR(MAX) NOT NULL,
-                    password NVARCHAR(255) NOT NULL,
-                    publicKey NVARCHAR(255),
-                    joinedAt DATETIME DEFAULT GETDATE(),
-                    refreshToken NVARCHAR(MAX),
-                    points BIGINT,
-                )
-            END
-        `);
-        logger.info('Users table created successfully', { className });
 
-        await pool.request().query(`
-            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'quizzes')
-            BEGIN
-                CREATE TABLE quizzes (
-                    id INT PRIMARY KEY NOT NULL,
-                    question NVARCHAR(MAX) NOT NULL,
-                    difficulty NVARCHAR(50) NOT NULL,
-                    correctAnswer NVARCHAR(MAX) NOT NULL,
-                    option2 NVARCHAR(MAX) NOT NULL,
-                    option3 NVARCHAR(MAX) NOT NULL,
-                    option4 NVARCHAR(MAX) NOT NULL
-                )
-            END
-        `);
-        logger.info('Quizzes table created successfully', { className });
-
-        await pool.request().query(`
-            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'challenges')
-            BEGIN
-                CREATE TABLE challenges (
-                    id INT PRIMARY KEY NOT NULL,
-                    name NVARCHAR(255) NOT NULL,
-                    description NVARCHAR(MAX) NOT NULL,
-                    points INT NOT NULL
-                )
-            END
-        `);
-        logger.info('Challenges table created successfully', { className });
-
-        await pool.request().query(`
-            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'points')
-            BEGIN
-                CREATE TABLE points (
-                    id INT PRIMARY KEY IDENTITY(1,1),
-                    userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
-                    timestamp DATETIME DEFAULT GETDATE(),
-                    challengeId INT FOREIGN KEY REFERENCES challenges(id) DEFAULT NULL,
-                    quizDifficulty NVARCHAR(10) DEFAULT NULL,
-                    points INT NOT NULL
-                )
-            END
-        `);
-        logger.info('Points table created successfully', { className });
-
-        await pool.request().query(`
-            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'supportQuestions')
-            BEGIN
-                CREATE TABLE supportQuestions (
-                    id INT PRIMARY KEY IDENTITY(1,1),
-                    timestamp DATETIME DEFAULT GETDATE(),
-                    userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
-                    question NVARCHAR(MAX) NOT NULL,
-                    answered BIT DEFAULT 0,
-                    answer NVARCHAR(MAX) DEFAULT NULL
-                )
-            END
-        `);
-        logger.info('SupportQuestions table created successfully', { className });
+    try{
+        const createTableSQLPath = path.join(__dirname, '../../data/sql/create-tables.sql');
+        const createTableSQL = fs.readFileSync(createTableSQLPath, 'utf-8');
+        await pool.request().query(createTableSQL);
 
         const resultQuiz = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
         const countQuiz = resultQuiz.recordset[0].count;
 
+        logger.info('Checking population of quizzes and challenges tables', { className });
+
         // This is currently hardcoded to 93 because the quiz Excel file has 93 questions
         // If number of questions gets updated in the Excel file, this number should be updated
         if (countQuiz < 93){
+            logger.info('Populating quizzes table', { className });
             await populateQuizzesTable(pool);
         }
 
@@ -100,12 +34,17 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
         // This is currently hardcoded to 12 because the challenge Excel file has 12 challenges
         // If number of challenges gets updated in the Excel file, this number should be updated
         if(countChallenge < 12){
+            logger.info('Populating challenges table', { className });
             await populateChallengesTable(pool);
         }
 
+        logger.info('Checking if procedures exist', { className });
+        const createProceduresSQLPath = path.join(__dirname, '../../data/sql/create-procedures.sql');
+        const createProceduresSQL = fs.readFileSync(createProceduresSQLPath, 'utf-8');
+        await pool.request().query(createProceduresSQL);
 
         logger.info('Database initialized successfully', { className });
-    } catch (error) {
+    }catch(error){
         logger.error({ message: 'Error initializing database: '+ error, error, className });
     }
 };

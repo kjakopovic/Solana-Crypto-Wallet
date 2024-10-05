@@ -8,6 +8,7 @@ import QuizRoutes from './routes/QuizRoutes';
 import PointsRoutes from './routes/PointsRoutes';
 import ChallengeRoutes from './routes/ChallengeRoutes';
 import SupportQuestionRoutes from './routes/SupportQuestionRoutes';
+import NFTRoutes from './routes/NFTRoutes';
 import dotenv from 'dotenv';
 import './config/database/Database';
 import swaggerDocs from './config/Swagger';
@@ -26,6 +27,7 @@ app.use('/quiz', QuizRoutes);
 app.use('/points', PointsRoutes);
 app.use('/challenges', ChallengeRoutes);
 app.use('/support-question', SupportQuestionRoutes);
+app.use('/nft', NFTRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);
