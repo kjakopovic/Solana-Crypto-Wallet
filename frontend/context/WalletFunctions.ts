@@ -22,16 +22,14 @@ import {
   createTransferInstruction,
   getMint,
   AccountLayout,
-  transfer
 } from "@solana/spl-token";
 import { TokenListProvider, TokenInfo } from '@solana/spl-token-registry';
-import { createGenericFile, generateSigner, keypairIdentity, PublicKey as pb, percentAmount } from '@metaplex-foundation/umi'
-import { create, mplCore } from '@metaplex-foundation/mpl-core'
+import { keypairIdentity, keypairPayer, PublicKey as pb, percentAmount } from '@metaplex-foundation/umi'
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
-import { createNft, mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata'
-import * as FileSystem from 'expo-file-system';
+import { createNft, fetchAllDigitalAssetWithTokenByOwner, mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata'
 
 import { saveItem, getItem } from './SecureStorage';
+import { get } from 'http';
 
 bip39.setDefaultWordlist('english');
 
@@ -148,13 +146,15 @@ export const getWalletInfo = async (): Promise<WalletInfo> => {
 
     tokenInfoPreviews.push(solInfo);
 
-    tokens.value.map(({ pubkey, account }) => {
+    tokens.value.map(async ({ pubkey, account }) => {
       // Decode the token account data
       const accountInfo = AccountLayout.decode(account.data);
 
       const userAmount = (accountInfo.amount).toString();
 
-      if (userAmount !== '0') {
+      const mintInfo = await getMint(connection, new PublicKey(accountInfo.mint));
+
+      if (userAmount !== '0' && mintInfo.decimals !== 0) {
         // Extract the mint address and balance
         const mintAddress = new PublicKey(accountInfo.mint).toBase58();
     
@@ -581,62 +581,45 @@ export const unstakeSolana = async (stakeKey: string, stakeBalance: number) => {
 export const createWelcomeNft = async () => {
   try {
     // Setting up UMI for creating an NFT
-    const connection = getWalletConnection();
-
     const umi = createUmi(clusterApiUrl((process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? 'devnet') as Cluster));
 
     const nftWallet = Keypair.generate();
     const umiNftWallet = umi.eddsa.createKeypairFromSecretKey(nftWallet.secretKey);
 
-    const ownerPublicKey = new PublicKey(getItem('publicKey') ?? '') as unknown as pb;
-  
-    umi.use(keypairIdentity(umiNftWallet)).use(mplTokenMetadata());
-
-    // Uploading NFT image
-
-    const response = await (await fetch(
-      (process.env.EXPO_PUBLIC_BACKEND_BASE_URL ?? 'http://localhost:3000') + '/nft/welcome', 
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )).json();
-
-    console.log(response)
-
-    const buffer = await FileSystem.readAsStringAsync('./nft.jpg', {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    let file = createGenericFile(buffer, 'nft.jpg', {
-      contentType: "image/jpeg",
-    });
-
-    const [imageUri] = await umi.uploader.upload([file]);
-
-    // Uploading NFT metadata
-    const metadataUri = await umi.uploader.uploadJson({
-      name: 'Welcome to SolaSafe',
-      description: 'This is your first NFT from SolaSafe',
-      image: imageUri,
-    });
+    const owner = umi.eddsa.createKeypairFromSecretKey(Buffer.from(getItem('privateKey') ?? '', 'hex'));
+    const nftPayer = umi.eddsa.createKeypairFromSecretKey(Buffer.from(process.env.EXPO_PUBLIC_NFT_PAYER ?? '', 'hex'))
+    
+    umi.use(keypairIdentity(umiNftWallet)).use(keypairPayer(nftPayer)).use(mplTokenMetadata());
 
     const { signature, result } = await createNft(umi, {
       mint: umi.identity,
       name: "Welcome to SolaSafe",
-      uri: metadataUri,
-      updateAuthority: umi.identity.publicKey,
+      uri: 'https://cdn.pixabay.com/photo/2022/02/18/16/09/ape-7020995_1280.png',
+      symbol: "WTS",
+      updateAuthority: umi.identity,
+      tokenOwner: owner.publicKey,
+      payer: umi.payer,
       sellerFeeBasisPoints: percentAmount(0),
     }).sendAndConfirm(umi, { send: { commitment: "finalized" } });
 
     console.log('NFT created:', signature);
-    console.log('Result: ', result)
-  } catch (error) {
-    console.log(error)
+  } catch (error: any) {
+    console.log(error.message);
   }
 };
+
+export const getUsersNfts = async () =>{
+  const umi = createUmi(clusterApiUrl((process.env.EXPO_PUBLIC_ACTIVE_CLUSTER ?? 'devnet') as Cluster));
+
+  const ownerPublicKey = new PublicKey(getItem('publicKey') ?? '') as unknown as pb;
+  
+  const allNFTs = await fetchAllDigitalAssetWithTokenByOwner(
+    umi,
+    ownerPublicKey,
+  );
+
+  return allNFTs;
+}
 
 // ALERT: This function works only on mainnet
 export const swapTokens = async (fromTokenMint: string, toTokenMint: string, swapAmount: number) => {

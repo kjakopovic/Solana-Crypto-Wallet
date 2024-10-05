@@ -7,41 +7,23 @@ import React, { useState, useEffect } from 'react'
 import PageHeader from '@/components/page_header'
 import CollectibleItem from '@/components/collectible_item'
 
-import { createWelcomeNft } from '@/context/WalletFunctions'
+import { getUsersNfts } from '@/context/WalletFunctions'
 
 const Collectibles = () => {
     const [collectibles, setCollectibles] = useState([] as any[])
     
     useEffect(() => {
-        setCollectibles([
-            {
-                name: 'Custom NFT',
-                image: 'https://cdn.pixabay.com/photo/2022/02/18/16/09/ape-7020995_1280.png',
-                value: 1500
-            },
-            {
-                name: 'Custom NFT',
-                image: 'https://cdn.pixabay.com/photo/2022/02/18/16/09/ape-7020995_1280.png',
-                value: 1500
-            },
-            {
-                name: 'Custom NFT',
-                image: 'https://cdn.pixabay.com/photo/2022/02/18/16/09/ape-7020995_1280.png',
-                value: 1500
-            },
-            {
-                name: 'Custom NFT',
-                image: 'https://cdn.pixabay.com/photo/2022/02/18/16/09/ape-7020995_1280.png',
-                value: 1500
-            },
-            {
-                name: 'Custom NFT',
-                image: 'https://cdn.pixabay.com/photo/2022/02/18/16/09/ape-7020995_1280.png',
-                value: 1500
-            }
-        ])
+        const fetchNfts = async () => {
+            const nfts = await getUsersNfts()
 
-        createWelcomeNft()
+            setCollectibles(nfts.map(nft => ({
+                name: nft.metadata.name,
+                image: nft.metadata.uri,
+                value: nft.metadata.symbol
+            })))
+        }
+
+        fetchNfts()
     }, [])
 
     return (

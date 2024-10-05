@@ -14,7 +14,7 @@ function getItem(key) {
     return result;
 }
 
-function deleteItem(key) {
+async function deleteItem(key) {
     SecureStore.deleteItemAsync(key);
 }
 

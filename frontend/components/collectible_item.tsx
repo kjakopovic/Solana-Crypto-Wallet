@@ -4,7 +4,7 @@ import React from 'react'
 interface CollectibleItemProps {
     name: string,
     image: string,
-    value: number
+    value: string
 }
 
 const CollectibleItem: React.FC<CollectibleItemProps> = ({ name, image, value }) => {
@@ -15,7 +15,7 @@ const CollectibleItem: React.FC<CollectibleItemProps> = ({ name, image, value })
                     {name}
                 </Text>
                 <Text className='font-lufgaBold text-white text-lg mr-7'>
-                    {`${value} SOL`}
+                    {value}
                 </Text>
             </View>
             <Image

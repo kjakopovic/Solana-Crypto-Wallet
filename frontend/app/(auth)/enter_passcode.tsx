@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native'
+import { View } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { router, Href } from "expo-router";
 
@@ -9,23 +9,39 @@ import PasscodeOutput from '@/components/passcode_output'
 import PasscodeInput from '@/components/passcode_input'
 import CustomDialog from '@/components/custom_dialog';
 import PageHeader from '@/components/page_header';
+import { createWelcomeNft } from '@/context/WalletFunctions';
+import Loader from '@/components/loader';
 
 const EnterPasscode = () => {
     const [isConfirming, setIsConfirming] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
     const [showDialog, setShowDialog] = useState(false)
 
     const [passcodes, setPasscodes] = useState({
         newPasscode: '',
         confirmPasscode: ''
     })
+
+    const registerUser = async () => {
+        setIsLoading(true)
+
+        await createWelcomeNft()
+
+        setIsLoading(false)
+
+        if (router.canDismiss()) {
+            router.dismissAll()
+        }
+        
+        router.replace('/(tabs)/wallet' as Href)
+    }
     
     useEffect(() => {
         if (passcodes.confirmPasscode.trimEnd().split(' ').length === 6) {
             if (passcodes.newPasscode === passcodes.confirmPasscode) {
                 //TODO: zovi backend za spremanje, odnosno tu je user registered i 
                 //saljem mu public key i passcode
-                router.dismissAll()
-                router.replace('/(tabs)/wallet' as Href)
+                registerUser()
             }
             else {
                 setPasscodes({ newPasscode: '', confirmPasscode: '' })
@@ -40,6 +56,12 @@ const EnterPasscode = () => {
             setIsConfirming(true);
         }
     }, [passcodes.newPasscode]);
+
+    if (isLoading) {
+        return (
+            <Loader isLoading />
+        )
+    }
     
     return (
         <SafeAreaView className='bg-background h-full'>

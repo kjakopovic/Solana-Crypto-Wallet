@@ -23,18 +23,15 @@ const Settings = () => {
   const logout = async () => {
     //TODO: provjeri jel to i dalje tako nakon integracije s backendom
     //TODO: pozvati backend endpoint za logout prvo, ako je uspjesan provedi ovo ostalo
-    await Promise.all([
-      deleteItem('privateKey'),
-      deleteItem('publicKey'),
-      deleteItem('refreshToken'),
-      deleteItem('isUserFound')
-    ])
+    await deleteItem('privateKey')
+    await deleteItem('publicKey')
+    await deleteItem('refreshToken')
+    await deleteItem('isUserFound')
 
-    getItem('privateKey')
-    getItem('publicKey')
-    getItem('refreshToken')
-    getItem('isUserFound')
-
+    if (router.canDismiss()) {
+      router.dismissAll()
+    }
+    
     router.replace('/' as Href)
   }
 
