@@ -11,7 +11,7 @@ const router = Router();
 // TODO: Make API for getALl challenges
 /**
  * @swagger
- * api/v1/points/save:
+ * /api/v1/points/save:
  *   post:
  *     summary: Save user points
  *     description: Save user points from challenge or daily quiz. It must always contain publicKey and points fields.

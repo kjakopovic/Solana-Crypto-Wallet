@@ -21,13 +21,13 @@ const PORT = process.env.PORT || 3000;
 swaggerDocs(app);
 
 app.use(express.json());
-app.use('api/v1/user', UserRoutes);
-app.use('api/v1/jwt', JwtRoutes);
-app.use('api/v1/quiz', QuizRoutes);
-app.use('api/v1/points', PointsRoutes);
-app.use('api/v1/challenges', ChallengeRoutes);
-app.use('api/v1/support-question', SupportQuestionRoutes);
-app.use('api/v1/nft', NFTRoutes);
+app.use('/api/v1/user', UserRoutes);
+app.use('/api/v1/jwt', JwtRoutes);
+app.use('/api/v1/quiz', QuizRoutes);
+app.use('/api/v1/points', PointsRoutes);
+app.use('/api/v1/challenges', ChallengeRoutes);
+app.use('/api/v1/support-question', SupportQuestionRoutes);
+app.use('/api/v1/nft', NFTRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);
