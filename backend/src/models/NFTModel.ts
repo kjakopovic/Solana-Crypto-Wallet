@@ -8,6 +8,7 @@ export interface bufferNFT{
     id: number;
     imageBuffer: Buffer;
     imageType: string;
+    name: string;
 }
 
 class NFTModel{
@@ -22,9 +23,9 @@ class NFTModel{
 
         // Query to get the welcome NFT
         const sqlQuery = `
-            SELECT id, imageBuffer, imageType
+            SELECT id, imageBuffer, imageType, name
             FROM images
-            WHERE id = 1;
+            WHERE name = 'Welcome NFT';
             `;
 
         try {
@@ -39,7 +40,8 @@ class NFTModel{
             return {
                 id: result.recordset[0].id,
                 imageBuffer: result.recordset[0].imageBuffer,
-                imageType: result.recordset[0].imageType
+                imageType: result.recordset[0].imageType,
+                name: result.recordset[0].name
             };
 
         } catch (err) {
@@ -48,19 +50,20 @@ class NFTModel{
         }
     }
 
-    public async saveNFTBuffer(imageBuffer: Buffer): Promise<void> {
+    public async saveNFTBuffer(imageBuffer: Buffer, name: string): Promise<void> {
         logger.info('Saving NFT buffer', { className });
 
         // Query to save the NFT buffer
         const sqlQuery = `
-            INSERT INTO images (imageBuffer, imageType)
-            VALUES (@imageBuffer, @imageType);
+            INSERT INTO images (imageBuffer, imageType, name)
+            VALUES (@imageBuffer, @imageType, @name);
             `;
 
         try {
             await this.db.request()
                 .input('imageBuffer', imageBuffer)
                 .input('imageType', 'NFT')
+                .input('name', name)
                 .query(sqlQuery);
 
             logger.info('NFT buffer saved successfully', { className });

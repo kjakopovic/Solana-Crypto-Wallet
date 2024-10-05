@@ -3,7 +3,7 @@
 import logger from '../config/Logger';
 import fs from 'fs';
 import path from 'path';
-import NFTModel, {bufferNFT} from '../models/NFTModel';
+import NFTModel from '../models/NFTModel';
 
 
 const className = 'NFTService';
@@ -20,7 +20,7 @@ class NFTService {
                 const defaultNFTPath = path.join(__dirname, '../data/images/welcome-nft.jpg');
                 const imageBuffer = fs.readFileSync(defaultNFTPath);
 
-                NFTModel.saveNFTBuffer(imageBuffer);
+                await NFTModel.saveNFTBuffer(imageBuffer, 'Welcome NFT');
 
                 const retryNFT = await NFTModel.getWelcomeNFT();
                 if(retryNFT == null){

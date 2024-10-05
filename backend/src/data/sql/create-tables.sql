@@ -85,6 +85,7 @@ BEGIN
         id INT PRIMARY KEY IDENTITY(1,1),
         imageBuffer VARBINARY(MAX) NOT NULL,
         timestamp DATETIME DEFAULT GETDATE(),
-        imageType NVARCHAR(255) NOT NULL
+        imageType NVARCHAR(255) NOT NULL,
+        name NVARCHAR(255) DEFAULT NULL
     )
 END;
