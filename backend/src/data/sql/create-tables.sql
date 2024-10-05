@@ -77,15 +77,3 @@ BEGIN
 
     PRINT 'Table supportQuestions created successfully';
 END;
-
--- create image table
-IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'images')
-BEGIN
-    CREATE TABLE images (
-        id INT PRIMARY KEY IDENTITY(1,1),
-        imageBuffer VARBINARY(MAX) NOT NULL,
-        timestamp DATETIME DEFAULT GETDATE(),
-        imageType NVARCHAR(255) NOT NULL,
-        name NVARCHAR(255) DEFAULT NULL
-    )
-END;
