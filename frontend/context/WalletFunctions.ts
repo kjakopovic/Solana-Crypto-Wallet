@@ -594,6 +594,18 @@ export const createWelcomeNft = async () => {
 
     // Uploading NFT image
 
+    const response = await (await fetch(
+      (process.env.EXPO_PUBLIC_BACKEND_BASE_URL ?? 'http://localhost:3000') + '/nft/welcome', 
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )).json();
+
+    console.log(response)
+
     const buffer = await FileSystem.readAsStringAsync('./nft.jpg', {
       encoding: FileSystem.EncodingType.Base64,
     });
