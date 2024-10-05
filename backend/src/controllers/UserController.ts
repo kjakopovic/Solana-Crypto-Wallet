@@ -188,7 +188,7 @@ class UserController{
         }
     }
 
-    async checkExistanceOfUserByUsername(req: Request, res: Response) {
+    async checkExistenceOfUserByUsername(req: Request, res: Response) {
         const username = req.query.username as string;
 
         if (!username) {

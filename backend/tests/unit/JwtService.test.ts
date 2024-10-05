@@ -21,7 +21,7 @@ describe('JwtService', () => {
     });
 
     afterAll(async () => {
-        await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
+        await new Promise<void>(resolve => setTimeout(() => resolve(), 1000));
     });
 
     describe('generateAccessToken', () => {
@@ -67,26 +67,29 @@ describe('JwtService', () => {
     });
 
     describe('verifyAccessToken', () => {
-        it('should verify an access token', () => {
+        it('should verify an access token', async () => {
             const token = 'testaccesstoken';
             const decoded = { id: '123', username: 'testuser' };
-            (jwt.verify as jest.Mock).mockReturnValue(decoded);
+            (jwt.verify as jest.Mock).mockResolvedValue(decoded);
 
-            const result = JwtService.verifyAccessToken(token);
+            const result = await JwtService.verifyAccessToken(token);
 
             expect(jwt.verify).toHaveBeenCalledWith(token, expect.any(String));
             expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Verifying access token'), { className: 'JwtService' });
-            expect(result).toBe(decoded);
+            expect(result).toEqual(decoded);
         });
 
-        it('should log an error and throw if token verification fails', () => {
+        it('should log an error and throw if token verification fails', async () => {
             const token = 'testaccesstoken';
             const error = new Error('Token verification failed');
             (jwt.verify as jest.Mock).mockImplementation(() => { throw error; });
 
-            expect(() => JwtService.verifyAccessToken(token)).toThrow(error);
-            expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error verifying access token'), { className: 'JwtService' });
+            await expect(JwtService.verifyAccessToken(token)).rejects.toThrow(error);
+
+            expect(logger.error).toHaveBeenCalledWith(`Error verifying access token: ${error}`, { className: 'JwtService' });
         });
+
+
     });
 
     describe('verifyRefreshToken', () => {

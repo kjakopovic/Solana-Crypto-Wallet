@@ -201,8 +201,6 @@ class UserModel {
     async getAmountOnLeaderboard(rank: number): Promise<UserPointsLeaderboard[] | null> {
         logger.info(`Getting ${rank} amount of users on leaderboard`, { className });
 
-        // Query to fetch a specific amount of users on the leaderboard from the users table
-
         try{
             const result = await this.db.request()
                 .input('rank', rank)

@@ -34,4 +34,6 @@ const router = Router();
  */
 router.post('/refresh-access', JwtController.refreshAccessTokenController);
 
+router.post('/verify-refresh', JwtController.verifyRefreshTokenController);
+
 export default router;

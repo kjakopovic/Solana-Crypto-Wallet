@@ -204,6 +204,6 @@ router.get('/info', authMiddleware, UserController.getUserInformation);
  */
 router.get('/leaderboard', authMiddleware, UserController.getLeaderboard);
 
-router.get('/exist/username', authMiddleware, UserController.checkExistanceOfUserByUsername);
+router.get('/exist/username', authMiddleware, UserController.checkExistenceOfUserByUsername);
 
 export default router;

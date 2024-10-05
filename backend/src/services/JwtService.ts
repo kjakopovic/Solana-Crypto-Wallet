@@ -70,9 +70,14 @@ class JwtService{
             }
 
             return decoded;
-        } catch (error) {
-            logger.error('Error verifying refresh token: ' + error, { className });
-            throw error;
+        } catch (error: any) {
+            if(error.name === 'TokenExpiredError'){
+                logger.error('Refresh token expired', { className });
+                throw new Error('Refresh token expired');
+            }else{
+                logger.error('Error verifying refresh token: ' + error, { className });
+                throw error;
+            }
         }
     };
 
