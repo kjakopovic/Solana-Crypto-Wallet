@@ -7,7 +7,7 @@ const router = Router();
 
 /**
  * @swagger
- * /nft/welcome:
+ * api/v1/nft/welcome:
  *   get:
  *     summary: Get welcome NFT
  *     description: Get the welcome NFT
