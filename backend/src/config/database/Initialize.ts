@@ -38,8 +38,6 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
             await populateChallengesTable(pool);
         }
 
-
-
         const numberOfUsers = await pool.request().query(`SELECT COUNT(*) AS count FROM users`);
         const numberOfSupportQuestions = await pool.request().query(`SELECT COUNT(*) AS count FROM supportQuestions`);
 
@@ -68,7 +66,7 @@ const populateQuizzesTable = async (pool: ConnectionPool) => {
         const sheet = workbook.Sheets[sheetName];
 
         const questions: any[][] = xlsx.utils.sheet_to_json(sheet, { header: 1 });
-        questions.shift(); // Remove the header row
+        questions.shift(); // Removes the header row
 
         for (const row of questions) {
             const [id, question, difficulty, correctAnswer, option2, option3, option4] = row;
@@ -101,7 +99,7 @@ const populateChallengesTable = async (pool: ConnectionPool) => {
         const sheet = workbook.Sheets[sheetName];
 
         const challenges: any[][] = xlsx.utils.sheet_to_json(sheet, { header: 1 });
-        challenges.shift(); // Remove the header row
+        challenges.shift();
 
         for (const row of challenges) {
             const [id, name, description, points, status] = row;
@@ -126,4 +124,3 @@ const populateChallengesTable = async (pool: ConnectionPool) => {
         logger.error({ message: 'Error populating challenges table: ' + error, error, className });
     }
 };
-
