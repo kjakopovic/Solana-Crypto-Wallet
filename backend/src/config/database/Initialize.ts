@@ -31,9 +31,9 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
         const resultChallenge = await pool.request().query(`SELECT COUNT(*) AS count FROM challenges`);
         const countChallenge = resultChallenge.recordset[0].count;
 
-        // This is currently hardcoded to 12 because the challenge Excel file has 12 challenges
+        // This is currently hardcoded to 6 because the challenge Excel file has 6 challenges
         // If number of challenges gets updated in the Excel file, this number should be updated
-        if(countChallenge < 12){
+        if(countChallenge < 6){
             logger.info('Populating challenges table', { className });
             await populateChallengesTable(pool);
         }
