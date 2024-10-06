@@ -110,6 +110,18 @@ router.get('/fetch-sq-by-field', authMiddleware, SupportQuestionController.fetch
  */
 router.get('/fetch-all-sq', authMiddleware, SupportQuestionController.fetchAllSupportQuestions);
 
+/**
+ * @swagger
+ * /api/v1/support-question/fetch-answered-sq:
+ *   get:
+ *     summary: Fetch answered support questions
+ *     description: Fetch answered support questions
+ *     responses:
+ *       200:
+ *         description: Answered support questions fetched successfully
+ *       500:
+ *         description: Error fetching answered support questions
+ */
 router.get('/fetch-answered-sq', authMiddleware, SupportQuestionController.fetchAnsweredSupportQuestions);
 
 export default router;
