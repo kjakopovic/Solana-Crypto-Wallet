@@ -9,14 +9,18 @@ import CustomButton from '@/components/custom_button'
 import CustomDialog from '@/components/custom_dialog'
 import SupportCard from '@/components/support_card'
 import PageHeader from '@/components/page_header'
+import { getItem, saveItem } from '@/context/SecureStorage'
+import Loader from '@/components/loader'
+import { publicKey } from '@metaplex-foundation/umi'
 
 const Support = () => {
     const adminProfilePicture = 'https://cdn.pixabay.com/photo/2022/02/18/16/09/ape-7020995_1280.png'
 
+    const [isLoading, setIsLoading] = useState(true)
+
     const [question, setQuestion] = useState({
         title: '',
-        description: '',
-        publicKey: ''
+        description: ''
     })
 
     const [dialogProps, setDialogProps] = useState({
@@ -27,41 +31,75 @@ const Support = () => {
 
     const [pastQuestions, setPastQuestions] = useState([] as any[])
 
-    const sendQuestionToSupport = () => {
-        //TODO: implementirati backend za sendanje u bazu
-        setDialogProps({ title: 'Success', description: 'Your question has been sent to support.', visible: true })
+    const sendQuestionToSupport = async () => {
+        const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/support-question/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getItem('accessToken')}`,
+                'x-refresh-token': getItem('refreshToken') ?? ''
+            },
+            body: JSON.stringify({
+                title: question.title,
+                description: question.description,
+                publicKey: getItem('publicKey')
+            })
+        })
+      
+        if (response.headers.get('x-access-token')) {
+            saveItem('accessToken', response.headers.get('x-access-token'))
+        }
+
+        if (response.status.toString().startsWith('2')) {
+            setDialogProps({ title: 'Success', description: 'Your question has been sent to support.', visible: true })
+        } else {
+            console.log(response)
+            //TODO: resetiraj i question
+            setDialogProps({ title: 'Failure', description: 'There was an error please try again.', visible: true })
+        }
     }
 
     useEffect(() => {
-        //TODO: fetch data from backend
-
-        setPastQuestions([
-            {
-                index: 1,
-                title: 'How to send crypto?',
-                description: 'I am trying to send crypto to my friend but I can\'t seem to find the option to do so.',
-                answer: 'To send crypto, you need to go to the Send Crypto page and fill in the required fields.',
-                userProfilePicture: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-                adminProfilePicture: adminProfilePicture
-            },
-            {
-                index: 33,
-                title: 'How should I proceed with the verification process?',
-                description: 'I have uploaded my documents but I am not sure what to do next.',
-                answer: 'You need to wait for the verification process to be completed. You will receive an email once the process is done.',
-                userProfilePicture: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-                adminProfilePicture: adminProfilePicture
-            },
-            {
-                index: 77,
-                title: 'What if I forget my password?',
-                description: 'I have forgotten my password and I can\'t seem to find the option to reset it.',
-                answer: 'You can reset your password by clicking on the Forgot Password link on the login page.',
-                userProfilePicture: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-                adminProfilePicture: adminProfilePicture
+        const fetchData = async () => {
+            const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/support-question/fetch-answered-sq`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getItem('accessToken')}`,
+                    'x-refresh-token': getItem('refreshToken') ?? ''
+                }
+            })
+          
+            if (response.headers.get('x-access-token')) {
+                saveItem('accessToken', response.headers.get('x-access-token'))
             }
-        ])
+
+            if (response.status.toString().startsWith('2')) {
+                const data = await response.json()
+                
+                console.log(data.supportQuestions)
+
+                setPastQuestions(data.supportQuestions.map((question: any, index: number) => {
+                    return {
+                        index: index + 1,
+                        title: question.title,
+                        description: question.description,
+                        answer: question.answer,
+                        userProfilePicture: question.user.imageUrl,
+                        adminProfilePicture: adminProfilePicture
+                    }
+                }))
+            } else {
+                console.log(response)
+            }
+        }
+
+        fetchData()
+
+        setIsLoading(false)
     }, [])
+
+    if (isLoading) return <Loader isLoading={isLoading} />
     
     return (
         <SafeAreaView className='bg-background h-full'>
