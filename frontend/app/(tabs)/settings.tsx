@@ -80,10 +80,16 @@ const Settings = () => {
         console.log(response)
       } else {
         setIsModalVisible(false)
+        setNewUsername('')
+
+        if (router.canDismiss()) {
+          router.dismissAll()
+        }
+
+        router.replace('/(auth)/login_with_passcode' as Href)
       }
     } catch (error) {
       console.log(error)
-      
     }
   }
 

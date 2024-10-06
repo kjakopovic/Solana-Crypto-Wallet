@@ -1,9 +1,11 @@
 name: Deploy backend on AWS
 
+# disabled further execution because we have the final product in production
 on:
   push:
     branches: 
-      - main
+      # - main
+      - develop
 
 env:
   AWS_REGION: eu-central-1

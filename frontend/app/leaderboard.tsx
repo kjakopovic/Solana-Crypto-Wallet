@@ -58,21 +58,23 @@ const Leaderboard = () => {
             if (response.status.toString().startsWith('2')) {
                 const responseData = await response.json()
 
-                if (responseData.length !== 0) {
+                if (responseData !== undefined && responseData.length !== 0) {
                     setUsers(responseData.map((user: any, index: number) => {
                         return {
                             username: user.username,
-                            publicKey: user.publicKey,
-                            image: user.imageUrl,
+                            publickey: user.publickey,
+                            image: user.imageurl,
                             points: user.points ?? 0,
-                            placement: index + 1
+                            placement: user.placement
                         }
                     }))
                 }
 
-                const currentUserData = users.find((user: any) => user.publicKey === getItem('publicKey'));
+                const currentUserData = responseData.find((user: any) => user.publickey === getItem('publicKey'));
 
-                setCurrentUser(currentUserData)
+                if (currentUserData) {
+                    setCurrentUser(currentUserData)
+                }
             }
 
             setStartDate(getLastMomentOfMonth())
@@ -114,7 +116,7 @@ const Leaderboard = () => {
                         </Text>
                     )}
 
-                    {users
+                    {users !== undefined && users !== null && users.length !== 0 && users
                         .sort((a, b) => b.points - a.points)
                         .map((user, index) => (
                         <LeaderboardPlacing
@@ -132,7 +134,7 @@ const Leaderboard = () => {
                 <LeaderboardPlacing
                     placement={currentUser.placement}
                     username={currentUser.username}
-                    image={currentUser.image}
+                    image={currentUser.imageurl}
                     points={currentUser.points}
                 />
             </View>
