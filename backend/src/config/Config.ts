@@ -11,7 +11,7 @@ export const dbConfig = {
     port: parseInt(process.env.DB_PORT || '1433', 10),
     database: process.env.DB_DATABASE || 'walletDB',
     options: {
-        encrypt: false,
+        encrypt: true,
         trustServerCertificate: true,
     }
 }
