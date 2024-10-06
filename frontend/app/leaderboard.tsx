@@ -6,6 +6,7 @@ import PageHeader from '@/components/page_header'
 import LeaderboardPlacing from '@/components/leaderboard_placing'
 import Loader from '@/components/loader'
 import Timer from '@/components/days_timer'
+import { getItem, saveItem } from '@/context/SecureStorage'
 
 const Leaderboard = () => {
     const [isLoading, setIsLoading] = useState(true)
@@ -42,7 +43,7 @@ const Leaderboard = () => {
         },
         {
             username: 'User 2',
-            public_key: 'asfadfdsajnhefjhuaefu',
+            publicKey: 'asfadfdsajnhefjhuaefu',
             image: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
             points: 250,
             placement: 5
@@ -81,13 +82,48 @@ const Leaderboard = () => {
     }
 
     useEffect(() => {
-        //TODO: fetch users from backend and THEN:
-        //TODO: treba usporediti s public keyom iz getItem()
-        setCurrentUser(users.find(user => user.public_key === 'jnhsdgsdefjhuadsgeadfefu'))
+        const loadData = async () => {
+            const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/leaderboard`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getItem('accessToken')}`,
+                    'x-refresh-token': getItem('refreshToken') ?? ''
+                }
+            })
 
-        setStartDate(getLastMomentOfMonth())
+            if (response.headers.get('x-access-token')) {
+                saveItem('accessToken', response.headers.get('x-access-token'))
+            }
 
-        setIsLoading(false)
+            if (response.status.toString().startsWith('2')) {
+                const responseData = await response.json()
+
+                console.log('This is data', responseData)
+
+                //TODO: kada se fixa backend
+
+                // if (responseData.length !== 0) {
+                //     setUsers(responseData.map((user: any, index: number) => {
+                //         return {
+                //             username: user.username,
+                //             publicKey: user.publicKey,
+                //             image: user.imageUrl,
+                //             points: user.points,
+                //             placement: user.placement ?? index + 1
+                //         }
+                //     }))
+                // }
+
+                // setCurrentUser(responseData.find((user: any) => user.publicKey === getItem('publicKey')))
+            }
+
+            setStartDate(getLastMomentOfMonth())
+
+            setIsLoading(false)
+        }
+
+        loadData()
     }, [])
 
     if (isLoading) {

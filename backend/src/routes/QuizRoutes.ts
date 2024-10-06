@@ -6,7 +6,6 @@ import authMiddleware from "../middleware/AuthMiddleware";
 
 const router = Router();
 
-// TODO: If set as GET, Swagger UI will not work
 /**
  * @swagger
  * /api/v1/quiz/get:
