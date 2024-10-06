@@ -104,6 +104,10 @@ class UserService{
             throw new Error('User not found');
         }
 
+        if(updates.password){
+            updates.password = await bcrypt.hash(updates.password, 10);
+        }
+
         await UserModel.updateUser(publicKey, updates);
 
         const userAfterUpdate = await UserModel.findUserByField('publicKey', publicKey);
