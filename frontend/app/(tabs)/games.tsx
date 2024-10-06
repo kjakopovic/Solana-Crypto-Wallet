@@ -10,17 +10,35 @@ import CustomButton from '@/components/custom_button'
 import ChallengeItem from '@/components/challenge_item'
 import Timer from '@/components/hours_timer'
 import { getItem, saveItem } from '@/context/SecureStorage'
+import CustomDialog from '@/components/custom_dialog'
+import Loader from '@/components/loader'
+
+interface QuizStructure {
+    difficulty: string,
+    streak: number,
+    id: number,
+    question: string,
+    correctAnswer: string,
+    answers: string[]
+}
 
 const Games = () => {
-    //TODO: integrirati sa backendom
     const [quiz, setQuiz] = useState({
         difficulty: 'easy',
         streak: 0
-    } as any)
+    } as QuizStructure)
+
+    const [dialogProps, setDialogProps] = useState({
+        title: '',
+        description: '',
+        visible: false
+    })
 
     const [modalData, setModalData] = useState({
         isModalVisible: false,
     })
+
+    const [isLoading, setIsLoading] = useState(true)
 
     const [startDate, setStartDate] = useState(null as Date | null)
 
@@ -94,6 +112,22 @@ const Games = () => {
         }
     };
 
+    const handleSubmitQuiz = async (answer: string) => {
+        if (answer === quiz.correctAnswer) {
+            setDialogProps({
+                title: 'Correct!',
+                description: 'You have successfully answered the question.',
+                visible: true
+            })
+        } else {
+            setDialogProps({
+                title: 'Incorrect!',
+                description: 'You have failed to answer the question.',
+                visible: true
+            })
+        }
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             // Challenge data
@@ -120,10 +154,10 @@ const Games = () => {
             }
 
             // Quiz data
-            const lastQuizDate = getItem('lastQuizDate')
+            const nextQuizDate = getItem('nextQuizDate')
 
-            if (lastQuizDate) {
-                setStartDate(new Date(lastQuizDate))
+            if (nextQuizDate) {
+                setStartDate(new Date(nextQuizDate))
             }
 
             const currentLevel = getItem('currentQuizLevel') ?? '1'
@@ -166,11 +200,62 @@ const Games = () => {
         }
 
         fetchData()
+
+        setIsLoading(false)
     }, [])
+
+    if (isLoading) return <Loader isLoading={isLoading} />;
     
     return (
         <SafeAreaView className='bg-background h-full'>
             <ScrollView>
+                <CustomDialog 
+                    title={dialogProps.title}
+                    description={dialogProps.description}
+                    visible={dialogProps.visible}
+                    showCancel={false}
+                    onOkPress={async () => {
+                        const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/points/save`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${getItem('accessToken')}`,
+                                'x-refresh-token': getItem('refreshToken') ?? ''
+                            },
+                            body: JSON.stringify({
+                                publicKey: getItem('publicKey') ?? '',
+                                quizDifficulty: quiz.difficulty,
+                            })
+                        })
+                      
+                        if (response.headers.get('x-access-token')) {
+                            saveItem('accessToken', response.headers.get('x-access-token'))
+                        }
+
+                        if (response.status.toString().startsWith('2')) {
+                            const currentPoints = parseFloat(getItem('points') ?? '0') + (
+                                quiz.difficulty === 'easy' ? 1 : quiz.difficulty === 'medium' ? 2 : 3
+                            )
+                            saveItem('points', currentPoints.toString())
+
+                            const currentLevel = parseFloat(getItem('currentQuizLevel') ?? '1')
+                            const currentStreak = parseFloat(getItem('currentQuizStreak') ?? '0')
+
+                            if (currentStreak + 1 === 3 && currentLevel < 3) {
+                                saveItem('currentQuizLevel', (currentLevel + 1).toString())
+                                saveItem('currentQuizStreak', '0')
+                            } else {
+                                saveItem('currentQuizStreak', (currentStreak + 1).toString())
+                            }
+
+                            saveItem('nextQuizDate', new Date(new Date().setHours(new Date().getHours() + 8)).toString())
+                            setStartDate(new Date(new Date().setHours(new Date().getHours() + 8)))
+                        }
+
+                        setDialogProps({ title: '', description: '', visible: false })
+                        setModalData({ isModalVisible: false })
+                    }}
+                />
                 <View className='items-center justify-center mt-10 w-full pb-[100px]'>
                     <View className='w-[80%] justify-between items-center flex-row'>
                         <Text className='font-lufgaBold text-left text-white text-[20px]'>
@@ -226,10 +311,6 @@ const Games = () => {
                             isLoading={!(startDate === null || startDate === undefined)}
                             handlePress={() => {
                                 setModalData({ isModalVisible: true })
-                                //TODO: otvori modal da rijesi kviz, kad se rijesi kviz zatvara se modal i resetira 
-                                // se timer za +8h te se doda counter za uspjesno rijesen kviz u tom difficultiju, 
-                                // ako se faila stavlja se na nula, ako se pogodi ide +1, ako je na 3 resetiraj na 0 i 
-                                // digni level
                             }}
                         />
                     </View>
@@ -259,16 +340,28 @@ const Games = () => {
                     >
                         <View className='flex-1 justify-center items-center bg-black/50'>
                             <View className='bg-secondaryUtils w-[90%] p-5 rounded-3xl'>
-                                <Text>Testing</Text>
-
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        setModalData({ isModalVisible: false })
-                                    }}
-                                    className='mt-5 bg-secondaryUtils p-2 rounded-lg'
+                                <Text
+                                    className='text-white font-lufgaBold justify-center items-center text-center text-[17px] mb-3'
                                 >
-                                    <Text className='text-center font-lufgaBold text-white'>Close</Text>
-                                </TouchableOpacity>
+                                    {quiz.question}
+                                </Text>
+
+                                <View className='w-full justify-center items-center'>
+                                    {quiz.answers.length > 0 && quiz.answers !== undefined && quiz.answers.map((answer: any, index: number) => (
+                                        <TouchableOpacity
+                                            key={`button-${index}`}
+                                            className='mt-5 h-[40px] w-[80%] items-center justify-center bg-primary rounded-lg'
+                                            onPress={() => handleSubmitQuiz(answer)}
+                                        >
+                                            <Text 
+                                                key={`button-${index}`}
+                                                className='text-white text-left font-lufgaBold text-[15px]'
+                                            >
+                                                {`${String.fromCharCode(65 + index)}: ${answer}`}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
                             </View>
                         </View>
                     </Modal>
