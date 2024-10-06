@@ -9,7 +9,7 @@ import { icons } from '@/constants'
 import CustomButton from '@/components/custom_button'
 import ChallengeItem from '@/components/challenge_item'
 import Timer from '@/components/hours_timer'
-import { getItem, saveItem } from '@/context/SecureStorage'
+import { deleteItem, getItem, saveItem } from '@/context/SecureStorage'
 import CustomDialog from '@/components/custom_dialog'
 import Loader from '@/components/loader'
 
@@ -31,7 +31,8 @@ const Games = () => {
     const [dialogProps, setDialogProps] = useState({
         title: '',
         description: '',
-        visible: false
+        visible: false,
+        quizFailed: true
     })
 
     const [modalData, setModalData] = useState({
@@ -42,35 +43,7 @@ const Games = () => {
 
     const [startDate, setStartDate] = useState(null as Date | null)
 
-    const [challenges, setChallenges] = useState([
-        {
-            id: 1,
-            name: 'Challenge 1',
-            description: 'Challenge 1',
-            status: 1,
-            currentStatus: 0,
-            points: 50,
-            obtained: false
-        },
-        {
-            id: 2,
-            name: 'Challenge 1',
-            description: 'Challenge 1',
-            status: 10,
-            currentStatus: 0,
-            points: 100,
-            obtained: true
-        },
-        {
-            id: 3,
-            name: 'Challenge 1',
-            description: 'Challenge 1',
-            status: 1,
-            currentStatus: 2,
-            points: 1000,
-            obtained: false
-        }
-    ] as any[])
+    const [challenges, setChallenges] = useState([] as any[])
 
     const getAwards = async (challenge: any) => {
         if (challenge.currentStatus >= challenge.status) {
@@ -94,7 +67,7 @@ const Games = () => {
             if (response.status.toString().startsWith('2')) {
                 // Create a new challenges array with updated challenge
                 const updatedChallenges = challenges.map((ch) => {
-                    if (ch.title === challenge.title) {
+                    if (ch.id === challenge.id) {
                         return { ...ch, obtained: true };
                     }
 
@@ -117,13 +90,15 @@ const Games = () => {
             setDialogProps({
                 title: 'Correct!',
                 description: 'You have successfully answered the question.',
-                visible: true
+                visible: true,
+                quizFailed: false
             })
         } else {
             setDialogProps({
                 title: 'Incorrect!',
                 description: 'You have failed to answer the question.',
-                visible: true
+                visible: true,
+                quizFailed: true
             })
         }
     }
@@ -132,12 +107,15 @@ const Games = () => {
         const fetchData = async () => {
             // Challenge data
             const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/challenges/get-all`, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${getItem('accessToken')}`,
                     'x-refresh-token': getItem('refreshToken') ?? ''
-                }
+                },
+                body: JSON.stringify({
+                    publicKey: getItem('publicKey') ?? ''
+                })
             })
 
             if (response.headers.get('x-access-token')) {
@@ -147,8 +125,44 @@ const Games = () => {
             if (response.status.toString().startsWith('2')) {
                 const data = await response.json()
 
-                console.log(data)
-                //TODO: set challenges
+                // Fetching current challenges status
+                const threeEasy = parseFloat(getItem('currentQuizLevel') ?? '1') === 1 ? 
+                    parseFloat(getItem('currentQuizStreak') ?? '0') : parseFloat(getItem('currentQuizLevel') ?? '1') > 1 ? 3 : 0
+
+                const threeMedium = parseFloat(getItem('currentQuizLevel') ?? '1') === 2 ? 
+                    parseFloat(getItem('currentQuizStreak') ?? '0') : parseFloat(getItem('currentQuizLevel') ?? '1') > 2 ? 3 : 0
+
+                const threeHardAndTen = parseFloat(getItem('currentQuizLevel') ?? '1') === 3 ? 
+                    parseFloat(getItem('currentQuizStreak') ?? '0') : 0
+
+                const currentAccountBalance = parseFloat(getItem('accountBalance') ?? '0')
+                
+                setChallenges(data.map((challenge: any) => {
+                    var answer = {} as any
+
+                    if (challenge.name === 'Get 3 correct easy questions') {
+                        answer.currentStatus = threeEasy
+                    } else if (challenge.name === 'Get 3 correct medium questions') {
+                        answer.currentStatus = threeMedium
+                    } else if (challenge.name === 'Get 3 correct hard questions') {
+                        answer.currentStatus = threeHardAndTen
+                    } else if (challenge.name === 'Get 10 correct hard questions') {
+                        answer.currentStatus = threeHardAndTen
+                    } else if (challenge.name === 'Have 1000$ worth of crypto in the wallet') {
+                        answer.currentStatus = currentAccountBalance
+                    } else {
+                        answer.currentStatus = 0
+                    }
+
+                    answer.id = challenge.id
+                    answer.name = challenge.name
+                    answer.description = challenge.description
+                    answer.status = challenge.status
+                    answer.points = challenge.points
+                    answer.obtained = challenge.obtained
+                    
+                    return answer
+                }))
             } else {
                 console.log(response)
             }
@@ -215,45 +229,50 @@ const Games = () => {
                     visible={dialogProps.visible}
                     showCancel={false}
                     onOkPress={async () => {
-                        const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/points/save`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${getItem('accessToken')}`,
-                                'x-refresh-token': getItem('refreshToken') ?? ''
-                            },
-                            body: JSON.stringify({
-                                publicKey: getItem('publicKey') ?? '',
-                                quizDifficulty: quiz.difficulty,
+                        if (dialogProps.quizFailed) {
+                            await deleteItem('currentQuizLevel')
+                            await deleteItem('currentQuizStreak')
+                        } else {
+                            const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/points/save`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${getItem('accessToken')}`,
+                                    'x-refresh-token': getItem('refreshToken') ?? ''
+                                },
+                                body: JSON.stringify({
+                                    publicKey: getItem('publicKey') ?? '',
+                                    quizDifficulty: quiz.difficulty,
+                                })
                             })
-                        })
-                      
-                        if (response.headers.get('x-access-token')) {
-                            saveItem('accessToken', response.headers.get('x-access-token'))
-                        }
-
-                        if (response.status.toString().startsWith('2')) {
-                            const currentPoints = parseFloat(getItem('points') ?? '0') + (
-                                quiz.difficulty === 'easy' ? 1 : quiz.difficulty === 'medium' ? 2 : 3
-                            )
-                            saveItem('points', currentPoints.toString())
-
-                            const currentLevel = parseFloat(getItem('currentQuizLevel') ?? '1')
-                            const currentStreak = parseFloat(getItem('currentQuizStreak') ?? '0')
-
-                            if (currentStreak + 1 === 3 && currentLevel < 3) {
-                                saveItem('currentQuizLevel', (currentLevel + 1).toString())
-                                saveItem('currentQuizStreak', '0')
-                            } else {
-                                saveItem('currentQuizStreak', (currentStreak + 1).toString())
+                          
+                            if (response.headers.get('x-access-token')) {
+                                saveItem('accessToken', response.headers.get('x-access-token'))
                             }
-
-                            saveItem('nextQuizDate', new Date(new Date().setHours(new Date().getHours() + 8)).toString())
-                            setStartDate(new Date(new Date().setHours(new Date().getHours() + 8)))
+    
+                            if (response.status.toString().startsWith('2')) {
+                                const currentPoints = parseFloat(getItem('points') ?? '0') + (
+                                    quiz.difficulty === 'easy' ? 1 : quiz.difficulty === 'medium' ? 2 : 3
+                                )
+                                saveItem('points', currentPoints.toString())
+    
+                                const currentLevel = parseFloat(getItem('currentQuizLevel') ?? '1')
+                                const currentStreak = parseFloat(getItem('currentQuizStreak') ?? '0')
+    
+                                if (currentStreak + 1 === 3 && currentLevel < 3) {
+                                    saveItem('currentQuizLevel', (currentLevel + 1).toString())
+                                    saveItem('currentQuizStreak', '0')
+                                } else {
+                                    saveItem('currentQuizStreak', (currentStreak + 1).toString())
+                                }
+    
+                                saveItem('nextQuizDate', new Date(new Date().setHours(new Date().getHours() + 8)).toString())
+                                setStartDate(new Date(new Date().setHours(new Date().getHours() + 8)))
+                            }
+    
+                            setDialogProps({ title: '', description: '', visible: false, quizFailed: true })
+                            setModalData({ isModalVisible: false })
                         }
-
-                        setDialogProps({ title: '', description: '', visible: false })
-                        setModalData({ isModalVisible: false })
                     }}
                 />
                 <View className='items-center justify-center mt-10 w-full pb-[100px]'>
@@ -322,7 +341,7 @@ const Games = () => {
                     <View className='w-full space-y-10 mt-10 justify-center items-center'>
                         {challenges.map((challenge, index) => (
                             <ChallengeItem
-                                key={index}
+                                key={challenge.id}
                                 title={challenge.description}
                                 status={challenge.currentStatus}
                                 requiredStatus={challenge.status}
@@ -347,7 +366,7 @@ const Games = () => {
                                 </Text>
 
                                 <View className='w-full justify-center items-center'>
-                                    {quiz.answers.length > 0 && quiz.answers !== undefined && quiz.answers.map((answer: any, index: number) => (
+                                    {quiz.answers !== undefined && quiz.answers.length > 0 && quiz.answers.map((answer: any, index: number) => (
                                         <TouchableOpacity
                                             key={`button-${index}`}
                                             className='mt-5 h-[40px] w-[80%] items-center justify-center bg-primary rounded-lg'

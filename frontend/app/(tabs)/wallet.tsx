@@ -16,7 +16,7 @@ import {
 import CustomDialog from '@/components/custom_dialog'
 import WalletHeader from '@/components/wallet_header'
 import WalletBody from '@/components/wallet_body'
-import { getItem } from '@/context/SecureStorage'
+import { getItem, saveItem } from '@/context/SecureStorage'
 import SkeletonLoader from '@/components/skeleton_loader'
 
 const Wallet = () => {
@@ -70,6 +70,7 @@ const Wallet = () => {
 
         if (walletInfoResult !== null && walletInfoResult !== undefined) {
             setWalletInfo(walletInfoResult)
+            saveItem('accountBalance', walletInfoResult.balance)
         }
 
         if (transactionHistoryResult !== null && transactionHistoryResult !== undefined) {

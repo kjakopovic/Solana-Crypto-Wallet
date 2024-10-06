@@ -18,6 +18,6 @@ const router = Router();
  *       500:
  *         description: Error getting challenges
  */
-router.get('/get-all', authMiddleware, ChallengeController.getAllChallenges);
+router.post('/get-all', authMiddleware, ChallengeController.getAllChallenges);
 
 export default router;
