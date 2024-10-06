@@ -187,8 +187,16 @@ class UserModel {
     async getAllPointsLeaderboard(): Promise<UserPointsLeaderboard[] | null> {
         logger.info('Getting points leaderboard', { className });
 
+        const sqlQuery = `
+            SELECT CAST(DENSE_RANK() OVER (ORDER BY points DESC) AS INT) AS placement, 
+                username, imageUrl, publicKey, 
+                CAST(points AS INT) AS points
+            FROM users;
+        `;
+
+
         try{
-            const result = await this.db.request().execute('getPointsLeaderboard');
+            const result = await this.db.request().query(sqlQuery);
             const leaderboard: UserPointsLeaderboard[] = result.recordset;
             logger.info('Points leaderboard fetched successfully', { className });
 
@@ -202,10 +210,21 @@ class UserModel {
     async getAmountOnLeaderboard(rank: number): Promise<UserPointsLeaderboard[] | null> {
         logger.info(`Getting ${rank} amount of users on leaderboard`, { className });
 
+        const sqlQuery = `
+        WITH rankedUsers AS (
+            SELECT CAST(DENSE_RANK() OVER (ORDER BY points DESC) AS INT) AS placement, 
+                username, imageUrl, publicKey, 
+                CAST(points AS INT) AS points
+            FROM users
+        )
+        SELECT * FROM rankedUsers
+        WHERE placement <= @rank;
+        `;
+
         try{
             const result = await this.db.request()
                 .input('rank', rank)
-                .execute('getTopRankedUsers');
+                .query(sqlQuery);
             const leaderboard: UserPointsLeaderboard[] = result.recordset;
             logger.info('Fetched users from leaderboard successfully', { className });
 

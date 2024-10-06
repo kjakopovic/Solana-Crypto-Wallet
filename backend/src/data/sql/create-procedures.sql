@@ -17,7 +17,6 @@ BEGIN
 				publicKey,
 				CAST(points AS INT) AS points
 			FROM users
-			WHERE points IS NOT NULL
 		)
 		SELECT *
 		FROM rankedUsers
@@ -27,19 +26,18 @@ BEGIN
 END;
 
 -- Procedure that returns the leaderboard of all users by points
-IF OBJECT_ID(N'dbo.GetPointsLeaderboard', N'P') IS NULL
+IF OBJECT_ID(N'dbo.getPointsLeaderboard', N'P') IS NULL
 BEGIN
 	EXECUTE('
-		CREATE PROCEDURE GetPointsLeaderboard
+		CREATE PROCEDURE getPointsLeaderboard
 		AS
 		BEGIN
-			SELECT CAST(DENSE_RANK() OVER (ORDER BY points DESC, username ASC) AS INT) AS placemenet,
+			SELECT CAST(DENSE_RANK() OVER (ORDER BY points DESC, username ASC) AS INT) AS placement,
 				username,
 				imageUrl,
 				publicKey,
 				CAST(points AS INT) AS points
-			FROM USERS
-			WHERE points IS NOT NULL;
+			FROM USERS;
 		END;
 	')
 END;

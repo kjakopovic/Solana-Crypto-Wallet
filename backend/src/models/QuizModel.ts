@@ -54,7 +54,7 @@ export class QuizModel {
             const result = await this.db.request()
                 .input('difficulty', difficulty)
                 .input('number', randomNumber)
-                .execute('fetchRandomQuizByDifficulty');
+                .query(sqlQuery);
 
             if (result.recordset.length === 0) {
                 logger.error('No quiz questions found by difficulty', { className });
