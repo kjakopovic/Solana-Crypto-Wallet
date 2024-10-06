@@ -1,7 +1,7 @@
 # Solana-Crypto-Wallet
 
 ## How to setup project
-Backend is deployed and configured, but the mobile app needs to be set up in expo go on your mobile phone (preferably android).
+Frontend needs to be set up in expo go on your mobile phone (preferably android).
 If this tutorial is not clear to you here is the video that explains how to setup development build:
 https://egghead.io/lessons/react-native-create-a-development-build-for-android-with-eas
   1. Install expo go on your device
@@ -18,5 +18,12 @@ https://egghead.io/lessons/react-native-create-a-development-build-for-android-w
   12. choose no for the emulator setup, and then go to your phone and scan the QR code
   13. while the APK is downloading on your phone, run in your CLI: npx expo start -c
   14. After the APK is downloaded and installed open your app
+
+Backend setup
+  1. in the main directory type docker-compose up -d (while having the docker hub on)
+  2. leave only the mssql instance running
+  3. to go ./backend
+  4. run: npm run dev
+  5. backend should run now and is ready for use
 
 ## Functionality
