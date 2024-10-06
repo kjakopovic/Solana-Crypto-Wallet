@@ -1,6 +1,7 @@
 USE walletDB;
 
 -- populate users table
+-- passwords are hashed, this is just dummy data, so no need to worry about security about the passwords
 INSERT INTO users (id, username, imageUrl, password, publicKey, joinedAt, refreshToken, points)
 VALUES
     ('user1-id', 'JohnDoe', 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png', 'password123', 'publicKey1', GETDATE(), NULL, 100),
