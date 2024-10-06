@@ -71,9 +71,12 @@ router.post('/register', UserController.createUser);
  *               username:
  *                 type: string
  *                 required: false
- *               newPassword:
+ *               password:
  *                 type: string
  *                 required: false
+ *               imageUrl:
+ *                  type: string
+ *                  required: false
  *     responses:
  *       200:
  *          description: User updated successfully

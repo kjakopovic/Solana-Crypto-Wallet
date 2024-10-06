@@ -3,6 +3,7 @@
 import { ConnectionPool } from 'mssql';
 import pool from '../config/database/Database';
 import logger from '../config/Logger';
+import bcrypt from 'bcryptjs';
 
 const className = 'UserModel';
 
