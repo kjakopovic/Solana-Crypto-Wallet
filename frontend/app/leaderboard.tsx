@@ -1,11 +1,13 @@
-import { View, Text, Image } from 'react-native'
+import { View, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
 import React, { useState, useEffect } from 'react'
+
 import PageHeader from '@/components/page_header'
 import LeaderboardPlacing from '@/components/leaderboard_placing'
 import Loader from '@/components/loader'
 import Timer from '@/components/days_timer'
+
 import { getItem, saveItem } from '@/context/SecureStorage'
 
 const Leaderboard = () => {
@@ -63,20 +65,14 @@ const Leaderboard = () => {
                             publicKey: user.publicKey,
                             image: user.imageUrl,
                             points: user.points ?? 0,
-                            placement: user.placement ?? index + 1
+                            placement: index + 1
                         }
                     }))
                 }
 
-                const currentUserData = responseData.find((user: any) => user.publicKey === getItem('publicKey'));
+                const currentUserData = users.find((user: any) => user.publicKey === getItem('publicKey'));
 
-                setCurrentUser({
-                    username: currentUserData.username,
-                    publicKey: currentUserData.publicKey,
-                    image: currentUserData.imageUrl,
-                    points: currentUserData.points ?? 0,
-                    placement: currentUserData.placement
-                })
+                setCurrentUser(currentUserData)
             }
 
             setStartDate(getLastMomentOfMonth())
