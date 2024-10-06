@@ -28,10 +28,10 @@ app.use('/api/v1/points', PointsRoutes);
 app.use('/api/v1/challenges', ChallengeRoutes);
 app.use('/api/v1/support-question', SupportQuestionRoutes);
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+/*app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
-});
+});*/
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
