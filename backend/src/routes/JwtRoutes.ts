@@ -5,8 +5,6 @@ import JwtController from '../controllers/JwtController';
 
 const router = Router();
 
-// TODO: Implement middleware to check if the user is logged in
-// TODO: Implement CORS allowed origin on all routes
 /**
  * @swagger
  * /api/v1/jwt/refresh-access:
