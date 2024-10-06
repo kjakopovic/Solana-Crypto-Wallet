@@ -31,11 +31,22 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
         const resultChallenge = await pool.request().query(`SELECT COUNT(*) AS count FROM challenges`);
         const countChallenge = resultChallenge.recordset[0].count;
 
-        // This is currently hardcoded to 12 because the challenge Excel file has 12 challenges
+        // This is currently hardcoded to 6 because the challenge Excel file has 6 challenges
         // If number of challenges gets updated in the Excel file, this number should be updated
-        if(countChallenge < 12){
+        if(countChallenge < 6){
             logger.info('Populating challenges table', { className });
             await populateChallengesTable(pool);
+        }
+
+        const dummyDataSQLPath = path.join(__dirname, '../../data/sql/dummy-data.sql');
+        const dummyDataSQL = fs.readFileSync(dummyDataSQLPath, 'utf-8');
+        await pool.request().query(dummyDataSQL);
+
+        const numberOfUsers = await pool.request().query(`SELECT COUNT(*) AS count FROM users`);
+        const numberOfSupportQuestions = await pool.request().query(`SELECT COUNT(*) AS count FROM supportQuestions`);
+
+        if(numberOfUsers.recordset[0].count < 3 || numberOfSupportQuestions.recordset[0].count < 3){
+            logger.error('Failed to insert dummy data, but continuing with initialization', { className });
         }
 
         logger.info('Database initialized successfully', { className });

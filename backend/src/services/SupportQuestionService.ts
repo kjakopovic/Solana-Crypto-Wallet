@@ -8,7 +8,7 @@ const className = "SupportQuestionService";
 
 class SupportQuestionService{
 
-    async createSupportQuestion(publicKey: string, question: string): Promise<void>{
+    async createSupportQuestion(publicKey: string, title: string, description: string): Promise<void>{
         logger.info("Called createSupportQuestion method", {className});
 
         try{
@@ -16,7 +16,7 @@ class SupportQuestionService{
             if(!user){
                 throw new Error("User not found");
             }
-            await SupportQuestionModel.createSupportQuestion(user.id, publicKey, question);
+            await SupportQuestionModel.createSupportQuestion(user.id, publicKey, title, description);
         }catch (err){
             logger.error('Error creating support question', { error: err, className });
             throw err;
@@ -38,7 +38,26 @@ class SupportQuestionService{
         logger.info("Called getSupportQuestionByField method", {className});
 
         try{
-            return await SupportQuestionModel.fetchSupportQuestionByField(field, value);
+            const responses = await SupportQuestionModel.fetchSupportQuestionByField(field, value);
+
+            const result = await Promise.all(responses.map(async (response: any) => {
+                const user = await UserModel.findUserByField("id", response.userId);
+                if (!user) {
+                    logger.error('User not found', { className });
+                    throw new Error("User not found");
+                }
+
+                return {
+                    title: response.title,
+                    description: response.description,
+                    answer: response.answer,
+                    user: {
+                        imageUrl: user.imageUrl
+                    }
+                };
+            }));
+
+            return result;
         }catch (err){
             logger.error('Error getting support question', { error: err, className });
             throw err;
