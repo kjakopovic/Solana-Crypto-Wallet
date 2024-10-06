@@ -39,6 +39,13 @@ const Settings = () => {
       await deleteItem('refreshToken')
       await deleteItem('accessToken')
       await deleteItem('isUserFound')
+      await deleteItem('imageUrl')
+      await deleteItem('username')
+      await deleteItem('isNFTProfile')
+      await deleteItem('points')
+      await deleteItem('currentQuizLevel')
+      await deleteItem('currentQuizStreak')
+      await deleteItem('accountBalance')
 
       if (router.canDismiss()) {
         router.dismissAll()

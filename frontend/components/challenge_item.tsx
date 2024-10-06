@@ -18,31 +18,27 @@ const ChallengeItem: React.FC<ChallengeItemProps> = ({ status, requiredStatus, t
             disabled={obtained || status < requiredStatus}
         >
             <View className='justify-center space-y-2'>
-                <Text className='font-lufgaBold text-left text-white text-[15px]'>
-                    {title}
-                </Text>
+                <View className='flex-row w-full justify-between items-center'>
+                    <Text className='font-lufgaBold text-left text-white text-[15px]'>
+                        {title}
+                    </Text>
 
-                <Text className='font-lufgaMedium text-left text-white text-[12px]'>
-                    {`Status: ${status} / ${requiredStatus}`}
-                </Text>
-            </View>
+                    {status >= requiredStatus && !obtained && (
+                        <Text className='font-lufgaBold text-left text-white text-[13px]'>
+                            Redeem
+                        </Text>
+                    )}
+                </View>
 
-            {status >= requiredStatus && !obtained && (
-                <View className='justify-center h-full'>
-                    <Text className='font-lufgaBold text-left text-white text-[13px]'>
-                        Click to{'\n'}Redeem
+                <View className='flex-row w-full justify-between items-center'>
+                    <Text className='font-lufgaMedium text-left text-white text-[12px]'>
+                        {`Status: ${status} / ${requiredStatus}`}
+                    </Text>
+
+                    <Text className='font-lufgaMedium text-left text-white text-[12px]'>
+                        {`${reward}`}
                     </Text>
                 </View>
-            )}
-
-            <View className='justify-center space-y-2'>
-                <Text className='font-lufgaBold text-left text-white text-[13px]'>
-                    Reward:
-                </Text>
-
-                <Text className='font-lufgaMedium text-left text-white text-[12px]'>
-                    {`${reward}`}
-                </Text>
             </View>
         </TouchableOpacity>
     )
