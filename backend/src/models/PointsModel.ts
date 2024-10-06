@@ -1,13 +1,13 @@
 // src/models/PointsModel.ts
 
-import { ConnectionPool } from 'mssql';
+import { Pool } from 'pg';
 import pool from '../config/database/Database';
 import logger from '../config/Logger';
 
 const className = 'PointsModel';
 
 class PointsModel {
-    private db: ConnectionPool;
+    private db: Pool;
 
     constructor() {
         this.db = pool;
@@ -17,15 +17,11 @@ class PointsModel {
         logger.info(`Saving ${points} points for user: ` + userId, { className });
         const sqlQuery = `
             INSERT INTO points (userId, challengeId, points)
-            VALUES (@userId, @challengeId, @points);
+            VALUES ($1, $2, $3);
         `;
 
         try{
-            await this.db.request()
-                .input('userId', userId)
-                .input('challengeId', challengeId)
-                .input('points', points)
-                .query(sqlQuery);
+            await this.db.query(sqlQuery, [userId, challengeId, points]);
 
             logger.info('Points saved successfully', { className });
             console.log(`Points saved successfully for user: ${userId}`);
@@ -40,15 +36,11 @@ class PointsModel {
         logger.info(`Saving ${points} points for user: ` + userId, { className });
         const sqlQuery = `
             INSERT INTO points (userId, quizDifficulty, points)
-            VALUES (@userId, @quizDifficulty, @points);
+            VALUES ($1, $2, $3);
         `;
 
         try {
-            await this.db.request()
-                .input('userId', userId)
-                .input('quizDifficulty', quizDifficulty)
-                .input('points', points)
-                .query(sqlQuery);
+            await this.db.query(sqlQuery, [userId, quizDifficulty, points]);
 
             logger.info('Points saved successfully', {className});
             console.log(`Points saved successfully for user: ${userId}`);
@@ -62,17 +54,14 @@ class PointsModel {
         logger.info('Finding points by userId and challengeId', { className });
         const sqlQuery = `
             SELECT * FROM points
-            WHERE userId = @userId AND challengeId = @challengeId;
+            WHERE userId = $1 AND challengeId = $2;
         `;
 
         try {
-            const result = await this.db.request()
-                .input('userId', userId)
-                .input('challengeId', challengeId)
-                .query(sqlQuery);
+            const result = await this.db.query(sqlQuery, [userId, challengeId]);
 
             logger.info('Points found', { className });
-            return result.recordset[0];
+            return result.rows[0];
         } catch (err) {
             logger.error('Error finding points: ' + err, { error: err, className });
             throw err;

@@ -2,12 +2,12 @@
 
 import logger from '../config/Logger';
 import pool from '../config/database/Database';
-import { ConnectionPool } from 'mssql';
+import { Pool } from 'pg';
 
 const className = 'SupportQuestionModel';
 
 class SupportQuestionModel{
-    private db: ConnectionPool;
+    private db: Pool;
 
     constructor() {
         this.db = pool;
@@ -18,15 +18,11 @@ class SupportQuestionModel{
         logger.info("Called createSupportQuestion method", {className});
         const sqlQuery = `
             INSERT INTO supportQuestions (userId, title, description)
-            VALUES (@userId, @title, @description);
+            VALUES ($1, $2, $3);
         `;
 
         try{
-            await this.db.request()
-                .input('userId', userId)
-                .input('title', title)
-                .input('description', description)
-                .query(sqlQuery);
+            await this.db.query(sqlQuery, [userId, title, description]);
 
             logger.info('Question created and saved successfully', {className});
             console.log('Question created and saved successfully');
@@ -41,16 +37,13 @@ class SupportQuestionModel{
         logger.info("Called answerSupportQuestion method", {className});
         const sqlQuery = `
             UPDATE supportQuestions
-            SET answer = @answer
-            WHERE id = @questionId;
+            SET answer = $1, answered = 1
+            WHERE id = $2;
         `;
 
+
         try{
-            await this.db.request()
-                .input('answer', answer)
-                .input('questionId', questionId)
-                .input('answered', 1)
-                .query(sqlQuery);
+            await this.db.query(sqlQuery, [answer, questionId]);
 
             logger.info('Question answered successfully', {className});
             console.log('Question answered successfully');
@@ -64,16 +57,14 @@ class SupportQuestionModel{
     public async fetchSupportQuestionByField(field: string, value: string): Promise<any>{
         logger.info("Called fetchSupportQuestionByField method", {className});
         const sqlQuery = `
-            SELECT * FROM supportQuestions WHERE ${field} = @value;
+            SELECT * FROM supportQuestions WHERE ${field} = $1;
         `;
 
         try{
-            const result = await this.db.request()
-                .input('value', value)
-                .query(sqlQuery);
+            const result = await this.db.query(sqlQuery, [value]);
 
             logger.info('Support question fetched successfully', {className});
-            return result.recordset;
+            return result.rows;
         }catch (err){
             logger.error('Error fetching support question', { error: err, className });
             throw err;
@@ -87,15 +78,14 @@ class SupportQuestionModel{
         `;
 
         try{
-            const result = await this.db.request().query(sqlQuery);
+            const result = await this.db.query(sqlQuery);
             logger.info('Support questions fetched successfully', {className});
-            return result.recordset;
+            return result.rows;
         }catch (err){
             logger.error('Error fetching support questions', { error: err, className });
             throw err;
         }
     }
-
 }
 
 export default new SupportQuestionModel();

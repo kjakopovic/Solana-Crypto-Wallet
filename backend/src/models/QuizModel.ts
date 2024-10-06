@@ -1,6 +1,6 @@
 // src/models/QuizModel.ts
 
-import { ConnectionPool } from 'mssql';
+import { Pool } from 'pg';
 import pool from '../config/database/Database';
 import logger from '../config/Logger';
 
@@ -18,7 +18,7 @@ export interface Quiz{
 }
 
 export class QuizModel {
-    private db: ConnectionPool;
+    private db: Pool;
 
     constructor() {
         this.db = pool;
@@ -26,41 +26,41 @@ export class QuizModel {
 
     async fetchQuizByDifficulty(difficulty: string): Promise<Quiz | null> {
         logger.info('Getting quiz question by difficulty: ' + difficulty, { className });
+
+        // Query to get a random quiz question by difficulty
         const sqlQuery = `
-            SELECT id, question, difficulty, correctAnswer, option2, option3, option4 
+            SELECT id, question, difficulty, correctAnswer, option2, option3, option4
             FROM (
                 SELECT ROW_NUMBER() OVER(PARTITION BY difficulty ORDER BY difficulty ASC) AS Number, *
                 FROM quizzes
-                WHERE difficulty = @difficulty
+                WHERE difficulty = $1
                 ) AS subquery
-            WHERE Number = @number;
+            WHERE Number = $2;
         `;
+
+        // Query to get the count of quiz questions by difficulty
         const countSqlQuery = `
-            SELECT COUNT(*) AS count FROM quizzes WHERE difficulty = @difficulty;
+            SELECT COUNT(*) AS count FROM quizzes WHERE difficulty = $1;
         `;
 
         try {
-            const count = await this.db.request()
-                .input('difficulty', difficulty)
-                .query(countSqlQuery);
+            const countResult = await this.db.query(countSqlQuery, [difficulty]);
 
-            if (count.recordset.length === 0) {
+
+            if (countResult.rows.length === 0) {
                 logger.error('No quiz questions found by difficulty', { className });
                 return null;
             }
 
-            const randomNumber = Math.floor(Math.random() * count.recordset[0].count) + 1;
+            const randomNumber = Math.floor(Math.random() * countResult.rows[0].count) + 1;
 
-            const result = await this.db.request()
-                .input('difficulty', difficulty)
-                .input('number', randomNumber)
-                .query(sqlQuery);
+            const result = await this.db.query(sqlQuery, [difficulty, randomNumber]);
 
-            if (result.recordset.length === 0) {
+            if (result.rows.length === 0) {
                 logger.error('No quiz questions found by difficulty', { className });
                 return null;
             }
-            const quiz = result.recordset[0];
+            const quiz = result.rows[0];
 
             logger.info('Random quiz chosen. Selected question id: ' + quiz.id, { className });
             logger.info('Shuffling quiz answers', { className });
@@ -97,7 +97,6 @@ export class QuizModel {
             throw err;
         }
     }
-
 }
 
 export default new QuizModel();

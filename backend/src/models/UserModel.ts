@@ -1,9 +1,8 @@
 // src/models/UserModel.ts
 
-import { ConnectionPool } from 'mssql';
+import { Pool } from 'pg';
 import pool from '../config/database/Database';
 import logger from '../config/Logger';
-import bcrypt from 'bcryptjs';
 
 const className = 'UserModel';
 
@@ -27,7 +26,7 @@ interface UserPointsLeaderboard{
 }
 
 class UserModel {
-    private db: ConnectionPool;
+    private db: Pool;
 
     constructor() {
         this.db = pool;
@@ -40,23 +39,13 @@ class UserModel {
         // Query to insert a new user into the users table
         const sqlQuery = `
             INSERT INTO users (id, username, imageUrl, password, publicKey, refreshToken)
-            VALUES (@id, @username, @imageUrl, @password, @publicKey, @refreshToken);
-            `;
+            VALUES ($1, $2, $3, $4, $5, $6);
+        `;
 
         try {
-
-            await this.db.request()
-                .input('id', id)
-                .input('username', username)
-                .input('imageUrl', imageUrl)
-                .input('password', hashedPassword)
-                .input('publicKey', publicKey)
-                .input('refreshToken', refreshToken)
-                .query(sqlQuery);
-
+            await this.db.query(sqlQuery, [id, username, imageUrl, hashedPassword, publicKey, refreshToken]);
             logger.info('User created successfully', { className });
             console.log(`User ${username} created successfully.`);
-
         } catch (err) {
             logger.error('Error creating user', { error: err, className });
             throw err;
@@ -67,22 +56,17 @@ class UserModel {
     async updateUser(publicKey: string, updates: Partial<User>): Promise<void> {
         logger.info('Updating user information', { className });
 
-        const updateFields = Object.keys(updates).map(field => `${field} = @${field}`).join(', ');
-        const request = this.db.request().input('publicKey', publicKey);
+        const updateFields = Object.keys(updates).map((field, index) => `${field} = $${index + 2}`).join(', ');
+        const values = [publicKey, ...Object.values(updates)];
 
-        Object.entries(updates).forEach(([key, value]) => {
-            request.input(key, value);
-        });
-
-        // Query to update user information for a specific field in the users table of a given user
         const sqlQuery = `
             UPDATE users
             SET ${updateFields}
-            WHERE publicKey = @publicKey;
+            WHERE publicKey = $1;
         `;
 
         try{
-            await request.query(sqlQuery);
+            await this.db.query(sqlQuery, values);
             logger.info('User information updated successfully', { className });
         }catch(err){
             logger.error('Error updating user information: ' + err, { error: err, className });
@@ -94,16 +78,21 @@ class UserModel {
     async findUserByField(field: string, value: string): Promise<User | null> {
         logger.info(`Fetching user by ${field}`, { className });
 
+        const validFields = ['id', 'username', 'publicKey', 'refreshToken', 'points', 'imageUrl'];
+
+        if(!validFields.includes(field)){
+            logger.error(`Invalid field name: ${field}`, { className });
+            throw new Error('Invalid field name');
+        }
+
         // Query to fetch a user by a specific field in the users table
-        const sqlQuery = `SELECT * FROM users WHERE ${field} = @${field}`;
+        const sqlQuery = `SELECT * FROM users WHERE ${field} = $1`;
 
         try {
-            const result = await this.db.request()
-                .input(field, value)
-                .query(sqlQuery);
+            const result = await this.db.query(sqlQuery, [value]);
 
-            if (result.recordset.length > 0) {
-                const user = result.recordset[0];
+            if (result.rows.length > 0) {
+                const user = result.rows[0];
                 logger.info('User fetched successfully, returning json with information', { className });
                 return {
                     id: user.id,
@@ -133,13 +122,11 @@ class UserModel {
         const sqlQuery = `
             UPDATE users
             SET refreshToken = null
-            WHERE publicKey = @publicKey;
+            WHERE publicKey = $1;
         `;
 
         try{
-            await this.db.request()
-                .input('publicKey', publicKey)
-                .query(sqlQuery);
+            await this.db.query(sqlQuery, [publicKey]);
             logger.info('Refresh token deleted successfully', { className });
         }catch(err){
             logger.error('Error deleting refresh token', { error: err, className });
@@ -155,15 +142,12 @@ class UserModel {
         // Query to update the points for a specific user in the users table
         const sqlQuery = `
             UPDATE users
-            SET points = ISNULL(points, 0) + @points
-            WHERE id = @userId;
+            SET points = COALESCE(points, 0) + $1
+            WHERE id = $2;
         `;
 
         try{
-            await this.db.request()
-                .input('userId', userId)
-                .input('points', points)
-                .query(sqlQuery);
+            await this.db.query(sqlQuery, [points, userId]);
             logger.info('User points updated successfully', { className });
         }catch(err){
             logger.error('Error updating user points: ' + err, { error: err, className });
@@ -188,16 +172,15 @@ class UserModel {
         logger.info('Getting points leaderboard', { className });
 
         const sqlQuery = `
-            SELECT CAST(RANK() OVER (ORDER BY points DESC) AS INT) AS placement, 
-                username, imageUrl, publicKey, 
+            SELECT CAST(RANK() OVER (ORDER BY points DESC) AS INT) AS placement,
+                username, imageUrl, publicKey,
                 CAST(points AS INT) AS points
             FROM users;
         `;
 
-
         try{
-            const result = await this.db.request().query(sqlQuery);
-            const leaderboard: UserPointsLeaderboard[] = result.recordset;
+            const result = await this.db.query(sqlQuery);
+            const leaderboard: UserPointsLeaderboard[] = result.rows;
             logger.info('Points leaderboard fetched successfully', { className });
 
             return leaderboard;
@@ -212,20 +195,18 @@ class UserModel {
 
         const sqlQuery = `
         WITH rankedUsers AS (
-            SELECT CAST(RANK() OVER (ORDER BY points DESC) AS INT) AS placement, 
-                username, imageUrl, publicKey, 
+            SELECT CAST(RANK() OVER (ORDER BY points DESC) AS INT) AS placement,
+                username, imageUrl, publicKey,
                 CAST(points AS INT) AS points
             FROM users
         )
         SELECT * FROM rankedUsers
-        WHERE placement <= @rank;
+        WHERE placement <= $1;
         `;
 
         try{
-            const result = await this.db.request()
-                .input('rank', rank)
-                .query(sqlQuery);
-            const leaderboard: UserPointsLeaderboard[] = result.recordset;
+            const result = await this.db.query(sqlQuery, [rank]);
+            const leaderboard: UserPointsLeaderboard[] = result.rows;
             logger.info('Fetched users from leaderboard successfully', { className });
 
             return leaderboard;
@@ -234,7 +215,6 @@ class UserModel {
             throw err;
         }
     }
-
 }
 
 export default new UserModel();

@@ -1,150 +1,104 @@
-USE master;
-GO
+-- Enable the dblink extension
+CREATE EXTENSION IF NOT EXISTS dblink;
 
--- check if login already exists
-IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = 'dbAdmin')
+-- Check if the database already exists
+DO $$
 BEGIN
-    -- create login
-    PRINT 'Creating login dbAdmin';
-    CREATE LOGIN dbAdmin WITH PASSWORD = 'Password123!';
-END
-ELSE
-BEGIN
-    PRINT 'Login dbAdmin already exists';
-END;
-GO
+    IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'walletdb') THEN
+        RAISE NOTICE 'Creating database walletdb';
+        PERFORM dblink_exec('dbname=postgres', 'CREATE DATABASE walletdb');
+    ELSE
+        RAISE NOTICE 'Database walletdb already exists';
+    END IF;
+END $$;
 
--- check if the database already exists
-IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'walletDB')
-BEGIN
-   -- create database
-    PRINT 'Creating database walletDB';
-    CREATE DATABASE walletDB;
-END
-ELSE
-BEGIN
-    PRINT 'Database walletDB already exists';
-END;
-GO
-
--- use the database
-USE walletDB;
-GO
-
--- check if the user already exists
-IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = 'dbAdmin')
-BEGIN
-    -- create user
-    PRINT 'Creating user dbAdmin';
-    CREATE USER dbAdmin FOR LOGIN dbAdmin;
-END
-ELSE
-BEGIN
-    PRINT 'User dbAdmin already exists';
-END;
-GO
-
--- check if the user is a member of the db_owner role
-IF NOT EXISTS (SELECT 1
-               FROM sys.database_role_members drm
-                        JOIN sys.database_principals dp ON dp.principal_id = drm.member_principal_id
-                        JOIN sys.database_principals dp2 ON dp2.principal_id = drm.role_principal_id
-               WHERE dp.name = 'dbAdmin' AND dp2.name = 'db_owner')
-BEGIN
-    -- add user to db_owner role
-    PRINT 'Adding user dbAdmin to db_owner role';
-    ALTER ROLE db_owner ADD MEMBER dbAdmin;
-END
-ELSE
-BEGIN
-    PRINT 'User dbAdmin is already a member of the db_owner role';
-END;
-GO
-
-PRINT 'Making sure that tables exist';
+-- Connect to the database
+\c walletdb
 
 -- Create users table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'users')
+DO $$
 BEGIN
-    CREATE TABLE users (
-        id NVARCHAR(255) PRIMARY KEY,
-        username NVARCHAR(50) NOT NULL,
-        imageUrl NVARCHAR(MAX) NOT NULL,
-        password NVARCHAR(255) NOT NULL,
-        publicKey NVARCHAR(255),
-        joinedAt DATETIME DEFAULT GETDATE(),
-        refreshToken NVARCHAR(MAX),
-        points BIGINT DEFAULT 0
-    );
-
-    PRINT 'Users table created';
-END;
-GO
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users') THEN
+        CREATE TABLE users (
+            id VARCHAR(255) PRIMARY KEY,
+            username VARCHAR(50) NOT NULL,
+            imageUrl TEXT NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            publicKey VARCHAR(255),
+            joinedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            refreshToken TEXT,
+            points BIGINT DEFAULT 0
+        );
+        RAISE NOTICE 'Users table created';
+    END IF;
+END $$;
 
 -- Create quizzes table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'quizzes')
+DO $$
 BEGIN
-    CREATE TABLE quizzes (
-        id INT PRIMARY KEY NOT NULL,
-        question NVARCHAR(MAX) NOT NULL,
-        difficulty NVARCHAR(50) NOT NULL,
-        correctAnswer NVARCHAR(MAX) NOT NULL,
-        option2 NVARCHAR(MAX) NOT NULL,
-        option3 NVARCHAR(MAX) NOT NULL,
-        option4 NVARCHAR(MAX) NOT NULL
-    );
-
-    PRINT 'Quizzes table created';
-END;
-GO
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'quizzes') THEN
+        CREATE TABLE quizzes (
+            id SERIAL PRIMARY KEY,
+            question TEXT NOT NULL,
+            difficulty VARCHAR(50) NOT NULL,
+            correctAnswer TEXT NOT NULL,
+            option2 TEXT NOT NULL,
+            option3 TEXT NOT NULL,
+            option4 TEXT NOT NULL
+        );
+        RAISE NOTICE 'Quizzes table created';
+    END IF;
+END $$;
 
 -- Create challenges table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'challenges')
+DO $$
 BEGIN
-    CREATE TABLE challenges (
-        id INT PRIMARY KEY,
-        name NVARCHAR(255) NOT NULL,
-        description NVARCHAR(MAX) NOT NULL,
-        points INT NOT NULL,
-        status INT
-    );
-
-    PRINT 'Challenges table created';
-END;
-GO
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'challenges') THEN
+        CREATE TABLE challenges (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            points INT NOT NULL,
+            status INT
+        );
+        RAISE NOTICE 'Challenges table created';
+    END IF;
+END $$;
 
 -- Create points table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'points')
+DO $$
 BEGIN
-    CREATE TABLE points(
-        id INT PRIMARY KEY IDENTITY(1,1),
-        userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
-        timestamp DATETIME DEFAULT GETDATE(),
-        challengeId INT FOREIGN KEY REFERENCES challenges(id) DEFAULT NULL,
-        quizDifficulty NVARCHAR(50) DEFAULT NULL,
-        points INT NOT NULL
-    );
-
-    PRINT 'Points table created';
-END;
-GO
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'points') THEN
+        CREATE TABLE points (
+            id SERIAL PRIMARY KEY,
+            userId VARCHAR(255) REFERENCES users(id),
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            challengeId INT REFERENCES challenges(id) DEFAULT NULL,
+            quizDifficulty VARCHAR(50) DEFAULT NULL,
+            points INT NOT NULL
+        );
+        RAISE NOTICE 'Points table created';
+    END IF;
+END $$;
 
 -- Create supportQuestions table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'supportQuestions')
+DO $$
 BEGIN
-    CREATE TABLE supportQuestions (
-        id INT PRIMARY KEY IDENTITY(1,1),
-        timestamp DATETIME DEFAULT GETDATE(),
-        userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
-        title NVARCHAR(255) NOT NULL,
-        description NVARCHAR(MAX) NOT NULL,
-        answered BIT DEFAULT 0,
-        answer NVARCHAR(MAX) DEFAULT NULL
-    );
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'supportQuestions') THEN
+        CREATE TABLE supportQuestions (
+            id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            userId VARCHAR(255) REFERENCES users(id),
+            title VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            answered BOOLEAN DEFAULT FALSE,
+            answer TEXT DEFAULT NULL
+        );
+        RAISE NOTICE 'SupportQuestions table created';
+    END IF;
+END $$;
 
-    PRINT 'SupportQuestions table created';
-END;
-GO
-
-PRINT 'Initialization complete';
-GO
+DO $$
+BEGIN
+    RAISE NOTICE 'Initialization complete';
+END $$;

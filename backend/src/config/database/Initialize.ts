@@ -1,53 +1,53 @@
 // src/config/database/Initialize.ts
 
-import { ConnectionPool } from 'mssql';
 import logger from '../Logger';
 import xlsx from 'xlsx';
 import fs from 'fs';
 import path from  'path';
+import {PoolClient} from "pg";
 
 const className = 'Initialize';
 
-export const initializeDatabase = async (pool: ConnectionPool) => {
+export const initializeDatabase = async (client: PoolClient) => {
     logger.info('Initializing database', { className });
 
     try{
         const createTableSQLPath = path.join(__dirname, '../../data/sql/create-tables.sql');
         const createTableSQL = fs.readFileSync(createTableSQLPath, 'utf-8');
-        await pool.request().query(createTableSQL);
+        await client.query(createTableSQL);
 
-        const resultQuiz = await pool.request().query(`SELECT COUNT(*) AS count FROM quizzes`);
-        const countQuiz = resultQuiz.recordset[0].count;
+        const resultQuiz = await client.query(`SELECT COUNT(*) AS count FROM quizzes`);
+        const countQuiz = resultQuiz.rows[0].count;
 
         logger.info('Checking population of quizzes and challenges tables', { className });
 
         // This is currently hardcoded to 93 because the quiz Excel file has 93 questions
         // If number of questions gets updated in the Excel file, this number should be updated
-        if (countQuiz < 93){
+        if (countQuiz < 93) {
             logger.info('Populating quizzes table', { className });
-            await populateQuizzesTable(pool);
+            await populateQuizzesTable(client);
         }
 
-        const resultChallenge = await pool.request().query(`SELECT COUNT(*) AS count FROM challenges`);
-        const countChallenge = resultChallenge.recordset[0].count;
+        const resultChallenge = await client.query(`SELECT COUNT(*) AS count FROM challenges`);
+        const countChallenge = resultChallenge.rows[0].count;
 
         // This is currently hardcoded to 6 because the challenge Excel file has 6 challenges
         // If number of challenges gets updated in the Excel file, this number should be updated
-        if(countChallenge < 6){
+        if (countChallenge < 6) {
             logger.info('Populating challenges table', { className });
-            await populateChallengesTable(pool);
+            await populateChallengesTable(client);
         }
 
-        const numberOfUsers = await pool.request().query(`SELECT COUNT(*) AS count FROM users`);
-        const numberOfSupportQuestions = await pool.request().query(`SELECT COUNT(*) AS count FROM supportQuestions`);
+        const numberOfUsers = await client.query(`SELECT COUNT(*) AS count FROM users`);
+        const numberOfSupportQuestions = await client.query(`SELECT COUNT(*) AS count FROM supportQuestions`);
 
-        if(numberOfUsers.recordset[0].count < 3 || numberOfSupportQuestions.recordset[0].count < 3){
+        if (numberOfUsers.rows[0].count < 3 || numberOfSupportQuestions.rows[0].count < 3) {
             logger.info('Inserting dummy data', { className });
             const dummyDataSQLPath = path.join(__dirname, '../../data/sql/dummy-data.sql');
             const dummyDataSQL = fs.readFileSync(dummyDataSQLPath, 'utf-8');
-            await pool.request().query(dummyDataSQL);
+            await client.query(dummyDataSQL);
             logger.info('Dummy data inserted successfully', { className });
-        }else{
+        } else {
             logger.info('Dummy data already exists, skipping insertion', { className });
         }
 
@@ -57,7 +57,7 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
     }
 };
 
-const populateQuizzesTable = async (pool: ConnectionPool) => {
+const populateQuizzesTable = async (client: PoolClient) => {
     logger.info('Populating quizzes table', { className });
 
     try{
@@ -70,18 +70,10 @@ const populateQuizzesTable = async (pool: ConnectionPool) => {
 
         for (const row of questions) {
             const [id, question, difficulty, correctAnswer, option2, option3, option4] = row;
-            await pool.request()
-                .input('id', id)
-                .input('question', question)
-                .input('difficulty', difficulty)
-                .input('correctAnswer', correctAnswer)
-                .input('option2', option2)
-                .input('option3', option3)
-                .input('option4', option4)
-                .query(`
-                    INSERT INTO quizzes (id, question, difficulty, correctAnswer, option2, option3, option4)
-                    VALUES (@id, @question, @difficulty, @correctAnswer, @option2, @option3, @option4)
-                `);
+            await client.query(`
+                INSERT INTO quizzes (id, question, difficulty, correctAnswer, option2, option3, option4)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `, [id, question, difficulty, correctAnswer, option2, option3, option4]);
         }
 
         logger.info('Quizzes table populated successfully', {className});
@@ -90,7 +82,7 @@ const populateQuizzesTable = async (pool: ConnectionPool) => {
     }
 }
 
-const populateChallengesTable = async (pool: ConnectionPool) => {
+const populateChallengesTable = async (client: PoolClient) => {
     logger.info('Populating challenges table', { className });
 
     try {
@@ -107,16 +99,10 @@ const populateChallengesTable = async (pool: ConnectionPool) => {
                 logger.warn(`Skipping challenge with missing id: ${JSON.stringify(row)}`, { className });
                 continue;
             }
-            await pool.request()
-                .input('id', id)
-                .input('name', name)
-                .input('description', description)
-                .input('points', points)
-                .input('status', status)
-                .query(`
-                    INSERT INTO challenges (id, name, description, points, status)
-                    VALUES (@id, @name, @description, @points, @status)
-                `);
+            await client.query(`
+                INSERT INTO challenges (id, name, description, points, status)
+                VALUES ($1, $2, $3, $4, $5)
+            `, [id, name, description, points, status]);
         }
 
         logger.info('Challenges table populated successfully', { className });

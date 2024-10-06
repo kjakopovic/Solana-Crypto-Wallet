@@ -1,14 +1,13 @@
 // src/models/ChallengeModel.ts
 
-
-import { ConnectionPool } from 'mssql';
+import { Pool } from 'pg';
 import pool from '../config/database/Database';
 import logger from '../config/Logger';
 
 const className = 'ChallengeModel';
 
 class ChallengeModel {
-    private db: ConnectionPool;
+    private db: Pool;
 
     constructor() {
         this.db = pool;
@@ -21,8 +20,8 @@ class ChallengeModel {
         `;
 
         try {
-            const result = await this.db.request().query(sqlQuery);
-            return result.recordset;
+            const result = await this.db.query(sqlQuery);
+            return result.rows;
         } catch (err) {
             logger.error('Error getting challenges: ' + err, { error: err, className });
             throw err;
@@ -32,21 +31,18 @@ class ChallengeModel {
     public async fetchPointsForChallenge(challengeId: number): Promise<number> {
         logger.info('Fetching points for challenge', { className });
         const sqlQuery = `
-            SELECT points FROM challenges WHERE id = @challengeId;
+            SELECT points FROM challenges WHERE id = $1;
         `;
 
         try {
-            const result = await this.db.request()
-                .input('challengeId', challengeId)
-                .query(sqlQuery);
-            return result.recordset[0].points;
+            const result = await this.db.query(sqlQuery, [challengeId]);
+
+            return result.rows[0].points;
         } catch (err) {
             logger.error('Error fetching points for challenge: ' + err, { error: err, className });
             throw err;
         }
     }
-
-
 }
 
 export default new ChallengeModel();
