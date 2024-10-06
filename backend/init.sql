@@ -105,8 +105,9 @@ BEGIN
         id INT PRIMARY KEY NOT NULL,
         name NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX) NOT NULL,
-        points INT NOT NULL
-    );
+        points INT NOT NULL,
+        status INT
+        );
 
     PRINT 'Challenges table created';
 END;

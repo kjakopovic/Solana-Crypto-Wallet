@@ -58,6 +58,27 @@ class PointsModel {
         }
     }
 
+    public async findPointsByUserIdAndChallengeId(userId: string, challengeId: number): Promise<any> {
+        logger.info('Finding points by userId and challengeId', { className });
+        const sqlQuery = `
+            SELECT * FROM points
+            WHERE userId = @userId AND challengeId = @challengeId;
+        `;
+
+        try {
+            const result = await this.db.request()
+                .input('userId', userId)
+                .input('challengeId', challengeId)
+                .query(sqlQuery);
+
+            logger.info('Points found', { className });
+            return result.recordset[0];
+        } catch (err) {
+            logger.error('Error finding points: ' + err, { error: err, className });
+            throw err;
+        }
+    }
+
 }
 
 export default new PointsModel();
