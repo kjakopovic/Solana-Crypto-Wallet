@@ -188,7 +188,7 @@ class UserModel {
         logger.info('Getting points leaderboard', { className });
 
         const sqlQuery = `
-            SELECT CAST(DENSE_RANK() OVER (ORDER BY points DESC) AS INT) AS placement, 
+            SELECT CAST(RANK() OVER (ORDER BY points DESC) AS INT) AS placement, 
                 username, imageUrl, publicKey, 
                 CAST(points AS INT) AS points
             FROM users;
@@ -212,7 +212,7 @@ class UserModel {
 
         const sqlQuery = `
         WITH rankedUsers AS (
-            SELECT CAST(DENSE_RANK() OVER (ORDER BY points DESC) AS INT) AS placement, 
+            SELECT CAST(RANK() OVER (ORDER BY points DESC) AS INT) AS placement, 
                 username, imageUrl, publicKey, 
                 CAST(points AS INT) AS points
             FROM users

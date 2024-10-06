@@ -135,10 +135,12 @@ BEGIN
         id INT PRIMARY KEY IDENTITY(1,1),
         timestamp DATETIME DEFAULT GETDATE(),
         userId NVARCHAR(255) FOREIGN KEY REFERENCES users(id),
-        question NVARCHAR(MAX) NOT NULL,
+        title NVARCHAR(255) NOT NULL,
+        description NVARCHAR(MAX) NOT NULL,
         answered BIT DEFAULT 0,
         answer NVARCHAR(MAX) DEFAULT NULL
-    );
+        );
+    END;
 
     PRINT 'SupportQuestions table created';
 END;

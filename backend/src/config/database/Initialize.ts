@@ -38,11 +38,6 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
             await populateChallengesTable(pool);
         }
 
-        logger.info('Checking if procedures exist', { className });
-        const createProceduresSQLPath = path.join(__dirname, '../../data/sql/create-procedures.sql');
-        const createProceduresSQL = fs.readFileSync(createProceduresSQLPath, 'utf-8');
-        await pool.request().query(createProceduresSQL);
-
         logger.info('Database initialized successfully', { className });
     }catch(error){
         logger.error({ message: 'Error initializing database: '+ error, error, className });
