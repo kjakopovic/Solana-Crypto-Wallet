@@ -1,16 +1,15 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:eu-central-1:333855566543:task-definition/express-demo-app:1",
+    "taskDefinitionArn": "arn:aws:ecs:eu-central-1:333855566543:task-definition/solasafe:1",
     "containerDefinitions": [
         {
-            "name": "express-app",
-            "image": "333855566543.dkr.ecr.eu-central-1.amazonaws.com/express-docker-images:latest",
-            "cpu": 512,
-            "memory": 2048,
+            "name": "solasafe-backend",
+            "image": "333855566543.dkr.ecr.eu-central-1.amazonaws.com/solasafe-docker-images/image:latest",
+            "cpu": 0,
             "portMappings": [
                 {
-                    "name": "80",
-                    "containerPort": 80,
-                    "hostPort": 80,
+                    "name": "3000",
+                    "containerPort": 3000,
+                    "hostPort": 3000,
                     "protocol": "tcp",
                     "appProtocol": "http"
                 }
@@ -24,7 +23,7 @@
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/express-demo-app",
+                    "awslogs-group": "/ecs/solasafe",
                     "mode": "non-blocking",
                     "awslogs-create-group": "true",
                     "max-buffer-size": "25m",
@@ -36,9 +35,9 @@
             "systemControls": []
         }
     ],
-    "family": "express-demo-app",
+    "family": "solasafe",
     "taskRoleArn": "arn:aws:iam::333855566543:role/ecsTaskExecutionRoleWithS3FullAccessAndSecretsReadAndWrite",
-    "executionRoleArn": "arn:aws:iam::333855566543:role/awsTaskExecutionRoleForECR",
+    "executionRoleArn": "arn:aws:iam::333855566543:role/ecsTaskExecutionRoleWithS3FullAccessAndSecretsReadAndWrite",
     "networkMode": "awsvpc",
     "revision": 1,
     "volumes": [],
@@ -83,13 +82,13 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "512",
-    "memory": "2048",
+    "cpu": "4096",
+    "memory": "8192",
     "runtimePlatform": {
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
     },
-    "registeredAt": "2024-08-24T07:50:10.644Z",
+    "registeredAt": "2024-10-06T20:57:46.270Z",
     "registeredBy": "arn:aws:iam::333855566543:root",
     "tags": []
 }

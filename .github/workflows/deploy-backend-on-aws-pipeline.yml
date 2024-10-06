@@ -3,16 +3,17 @@ name: Deploy backend on AWS
 on:
   push:
     branches: 
-      # - main
-      - develop
+      - main
+    paths:
+      - 'backend/**'
 
 env:
   AWS_REGION: eu-central-1
-  ECR_REPOSITORY: express-docker-images
-  ECS_SERVICE: express-demo
-  ECS_CLUSTER: express-demo
+  ECR_REPOSITORY: solasafe-docker-images
+  ECS_SERVICE: solasafe-backend
+  ECS_CLUSTER: solasafe-backend
   ECS_TASK_DEFINITION: .github/workflows/task_definition.json
-  CONTAINER_NAME: express-app
+  CONTAINER_NAME: solasafe-backend
 
 permissions:
   id-token: write
