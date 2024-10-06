@@ -54,7 +54,7 @@ const EnterPasscode = () => {
                 saveItem('imageUrl', imageUrl)
                 saveItem('points', '0')
 
-                // await createWelcomeNft() TODO: uncomment when app is ready
+                // await createWelcomeNft() // TODO: uncomment when app is ready
 
                 setIsLoading(false)
 

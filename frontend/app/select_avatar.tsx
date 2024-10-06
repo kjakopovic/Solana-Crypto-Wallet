@@ -9,11 +9,14 @@ import { getDefaultAvatars } from '@/utils/avatars'
 import CustomDialog from '@/components/custom_dialog'
 import PageHeader from '@/components/page_header'
 import { deleteItem, getItem, saveItem } from '@/context/SecureStorage'
+import Loader from '@/components/loader'
+import { getUsersNfts } from '@/context/WalletFunctions'
 
 const SelectAvatar = () => {
+    const [collectibles, setCollectibles] = useState([] as any[])
     const [avatars, setAvatars] = useState([] as string[])
+
     const [selectedAvatar, setSelectedAvatar] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
 
     const [dialogProps, setDialogProps] = useState({
         title: '',
@@ -23,8 +26,6 @@ const SelectAvatar = () => {
 
     const changeProfilePicture = async () => {
         try {
-            setIsLoading(true)
-
             const publicKey = getItem('publicKey') ?? ''
         
             const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/update/${publicKey}`, {
@@ -49,15 +50,25 @@ const SelectAvatar = () => {
         } catch (error) {
             console.log(error)
         } finally {
-            setIsLoading(false)
-
             router.push('/(auth)/login_with_passcode' as Href)
         }
     }
 
     useEffect(() => {
-        const listOfAvatars = getDefaultAvatars()
-        setAvatars(listOfAvatars)
+        const fetchData = async () => {
+            const listOfAvatars = getDefaultAvatars()
+            setAvatars(listOfAvatars)
+
+            const nfts = await getUsersNfts()
+
+            setCollectibles(nfts.map(nft => ({
+                name: nft.metadata.name,
+                image: nft.metadata.uri,
+                value: nft.metadata.symbol
+            })))
+        }
+        
+        fetchData()
     }, [])
     
     return (
@@ -69,7 +80,12 @@ const SelectAvatar = () => {
                 showCancel
                 onOkPress={async () => {
                     setDialogProps({ title: '', description: '', visible: false })
-                    await deleteItem('isNFTProfile')
+
+                    if (avatars.includes(selectedAvatar)) {
+                        await deleteItem('isNFTProfile')
+                    } else {
+                        saveItem('isNFTProfile', 'yes')
+                    }
 
                     if (selectedAvatar !== '') {
                         changeProfilePicture()
@@ -78,7 +94,7 @@ const SelectAvatar = () => {
                 onCancelPress={() => {setDialogProps({ title: '', description: '', visible: false })}}
             />
             <ScrollView>
-                <View className='h-[70vh] items-center justify-center mt-[50px]'>
+                <View className='h-[90vh] items-center justify-center mt-[50px]'>
                     <PageHeader 
                         title='Select new avatar'
                         containerStyles='mt-1'
@@ -111,8 +127,34 @@ const SelectAvatar = () => {
                                 </View>
                             </TouchableOpacity>
                         ))}
+
+                        {collectibles.map((collectible, index) => (
+                            <TouchableOpacity
+                                key={`nft-touchable-${index}`}
+                                onPress={() => {
+                                    setSelectedAvatar(collectible.image)
+                                    
+                                    setDialogProps({
+                                        title: 'Update profile picture',
+                                        description: 'Do you want to update your profile picture?',
+                                        visible: true
+                                    })
+                                }}
+                            >
+                                <View
+                                    className='justify-center items-center w-[100px] h-[100px] bg-secondaryUtils rounded-full'
+                                    key={`nft-container-${index}`}
+                                >
+                                    <Image 
+                                        source={{ uri: collectible.image }}
+                                        className='w-[70px] h-[70px] rounded-full'
+                                        resizeMode="contain"
+                                        key={`nft-image-${index}`}
+                                    />
+                                </View>
+                            </TouchableOpacity>
+                        ))}
                     </View>
-                    {/* TODO: dodati button da odabere NFT, ako odabere NFT onda setItem('isNFTProfile', 'yes') */}
                 </View>
             </ScrollView>
         </SafeAreaView>
