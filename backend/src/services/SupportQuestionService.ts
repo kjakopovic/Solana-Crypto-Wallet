@@ -39,13 +39,17 @@ class SupportQuestionService{
 
         try{
             const responses = await SupportQuestionModel.fetchSupportQuestionByField(field, value);
+            logger.info(`Fetched responses: ${JSON.stringify(responses)}`, { className });
 
             const result = await Promise.all(responses.map(async (response: any) => {
-                const user = await UserModel.findUserByField("id", response.userId);
+                logger.info(`Fetching user with id: ${response.userid}`, { className });
+                const user = await UserModel.findUserByField("id", response.userid);
                 if (!user) {
                     logger.error('User not found', { className });
                     throw new Error("User not found");
                 }
+
+                logger.info(`User found: ${JSON.stringify(user)}`, { className });
 
                 return {
                     title: response.title,

@@ -75,7 +75,7 @@ class UserModel {
     }
 
     // Fetch a user by a specific field
-    async findUserByField(field: string, value: string): Promise<User | null> {
+    async findUserByField(field: string, value: string): Promise<any | null> {
         logger.info(`Fetching user by ${field}`, { className });
 
         const validFields = ['id', 'username', 'publicKey', 'refreshToken', 'points', 'imageUrl'];
@@ -90,6 +90,7 @@ class UserModel {
 
         try {
             const result = await this.db.query(sqlQuery, [value]);
+            logger.info(`Query result: ${JSON.stringify(result.rows)}`, { className });
 
             if (result.rows.length > 0) {
                 const user = result.rows[0];
@@ -97,11 +98,12 @@ class UserModel {
                 return {
                     id: user.id,
                     username: user.username,
-                    imageUrl: user.imageUrl,
+                    imageUrl: user.imageurl,
                     password: user.password,
-                    publicKey: user.publicKey,
-                    joinedAt: user.joinedAt,
-                    refreshToken: user.refreshToken,
+                    publicKey: user.publickey,
+                    joinedAt: user.joinedat,
+                    refreshToken: user.refreshtoken,
+                    points: user.points
                 };
             } else {
                 logger.info('User not found', { className });
@@ -156,7 +158,7 @@ class UserModel {
 
     }
 
-    async getUserInfo(publicKey: string): Promise<User | null>{
+    async getUserInfo(publicKey: string): Promise<any | null>{
         logger.info('Getting user info for publicKey: ' + publicKey, { className });
         const user = await this.findUserByField('publicKey', publicKey);
         if(user){
