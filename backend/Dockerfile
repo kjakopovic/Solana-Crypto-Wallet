@@ -1,6 +1,6 @@
 FROM node:18-slim
 
-WORKDIR /app/backend
+WORKDIR /app
 
 # Install system dependencies and build tools
 RUN apt-get update && apt-get install -y \
@@ -10,14 +10,11 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/package*.json /app/backend/
+COPY ./package*.json ./
+
 RUN npm install
 
-COPY backend /app/backend
-
-RUN npm install -g typescript
-RUN npm run build
-RUN npm rebuild
+COPY . ./
 
 EXPOSE 3000
 
