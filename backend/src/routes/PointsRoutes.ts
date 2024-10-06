@@ -14,9 +14,9 @@ const router = Router();
  * /api/v1/points/save:
  *   post:
  *     summary: Save user points
- *     description: Save user points from challenge or daily quiz. It must always contain publicKey and points fields.
- *          If from challenge, the request body must contain the publicKey, points and fromChallenge fields.
- *          If from daily quiz, the request body must contain the publicKey, points, fromDailyQuiz and questionId fields.
+ *     description: Save user points from challenge or daily quiz. It must always contain publicKey.
+ *          If from challenge, the request body must contain the publicKey and challengeId fields.
+ *          If from daily quiz, the request body must contain the publicKey and quizDifficulty fields.
  *     requestBody:
  *       required: true
  *       content:
