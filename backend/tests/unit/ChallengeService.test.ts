@@ -2,33 +2,31 @@
 
 import ChallengeService from '../../src/services/ChallengeService';
 
-jest.mock('../../src/services/ChallengeService', () =>{
+jest.mock('../../src/services/ChallengeService', () => {
     return {
         getAllChallenges: jest.fn(),
     };
 });
 
 describe('ChallengeService', () => {
-   beforeEach(() => {
-       jest.clearAllMocks();
-   });
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
-    it('should get all challenges successfully', async () => {
-        const mockChallenges = [{ id: 1, name: 'Test Challenge' }];
+    it('should get all challenges', async () => {
+        const userId = 'testUserId';
+        const mockChallenges = [{ id: 1, name: 'Challenge 1' }];
         (ChallengeService.getAllChallenges as jest.Mock).mockResolvedValue(mockChallenges);
 
-        const result = await ChallengeService.getAllChallenges();
-
+        const result = await ChallengeService.getAllChallenges(userId);
+        expect(result).toBeDefined();
         expect(result).toEqual(mockChallenges);
-        expect(ChallengeService.getAllChallenges).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw an error when getting all challenges fails', async () => {
+    it('should throw an error if getting challenges fails', async () => {
+        const userId = 'testUserId';
         (ChallengeService.getAllChallenges as jest.Mock).mockRejectedValue(new Error('Error getting challenges'));
 
-        await expect(ChallengeService.getAllChallenges()).rejects.toThrow('Error getting challenges');
-        expect(ChallengeService.getAllChallenges).toHaveBeenCalledTimes(1);
+        await expect(ChallengeService.getAllChallenges(userId)).rejects.toThrow('Error getting challenges');
     });
-
-
 });

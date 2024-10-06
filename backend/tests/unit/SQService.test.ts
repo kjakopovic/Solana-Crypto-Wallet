@@ -21,16 +21,16 @@ describe("SupportQuestionService", () => {
             const mockCreateSupportQuestion = jest.fn().mockResolvedValue(undefined);
             (SupportQuestionService.createSupportQuestion as jest.Mock).mockImplementation(mockCreateSupportQuestion);
 
-            await SupportQuestionService.createSupportQuestion('testPublicKey', 'testQuestion');
+            await SupportQuestionService.createSupportQuestion('testPublicKey', 'testQuestion', 'testDescription');
 
-            expect(mockCreateSupportQuestion).toHaveBeenCalledWith('testPublicKey', 'testQuestion');
+            expect(mockCreateSupportQuestion).toHaveBeenCalledWith('testPublicKey', 'testQuestion', 'testDescription');
         });
 
         it('should throw an error when creating a support question fails', async () => {
             const mockCreateSupportQuestion = jest.fn().mockRejectedValue(new Error('Error creating support question'));
             (SupportQuestionService.createSupportQuestion as jest.Mock).mockImplementation(mockCreateSupportQuestion);
 
-            await expect(SupportQuestionService.createSupportQuestion('testPublicKey', 'testQuestion')).rejects.toThrow('Error creating support question');
+            await expect(SupportQuestionService.createSupportQuestion('testPublicKey', 'testQuestion', 'testDescription')).rejects.toThrow('Error creating support question');
         });
     });
 
