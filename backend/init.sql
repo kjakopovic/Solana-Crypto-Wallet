@@ -107,7 +107,7 @@ BEGIN
         description NVARCHAR(MAX) NOT NULL,
         points INT NOT NULL,
         status INT
-        );
+    );
 
     PRINT 'Challenges table created';
 END;
@@ -140,8 +140,7 @@ BEGIN
         description NVARCHAR(MAX) NOT NULL,
         answered BIT DEFAULT 0,
         answer NVARCHAR(MAX) DEFAULT NULL
-        );
-    END;
+    );
 
     PRINT 'SupportQuestions table created';
 END;
