@@ -27,6 +27,14 @@ const ChallengeItem: React.FC<ChallengeItemProps> = ({ status, requiredStatus, t
                 </Text>
             </View>
 
+            {status >= requiredStatus && !obtained && (
+                <View className='justify-center h-full'>
+                    <Text className='font-lufgaBold text-left text-white text-[13px]'>
+                        Click to{'\n'}Redeem
+                    </Text>
+                </View>
+            )}
+
             <View className='justify-center space-y-2'>
                 <Text className='font-lufgaBold text-left text-white text-[13px]'>
                     Reward:
