@@ -16,7 +16,7 @@ class SupportQuestionService{
             if(!user){
                 throw new Error("User not found");
             }
-            await SupportQuestionModel.createSupportQuestion(user.id, publicKey, title, description);
+            await SupportQuestionModel.createSupportQuestion(user.id, title, description);
         }catch (err){
             logger.error('Error creating support question', { error: err, className });
             throw err;

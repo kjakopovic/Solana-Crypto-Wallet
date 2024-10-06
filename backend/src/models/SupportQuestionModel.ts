@@ -14,17 +14,16 @@ class SupportQuestionModel{
     }
 
     // Insert new support question
-    public async createSupportQuestion(userId: string, userPubKey: string, title:string, description: string): Promise<void>{
+    public async createSupportQuestion(userId: string, title:string, description: string): Promise<void>{
         logger.info("Called createSupportQuestion method", {className});
         const sqlQuery = `
-            INSERT INTO supportQuestions (userId, userPubKey, title, description)
-            VALUES (@userId, @userPubKey, @title, @description);
+            INSERT INTO supportQuestions (userId, title, description)
+            VALUES (@userId, @title, @description);
         `;
 
         try{
             await this.db.request()
                 .input('userId', userId)
-                .input('userPubKey', userPubKey)
                 .input('title', title)
                 .input('description', description)
                 .query(sqlQuery);
