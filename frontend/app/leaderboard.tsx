@@ -12,50 +12,7 @@ const Leaderboard = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [startDate, setStartDate] = useState(null as Date | null)
     
-    const [users, setUsers] = useState([
-        {
-            username: 'User 1',
-            public_key: 'jnhefjhuaefu',
-            image: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-            points: 1000,
-            placement: 1
-        },
-        {
-            username: 'User 2kfjaskfdjaijda',
-            public_key: 'jnhefjhsdguaefu',
-            image: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-            points: 777,
-            placement: 2
-        },
-        {
-            username: 'User 3',
-            public_key: 'jnheasfdsafdsffjhuaefu',
-            image: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-            points: 700,
-            placement: 3
-        },
-        {
-            username: 'User 1',
-            public_key: 'jnhefjhuaefdgfdgdgu',
-            image: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-            points: 500,
-            placement: 4
-        },
-        {
-            username: 'User 2',
-            publicKey: 'asfadfdsajnhefjhuaefu',
-            image: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-            points: 250,
-            placement: 5
-        },
-        {
-            username: 'User 3',
-            public_key: 'jnhsdgsdefjhuadsgeadfefu',
-            image: 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png',
-            points: 250,
-            placement: 6
-        }
-    ] as any[])
+    const [users, setUsers] = useState([] as any[])
 
     const [currentUser, setCurrentUser] = useState({
         username: '',
@@ -99,23 +56,27 @@ const Leaderboard = () => {
             if (response.status.toString().startsWith('2')) {
                 const responseData = await response.json()
 
-                console.log('This is data', responseData)
+                if (responseData.length !== 0) {
+                    setUsers(responseData.map((user: any, index: number) => {
+                        return {
+                            username: user.username,
+                            publicKey: user.publicKey,
+                            image: user.imageUrl,
+                            points: user.points ?? 0,
+                            placement: user.placement ?? index + 1
+                        }
+                    }))
+                }
 
-                //TODO: kada se fixa backend
+                const currentUserData = responseData.find((user: any) => user.publicKey === getItem('publicKey'));
 
-                // if (responseData.length !== 0) {
-                //     setUsers(responseData.map((user: any, index: number) => {
-                //         return {
-                //             username: user.username,
-                //             publicKey: user.publicKey,
-                //             image: user.imageUrl,
-                //             points: user.points,
-                //             placement: user.placement ?? index + 1
-                //         }
-                //     }))
-                // }
-
-                // setCurrentUser(responseData.find((user: any) => user.publicKey === getItem('publicKey')))
+                setCurrentUser({
+                    username: currentUserData.username,
+                    publicKey: currentUserData.publicKey,
+                    image: currentUserData.imageUrl,
+                    points: currentUserData.points ?? 0,
+                    placement: currentUserData.placement
+                })
             }
 
             setStartDate(getLastMomentOfMonth())
