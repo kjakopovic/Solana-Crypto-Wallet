@@ -66,7 +66,7 @@ export class QuizModel {
             logger.info('Shuffling quiz answers', { className });
 
             const answers = [
-                { letter: 'A', text: quiz.correctAnswer },
+                { letter: 'A', text: quiz.correctanswer },
                 { letter: 'B', text: quiz.option2 },
                 { letter: 'C', text: quiz.option3 },
                 { letter: 'D', text: quiz.option4 }
@@ -83,7 +83,7 @@ export class QuizModel {
                 id: quiz.id,
                 question: quiz.question,
                 difficulty: quiz.difficulty,
-                correctAnswer: quiz.correctAnswer,
+                correctAnswer: quiz.correctanswer,
                 A: answers[0].text,
                 B: answers[1].text,
                 C: answers[2].text,
