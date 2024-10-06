@@ -8,17 +8,19 @@ import Swiper from "react-native-swiper";
 import SegmentBar from '@/components/segment_bar'
 import CustomButton from '@/components/custom_button'
 import Loader from '@/components/loader'
+
 import { getItem } from '@/context/SecureStorage';
 
 import { useGlobalContext } from "../context/GlobalProvider";
+
 import { images, icons } from '@/constants'
 
 const Index = () => {
+    const { loading } = useGlobalContext()
+
     const [isIndexLoading, setIsIndexLoading] = useState(true)
     const [isFirstTime, setIsFirstTime] = useState(false)
     const [isLogged, setIsLogged] = useState(false)
-
-    const { loading } = useGlobalContext();
 
     const swiperRef = useRef<Swiper>(null);
     const [currentSegment, setCurrentSegment] = useState(0);
@@ -28,6 +30,26 @@ const Index = () => {
     const positionX = useRef(new Animated.Value(screenWidth)).current;
 
     useEffect(() => {
+        const checkGlobalInfo = async () => {
+            const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/jwt/verify-refresh`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    refreshToken: getItem('refreshToken')
+                })
+            })
+
+            const isUserFound = getItem('isUserFound')
+            const isUserLoggedIn = response.status.toString().startsWith('2')
+            
+            setIsFirstTime(isUserFound === undefined || isUserFound === null);
+            setIsLogged(isUserLoggedIn);
+
+            setIsIndexLoading(false);
+        }
+
         const moveAnimation = Animated.timing(positionX, {
             toValue: 0,
             duration: 3500,
@@ -45,24 +67,16 @@ const Index = () => {
             ])
         ).start();
 
-        //BACKEND TODO: na backendu napravi endpoint za checka jel refresh token validan, ako nije, izbrisi ga iz secure storagea
-
-        const isUserFound = getItem('isUserFound')
-        const isUserLoggedIn = getItem('refreshToken')
-        
-        setIsFirstTime(isUserFound === undefined || isUserFound === null);
-        setIsLogged(isUserLoggedIn !== undefined && isUserLoggedIn !== null);
-
-        setIsIndexLoading(false);
+        checkGlobalInfo();
     }, []);
+
+    if (isIndexLoading) return <Loader isLoading={isIndexLoading} />;
 
     if (!loading && !isIndexLoading && isLogged) return <Redirect href="/(tabs)/wallet"/>;
     if (!loading && !isIndexLoading && !isFirstTime) return <Redirect href="/(auth)/login_with_passcode"/>;
 
     return (
         <SafeAreaView className='bg-background h-full'>
-            <Loader isLoading={loading} />
-
             <ScrollView>
                 <View className='h-full'>
                     <SegmentBar 

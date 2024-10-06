@@ -39,6 +39,7 @@ const authMiddleware = async (req: Request, res: Response, next: NextFunction) =
                 } catch (error) {
                     logger.error('Error generating new access token: ' + error, { className });
                     
+                    return res.status(401).json({ message: 'Invalid token' });
                 }
             } else {
                 return res.status(401).json({ message: 'Invalid token' });
