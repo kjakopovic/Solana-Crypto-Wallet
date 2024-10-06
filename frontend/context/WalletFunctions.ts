@@ -32,6 +32,11 @@ import { saveItem, getItem } from './SecureStorage';
 
 bip39.setDefaultWordlist('english');
 
+/* COMMENT: There was a plan to make this code prettier and more readable and structured into classes but 
+   unfortunately we ran out of time because of finishing features and fixing bugs. We are aware that this 
+   code is not perfect and we are planning to refactor it in the future. 
+*/
+
 const SOL_MINT = 'So11111111111111111111111111111111111111112'
 
 interface TokenInfoPreview {
