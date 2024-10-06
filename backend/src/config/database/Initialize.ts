@@ -91,8 +91,8 @@ const populateQuizzesTable = async (pool: ConnectionPool) => {
 const populateChallengesTable = async (pool: ConnectionPool) => {
     logger.info('Populating challenges table', { className });
 
-    try{
-        const workbook = xlsx.readFile('../backend/src/data/excel/challenges.xlsx');
+    try {
+        const workbook = xlsx.readFile(path.join(__dirname, '../../data/excel/challenges.xlsx'));
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
 
@@ -100,21 +100,26 @@ const populateChallengesTable = async (pool: ConnectionPool) => {
         challenges.shift(); // Remove the header row
 
         for (const row of challenges) {
-            const [id, name, description, points] = row;
+            const [id, name, description, points, status] = row;
+            if (!id) {
+                logger.warn(`Skipping challenge with missing id: ${JSON.stringify(row)}`, { className });
+                continue;
+            }
             await pool.request()
                 .input('id', id)
                 .input('name', name)
                 .input('description', description)
                 .input('points', points)
+                .input('status', status)
                 .query(`
-                    INSERT INTO challenges (id,name, description, points)
-                    VALUES (@id, @name, @description, @points)
+                    INSERT INTO challenges (id, name, description, points, status)
+                    VALUES (@id, @name, @description, @points, @status)
                 `);
         }
 
-        logger.info('Challenges table populated successfully', {className});
+        logger.info('Challenges table populated successfully', { className });
     } catch (error) {
         logger.error({ message: 'Error populating challenges table: ' + error, error, className });
     }
-}
+};
 
