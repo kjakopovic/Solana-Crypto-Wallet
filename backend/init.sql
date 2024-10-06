@@ -74,7 +74,7 @@ BEGIN
         publicKey NVARCHAR(255),
         joinedAt DATETIME DEFAULT GETDATE(),
         refreshToken NVARCHAR(MAX),
-        points BIGINT,
+        points BIGINT DEFAULT 0
     );
 
     PRINT 'Users table created';
