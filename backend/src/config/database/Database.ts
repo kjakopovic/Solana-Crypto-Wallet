@@ -3,23 +3,22 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import logger from '../Logger';
 import { initializeDatabase } from './Initialize';
+import { dbConfig } from '../Config';
 
 dotenv.config();
 
 const className = 'Database';
 
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_SERVER,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    ssl: false, // Disable SSL
-});
+async function createPool() {
+    const dbConfigResult = await dbConfig;
+    return new Pool(dbConfigResult);
+}
+
+const poolPromise = createPool();
 
 async function connectToDatabase() {
     try {
-        const client = await pool.connect();
+        const client = await (await poolPromise).connect();
         console.log('Connected to PostgreSQL');
         logger.info('Connected to PostgreSQL', { className });
         if (process.env.NODE_ENV !== 'test') {
@@ -39,4 +38,4 @@ async function connectToDatabase() {
 
 connectToDatabase();
 
-export default pool;
+export default poolPromise;

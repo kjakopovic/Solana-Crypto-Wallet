@@ -140,15 +140,15 @@ const Games = () => {
                 setChallenges(data.map((challenge: any) => {
                     var answer = {} as any
 
-                    if (challenge.name === 'Get 3 correct easy questions') {
+                    if (challenge.description === 'Get 3 correct easy questions') {
                         answer.currentStatus = threeEasy
-                    } else if (challenge.name === 'Get 3 correct medium questions') {
+                    } else if (challenge.description === 'Get 3 correct medium questions') {
                         answer.currentStatus = threeMedium
-                    } else if (challenge.name === 'Get 3 correct hard questions') {
+                    } else if (challenge.description === 'Get 3 correct hard questions') {
                         answer.currentStatus = threeHardAndTen
-                    } else if (challenge.name === 'Get 10 correct hard questions') {
+                    } else if (challenge.description === 'Get 10 correct hard questions') {
                         answer.currentStatus = threeHardAndTen
-                    } else if (challenge.name === 'Have 1000$ worth of crypto in the wallet') {
+                    } else if (challenge.description === 'Have 1000$ worth of crypto in the wallet') {
                         answer.currentStatus = currentAccountBalance
                     } else {
                         answer.currentStatus = 0

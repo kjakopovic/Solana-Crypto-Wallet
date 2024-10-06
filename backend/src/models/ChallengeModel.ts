@@ -1,18 +1,11 @@
 // src/models/ChallengeModel.ts
 
-import { Pool } from 'pg';
-import pool from '../config/database/Database';
+import poolPromise from '../config/database/Database';
 import logger from '../config/Logger';
 
 const className = 'ChallengeModel';
 
 class ChallengeModel {
-    private db: Pool;
-
-    constructor() {
-        this.db = pool;
-    }
-
     public async getAllChallenges(): Promise<any> {
         logger.info('Getting all challenges', { className });
         const sqlQuery = `
@@ -20,7 +13,7 @@ class ChallengeModel {
         `;
 
         try {
-            const result = await this.db.query(sqlQuery);
+            const result = await (await poolPromise).query(sqlQuery);
             return result.rows;
         } catch (err) {
             logger.error('Error getting challenges: ' + err, { error: err, className });
@@ -35,7 +28,7 @@ class ChallengeModel {
         `;
 
         try {
-            const result = await this.db.query(sqlQuery, [challengeId]);
+            const result = await (await poolPromise).query(sqlQuery, [challengeId]);
 
             return result.rows[0].points;
         } catch (err) {

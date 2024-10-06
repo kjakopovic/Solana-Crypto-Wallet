@@ -1,18 +1,11 @@
 // src/models/PointsModel.ts
 
-import { Pool } from 'pg';
-import pool from '../config/database/Database';
+import poolPromise from '../config/database/Database';
 import logger from '../config/Logger';
 
 const className = 'PointsModel';
 
 class PointsModel {
-    private db: Pool;
-
-    constructor() {
-        this.db = pool;
-    }
-
     public async savePointsChallenge(userId: string, challengeId: number, points: number): Promise<void> {
         logger.info(`Saving ${points} points for user: ` + userId, { className });
         const sqlQuery = `
@@ -21,7 +14,7 @@ class PointsModel {
         `;
 
         try{
-            await this.db.query(sqlQuery, [userId, challengeId, points]);
+            await (await poolPromise).query(sqlQuery, [userId, challengeId, points]);
 
             logger.info('Points saved successfully', { className });
             console.log(`Points saved successfully for user: ${userId}`);
@@ -40,7 +33,7 @@ class PointsModel {
         `;
 
         try {
-            await this.db.query(sqlQuery, [userId, quizDifficulty, points]);
+            await (await poolPromise).query(sqlQuery, [userId, quizDifficulty, points]);
 
             logger.info('Points saved successfully', {className});
             console.log(`Points saved successfully for user: ${userId}`);
@@ -58,7 +51,7 @@ class PointsModel {
         `;
 
         try {
-            const result = await this.db.query(sqlQuery, [userId, challengeId]);
+            const result = await (await poolPromise).query(sqlQuery, [userId, challengeId]);
 
             logger.info('Points found', { className });
             return result.rows[0];

@@ -1,7 +1,6 @@
 // src/models/QuizModel.ts
 
-import { Pool } from 'pg';
-import pool from '../config/database/Database';
+import poolPromise from '../config/database/Database';
 import logger from '../config/Logger';
 
 const className = 'QuizModel';
@@ -18,12 +17,6 @@ export interface Quiz{
 }
 
 export class QuizModel {
-    private db: Pool;
-
-    constructor() {
-        this.db = pool;
-    }
-
     async fetchQuizByDifficulty(difficulty: string): Promise<Quiz | null> {
         logger.info('Getting quiz question by difficulty: ' + difficulty, { className });
 
@@ -44,7 +37,7 @@ export class QuizModel {
         `;
 
         try {
-            const countResult = await this.db.query(countSqlQuery, [difficulty]);
+            const countResult = await (await poolPromise).query(countSqlQuery, [difficulty]);
 
 
             if (countResult.rows.length === 0) {
@@ -54,7 +47,7 @@ export class QuizModel {
 
             const randomNumber = Math.floor(Math.random() * countResult.rows[0].count) + 1;
 
-            const result = await this.db.query(sqlQuery, [difficulty, randomNumber]);
+            const result = await (await poolPromise).query(sqlQuery, [difficulty, randomNumber]);
 
             if (result.rows.length === 0) {
                 logger.error('No quiz questions found by difficulty', { className });

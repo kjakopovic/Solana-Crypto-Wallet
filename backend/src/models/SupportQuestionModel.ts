@@ -1,18 +1,11 @@
 // src/models/SupportQuestionModel.ts
 
 import logger from '../config/Logger';
-import pool from '../config/database/Database';
-import { Pool } from 'pg';
+import poolPromise from '../config/database/Database';
 
 const className = 'SupportQuestionModel';
 
 class SupportQuestionModel{
-    private db: Pool;
-
-    constructor() {
-        this.db = pool;
-    }
-
     // Insert new support question
     public async createSupportQuestion(userId: string, title:string, description: string): Promise<void>{
         logger.info("Called createSupportQuestion method", {className});
@@ -22,7 +15,7 @@ class SupportQuestionModel{
         `;
 
         try{
-            await this.db.query(sqlQuery, [userId, title, description]);
+            await (await poolPromise).query(sqlQuery, [userId, title, description]);
 
             logger.info('Question created and saved successfully', {className});
             console.log('Question created and saved successfully');
@@ -43,7 +36,7 @@ class SupportQuestionModel{
 
 
         try{
-            await this.db.query(sqlQuery, [answer, questionId]);
+            await (await poolPromise).query(sqlQuery, [answer, questionId]);
 
             logger.info('Question answered successfully', {className});
             console.log('Question answered successfully');
@@ -61,7 +54,7 @@ class SupportQuestionModel{
         `;
 
         try{
-            const result = await this.db.query(sqlQuery, [value]);
+            const result = await (await poolPromise).query(sqlQuery, [value]);
 
             logger.info('Support question fetched successfully', {className});
             return result.rows;
@@ -78,7 +71,7 @@ class SupportQuestionModel{
         `;
 
         try{
-            const result = await this.db.query(sqlQuery);
+            const result = await (await poolPromise).query(sqlQuery);
             logger.info('Support questions fetched successfully', {className});
             return result.rows;
         }catch (err){

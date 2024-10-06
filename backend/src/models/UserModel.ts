@@ -1,7 +1,7 @@
 // src/models/UserModel.ts
 
 import { Pool } from 'pg';
-import pool from '../config/database/Database';
+import poolPromise from '../config/database/Database';
 import logger from '../config/Logger';
 
 const className = 'UserModel';
@@ -26,12 +26,6 @@ interface UserPointsLeaderboard{
 }
 
 class UserModel {
-    private db: Pool;
-
-    constructor() {
-        this.db = pool;
-    }
-
     // Insert a new user into the users table
     public async createUser(id: string, username:string, imageUrl:string, hashedPassword: string,  publicKey: string, refreshToken: string): Promise<void> {
         logger.info('Creating a new user', { className });
@@ -43,7 +37,7 @@ class UserModel {
         `;
 
         try {
-            await this.db.query(sqlQuery, [id, username, imageUrl, hashedPassword, publicKey, refreshToken]);
+            await (await poolPromise).query(sqlQuery, [id, username, imageUrl, hashedPassword, publicKey, refreshToken]);
             logger.info('User created successfully', { className });
             console.log(`User ${username} created successfully.`);
         } catch (err) {
@@ -66,7 +60,7 @@ class UserModel {
         `;
 
         try{
-            await this.db.query(sqlQuery, values);
+            await (await poolPromise).query(sqlQuery, values);
             logger.info('User information updated successfully', { className });
         }catch(err){
             logger.error('Error updating user information: ' + err, { error: err, className });
@@ -89,7 +83,7 @@ class UserModel {
         const sqlQuery = `SELECT * FROM users WHERE ${field} = $1`;
 
         try {
-            const result = await this.db.query(sqlQuery, [value]);
+            const result = await (await poolPromise).query(sqlQuery, [value]);
             logger.info(`Query result: ${JSON.stringify(result.rows)}`, { className });
 
             if (result.rows.length > 0) {
@@ -128,7 +122,7 @@ class UserModel {
         `;
 
         try{
-            await this.db.query(sqlQuery, [publicKey]);
+            await (await poolPromise).query(sqlQuery, [publicKey]);
             logger.info('Refresh token deleted successfully', { className });
         }catch(err){
             logger.error('Error deleting refresh token', { error: err, className });
@@ -149,7 +143,7 @@ class UserModel {
         `;
 
         try{
-            await this.db.query(sqlQuery, [points, userId]);
+            await (await poolPromise).query(sqlQuery, [points, userId]);
             logger.info('User points updated successfully', { className });
         }catch(err){
             logger.error('Error updating user points: ' + err, { error: err, className });
@@ -181,7 +175,7 @@ class UserModel {
         `;
 
         try{
-            const result = await this.db.query(sqlQuery);
+            const result = await (await poolPromise).query(sqlQuery);
             const leaderboard: UserPointsLeaderboard[] = result.rows;
             logger.info('Points leaderboard fetched successfully', { className });
 
@@ -207,7 +201,7 @@ class UserModel {
         `;
 
         try{
-            const result = await this.db.query(sqlQuery, [rank]);
+            const result = await (await poolPromise).query(sqlQuery, [rank]);
             const leaderboard: UserPointsLeaderboard[] = result.rows;
             logger.info('Fetched users from leaderboard successfully', { className });
 
