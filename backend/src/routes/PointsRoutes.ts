@@ -6,9 +6,6 @@ import authMiddleware from "../middleware/AuthMiddleware";
 
 const router = Router();
 
-// TODO: Change this endpoint so it works differently, do not send the points at all, use table and json msgs to assign points to a user
-// TODO: Change so poiunts arent required when it is daily quz
-// TODO: Make API for getALl challenges
 /**
  * @swagger
  * /api/v1/points/save:

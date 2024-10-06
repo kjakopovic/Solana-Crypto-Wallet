@@ -102,7 +102,7 @@ GO
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'challenges')
 BEGIN
     CREATE TABLE challenges (
-        id INT PRIMARY KEY NOT NULL,
+        id INT PRIMARY KEY,
         name NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX) NOT NULL,
         points INT NOT NULL,
