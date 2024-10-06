@@ -39,6 +39,8 @@ class UserController{
         const { publicKey } = req.params;
         const updates = req.body;
 
+        logger.info('Updating user with for updates: ' + updates.password);
+
         if (!publicKey) {
             logger.error('Public key is required', { className });
             return res.status(400).json({ message: 'Public key is required' });

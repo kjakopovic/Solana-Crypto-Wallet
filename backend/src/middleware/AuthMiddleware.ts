@@ -9,7 +9,7 @@ const className = 'AuthMiddleware';
 const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     logger.info('Authenticating user', { className });
 
-    var accessToken = req.header('Authorization')?.replace('Bearer ', '');
+    const accessToken = req.header('Authorization')?.replace('Bearer ', '');
     const refreshToken = req.header('x-refresh-token');
 
     if (!accessToken) {
@@ -30,8 +30,11 @@ const authMiddleware = async (req: Request, res: Response, next: NextFunction) =
                     const userPayload = await JwtService.verifyRefreshToken(refreshToken);
 
                     if (userPayload) {
-                        accessToken = JwtService.generateAccessToken(userPayload);
-                        //TODO: kako da opet frontend primi novi access token - vidjet sa Majkijem
+                        const newAccessToken = JwtService.generateAccessToken(userPayload);
+
+                        res.setHeader("x-access-token", newAccessToken);
+
+                        req.headers.authorization = `Bearer ${newAccessToken}`;
                     }
                 } catch (error) {
                     logger.error('Error generating new access token: ' + error, { className });

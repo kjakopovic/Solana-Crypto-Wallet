@@ -27,7 +27,7 @@ const LoginWithPasscode = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    password: passcode,
+                    password: passcode.trimEnd().replaceAll(' ', ''),
                     publicKey: getItem('publicKey') ?? '',
                 })
             })
@@ -100,6 +100,11 @@ const LoginWithPasscode = () => {
                         <Text className='text-secondary text-sm font-lufgaRegular mt-3 -mb-3 text-white'>
                             Forgot your passcode?{' '}
                             <Link href={'/(auth)/recover_wallet'} className='text-primary'>Recover wallet</Link>
+                        </Text>
+
+                        <Text className='text-secondary text-sm font-lufgaRegular mt-7 -mb-3 text-white'>
+                            Wanna get a new wallet?{' '}
+                            <Link href={'/(auth)/recovery_phrase_generation'} className='text-primary'>Create wallet</Link>
                         </Text>
                     </View>
                 </View>

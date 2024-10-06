@@ -1,24 +1,59 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
-
+import { router, Href } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 
 import { getDefaultAvatars } from '@/utils/avatars'
 
 import CustomDialog from '@/components/custom_dialog'
 import PageHeader from '@/components/page_header'
-import { deleteItem } from '@/context/SecureStorage'
+import { deleteItem, getItem, saveItem } from '@/context/SecureStorage'
 
 const SelectAvatar = () => {
     const [avatars, setAvatars] = useState([] as string[])
     const [selectedAvatar, setSelectedAvatar] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
 
     const [dialogProps, setDialogProps] = useState({
         title: '',
         description: '',
         visible: false
     })
+
+    const changeProfilePicture = async () => {
+        try {
+            setIsLoading(true)
+
+            const publicKey = getItem('publicKey') ?? ''
+        
+            const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/update/${publicKey}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getItem('accessToken')}`,
+                    'x-refresh-token': getItem('refreshToken') ?? ''
+                },
+                body: JSON.stringify({
+                    imageUrl: selectedAvatar
+                })
+            })
+        
+            if (response.headers.get('x-access-token')) {
+                saveItem('accessToken', response.headers.get('x-access-token'))
+            }
+        
+            if (response.status.toString().startsWith('2')) {
+                saveItem('imageUrl', selectedAvatar)
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsLoading(false)
+
+            router.push('/(auth)/login_with_passcode' as Href)
+        }
+    }
 
     useEffect(() => {
         const listOfAvatars = getDefaultAvatars()
@@ -32,11 +67,13 @@ const SelectAvatar = () => {
                 description={dialogProps.description}
                 visible={dialogProps.visible}
                 showCancel
-                onOkPress={() => {
+                onOkPress={async () => {
                     setDialogProps({ title: '', description: '', visible: false })
-                    console.log(selectedAvatar)
-                    deleteItem('isNFTProfile')
-                    //TODO: Update user's profile picture on backend
+                    await deleteItem('isNFTProfile')
+
+                    if (selectedAvatar !== '') {
+                        changeProfilePicture()
+                    }
                 }}
                 onCancelPress={() => {setDialogProps({ title: '', description: '', visible: false })}}
             />

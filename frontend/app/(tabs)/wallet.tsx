@@ -220,7 +220,7 @@ const Wallet = () => {
                     <WalletHeader
                         balance={walletInfo.balance}
                         username={`${getItem('username') ?? '0'}`}
-                        profileUri='https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png'
+                        profileUri={`${getItem('imageUrl') ?? 'https://cdn.pixabay.com/photo/2022/08/28/21/51/cartoon-7417574_1280.png'}`}
                         isCustomProfilePicture={getItem('isNFTProfile') === 'yes'}
                         solaSafePoints={`${getItem('points') ?? '0'}`}
                     />

@@ -9,7 +9,7 @@ import Option from '@/components/option'
 
 import { icons } from '@/constants'
 import { Href, router } from 'expo-router'
-import { deleteItem, getItem } from '@/context/SecureStorage'
+import { deleteItem, getItem, saveItem } from '@/context/SecureStorage'
 import CustomInput from '@/components/custom_input'
 
 const Settings = () => {
@@ -64,6 +64,10 @@ const Settings = () => {
         })
       })
 
+      if (response.headers.get('x-access-token')) {
+        saveItem('accessToken', response.headers.get('x-access-token'))
+      }
+
       if (!response.status.toString().startsWith('2')) {
         setModalErrorMessage('There was an error while setting the username. Please try again.')
         console.log(response)
@@ -85,6 +89,10 @@ const Settings = () => {
           'x-refresh-token': getItem('refreshToken') ?? ''
       }
     })
+
+    if (response.headers.get('x-access-token')) {
+      saveItem('accessToken', response.headers.get('x-access-token'))
+    }
 
     const isBackendResponseValid = response.status.toString().startsWith('2')
     return newUsername !== '' && newUsername !== null && newUsername !== undefined && isBackendResponseValid;
@@ -113,7 +121,11 @@ const Settings = () => {
                 icon={icons.passwords}
                 text='Change password'
                 iconStyles='w-[35px] h-[35px]'
-                onClick={() => router.push('/(auth)/enter_passcode' as Href)}
+                onClick={() => router.push({
+                    pathname: '/(auth)/enter_passcode',
+                    params: { changePassword: 'true' },
+                  })
+                }
               />
 
               <Option

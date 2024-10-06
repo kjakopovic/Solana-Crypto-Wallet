@@ -1,6 +1,6 @@
 import { View } from 'react-native'
 import React, { useState, useEffect } from 'react'
-import { router, Href } from "expo-router";
+import { router, Href, useGlobalSearchParams } from "expo-router";
 
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
@@ -15,6 +15,8 @@ import { getRandomAvatar } from '@/utils/avatars';
 import { getItem, saveItem } from '@/context/SecureStorage';
 
 const EnterPasscode = () => {
+    const { changePassword } = useGlobalSearchParams();
+
     const [isConfirming, setIsConfirming] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [showDialog, setShowDialog] = useState(false)
@@ -37,7 +39,7 @@ const EnterPasscode = () => {
                 },
                 body: JSON.stringify({
                     imageUrl,
-                    password: passcodes.newPasscode,
+                    password: passcodes.newPasscode.trimEnd().replaceAll(' ', ''),
                     publicKey: getItem('publicKey') ?? '',
                 })
             })
@@ -49,6 +51,7 @@ const EnterPasscode = () => {
                 saveItem('accessToken', data.accessToken)
                 saveItem('refreshToken', data.refreshToken)
                 saveItem('username', data.username)
+                saveItem('imageUrl', imageUrl)
                 saveItem('points', '0')
 
                 // await createWelcomeNft() TODO: uncomment when app is ready
@@ -67,11 +70,53 @@ const EnterPasscode = () => {
             setIsLoading(false)
         }
     }
+
+    const updatePassword = async () => {
+        setIsLoading(true)
+
+        try {
+            const publicKey = getItem('publicKey') ?? ''
+            
+            const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/user/update/${publicKey}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getItem('accessToken')}`,
+                    'x-refresh-token': getItem('refreshToken') ?? ''
+                },
+                body: JSON.stringify({
+                    password: passcodes.newPasscode.trimEnd().replaceAll(' ', '')
+                })
+            })
+        
+            if (response.headers.get('x-access-token')) {
+                saveItem('accessToken', response.headers.get('x-access-token'))
+            }
+
+            if (response.status.toString().startsWith('2')) {
+                setIsLoading(false)
+
+                if (router.canDismiss()) {
+                    router.dismissAll()
+                }
+                
+                router.replace('/(tabs)/settings' as Href)
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
     
     useEffect(() => {
         if (passcodes.confirmPasscode.trimEnd().split(' ').length === 6) {
             if (passcodes.newPasscode === passcodes.confirmPasscode) {
-                registerUser()
+                if (changePassword === undefined || changePassword === null) {
+                    registerUser()
+                } else {
+                    updatePassword()
+                }
             }
             else {
                 setPasscodes({ newPasscode: '', confirmPasscode: '' })
