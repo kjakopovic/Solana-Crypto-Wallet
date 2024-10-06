@@ -22,9 +22,12 @@ const router = Router();
  *               publicKey:
  *                 type: string
  *                 required: true
- *               question:
+ *               title:
  *                 type: string
  *                 required: true
+ *               description:
+ *                  type: string
+ *                  required: true
  *     responses:
  *       201:
  *         description: Support question created successfully
@@ -106,5 +109,7 @@ router.get('/fetch-sq-by-field', authMiddleware, SupportQuestionController.fetch
  *         description: Error fetching support questions
  */
 router.get('/fetch-all-sq', authMiddleware, SupportQuestionController.fetchAllSupportQuestions);
+
+router.get('/fetch-answered-sq', authMiddleware, SupportQuestionController.fetchAnsweredSupportQuestions);
 
 export default router;

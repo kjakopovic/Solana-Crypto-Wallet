@@ -38,6 +38,17 @@ export const initializeDatabase = async (pool: ConnectionPool) => {
             await populateChallengesTable(pool);
         }
 
+        const dummyDataSQLPath = path.join(__dirname, '../../data/sql/dummy-data.sql');
+        const dummyDataSQL = fs.readFileSync(dummyDataSQLPath, 'utf-8');
+        await pool.request().query(dummyDataSQL);
+
+        const numberOfUsers = await pool.request().query(`SELECT COUNT(*) AS count FROM users`);
+        const numberOfSupportQuestions = await pool.request().query(`SELECT COUNT(*) AS count FROM supportQuestions`);
+
+        if(numberOfUsers.recordset[0].count < 3 || numberOfSupportQuestions.recordset[0].count < 3){
+            logger.error('Failed to insert dummy data, but continuing with initialization', { className });
+        }
+
         logger.info('Database initialized successfully', { className });
     }catch(error){
         logger.error({ message: 'Error initializing database: '+ error, error, className });

@@ -10,15 +10,15 @@ class SupportQuestionController{
 
     async createSupportQuestion(req: Request, res: Response): Promise<Response>{
         logger.info("Creating a new support question", {className});
-        const { publicKey, question } = req.body;
+        const { publicKey, title, description } = req.body;
 
-        if(!publicKey || !question){
-            logger.error("Invalid input, publicKey or question is missing", {className});
-            return res.status(400).json({message: "Invalid input, publicKey or question is missing"});
+        if(!publicKey || !title || !description){
+            logger.error("Invalid input, publicKey, title or description is missing", {className});
+            return res.status(400).json({message: "Invalid input, publicKey, title or description is missing"});
         }
 
         try{
-            await SupportQuestionService.createSupportQuestion(publicKey, question);
+            await SupportQuestionService.createSupportQuestion(publicKey, title, description);
             logger.info("Support question created successfully", {className});
             return res.status(201).json({message: "Support question created successfully"});
         }catch (error){
@@ -70,6 +70,20 @@ class SupportQuestionController{
 
         try{
             const supportQuestions = await SupportQuestionService.fetchAllSupportQuestions();
+            logger.info("Support questions fetched successfully", {className});
+            return res.status(200).json({supportQuestions});
+        }catch (error){
+            logger.error({message: "Error fetching support questions", error, className});
+            return res.status(500).json({
+                message: "Error fetching support questions"});
+        }
+    }
+
+    async fetchAnsweredSupportQuestions(req: Request, res: Response): Promise<Response>{
+        logger.info("Fetching all answered support questions", {className});
+
+        try{
+            const supportQuestions = await SupportQuestionService.fetchSupportQuestionByField("answered", "1");
             logger.info("Support questions fetched successfully", {className});
             return res.status(200).json({supportQuestions});
         }catch (error){
