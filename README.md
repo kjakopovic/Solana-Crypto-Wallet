@@ -19,11 +19,4 @@ https://egghead.io/lessons/react-native-create-a-development-build-for-android-w
   13. while the APK is downloading on your phone, run in your CLI: npx expo start -c
   14. After the APK is downloaded and installed open your app
 
-Backend setup
-  1. in the main directory type docker-compose up -d (while having the docker hub on)
-  2. leave only the mssql instance running
-  3. to go ./backend
-  4. run: npm run dev
-  5. backend should run now and is ready for use
-
-## Functionality
+Database is deployed using NEON and our backend is deployed using AWS ECS so you should not have problems with it.
