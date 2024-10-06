@@ -1,4 +1,4 @@
-import { View, Text, Image } from 'react-native'
+import { View, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
 
@@ -11,7 +11,6 @@ import SupportCard from '@/components/support_card'
 import PageHeader from '@/components/page_header'
 import { getItem, saveItem } from '@/context/SecureStorage'
 import Loader from '@/components/loader'
-import { publicKey } from '@metaplex-foundation/umi'
 
 const Support = () => {
     const adminProfilePicture = 'https://cdn.pixabay.com/photo/2022/02/18/16/09/ape-7020995_1280.png'
@@ -54,9 +53,11 @@ const Support = () => {
             setDialogProps({ title: 'Success', description: 'Your question has been sent to support.', visible: true })
         } else {
             console.log(response)
-            //TODO: resetiraj i question
+            
             setDialogProps({ title: 'Failure', description: 'There was an error please try again.', visible: true })
         }
+
+        setQuestion({ title: '', description: '' })
     }
 
     useEffect(() => {
@@ -76,8 +77,6 @@ const Support = () => {
 
             if (response.status.toString().startsWith('2')) {
                 const data = await response.json()
-                
-                console.log(data.supportQuestions)
 
                 setPastQuestions(data.supportQuestions.map((question: any, index: number) => {
                     return {
